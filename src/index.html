@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AUTOSTUDIO 3D — Bangkok Fleet Render Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>@@CSS@@</style>
+</head>
+<body>
+<div class="shell">
+
+<header class="top">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#160802" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 16V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v9"/><path d="M3 11h15"/>
+        <circle cx="7" cy="17.5" r="1.6"/><circle cx="15.5" cy="17.5" r="1.6"/><path d="M19 9h2l1 4v3h-3"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Autostudio 3D <span style="color:var(--amber);font-size:12px;letter-spacing:.1em">v40</span></h1>
+      <small>Bangkok OOH Prompt Studio</small>
+    </div>
+  </div>
+  <div class="top-spacer"></div>
+  <div class="engine-badge"><span class="dot" id="liveDot"></span><span id="badgeEngine">PROMPT ENGINE</span></div>
+  <div class="engine-badge" id="badgeMode">TEXT ONLY</div>
+  <button class="btn primary" id="wizBtn" type="button" style="padding:7px 14px;font-size:11.5px">
+    <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4.5"/></svg>
+    โหมดแนะนำทีละขั้น
+  </button>
+</header>
+
+<div class="workspace">
+
+  <!-- ================= LEFT RAIL : SOURCE ================= -->
+  <aside class="rail rail-left">
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M12 3v13"/><path d="M7.5 7.5 12 3l4.5 4.5"/></svg>
+        <h2>01 · Source</h2><span class="th">สื่อโฆษณาต้นแบบ</span>
+      </div>
+
+      <div class="field">
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="อัปโหลดภาพร่าง">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m3 16 4.5-4.5 3.5 3.5 3-3L21 18"/></svg>
+          <strong>อัปโหลดภาพสื่อโฆษณาต้นแบบ</strong>
+          <span>PNG · JPG · WEBP</span>
+        </div>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+
+      <div class="field" id="refBox" hidden>
+        <div class="ref-wrap">
+          <img id="refImg" alt="ภาพร่างอ้างอิงที่อัปโหลด">
+          <div class="bar"><span id="refName">reference.png</span><button class="linkbtn" id="refClear" type="button">ลบ / CLEAR</button></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">ภาพโฆษณาที่จะติดลงบนสื่อ <b id="adState">ทางเลือก</b></label>
+        <div class="drop" id="adDrop" tabindex="0" role="button" aria-label="อัปโหลดภาพโฆษณา">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l4-4 3 3 3-3 8 8"/><circle cx="8.5" cy="9" r="1.3"/></svg>
+          <strong>อัปโหลดอาร์ตเวิร์กโฆษณา</strong>
+          <span>ใส่คู่กับภาพสื่อ = เปลี่ยนโฆษณาในจุดเดิม</span>
+        </div>
+        <input type="file" id="adFile" accept="image/*" hidden>
+      </div>
+
+      <div class="field" id="adBox" hidden>
+        <div class="ref-wrap">
+          <img id="adImg" alt="อาร์ตเวิร์กโฆษณาที่อัปโหลด">
+          <div class="bar"><span id="adName">artwork.png</span><button class="linkbtn" id="adClear" type="button">ลบ / CLEAR</button></div>
+        </div>
+        <div class="field" style="margin-top:10px;margin-bottom:0">
+          <label class="lbl" for="adFit">วิธีวางอาร์ตเวิร์กลงกรอบ <b>LAYOUT</b></label>
+          <select id="adFit">
+            <option value="relayout" selected>จัดองค์ประกอบใหม่ให้เต็มกรอบ (แนะนำ)</option>
+            <option value="fit">วางตามต้นฉบับ ไม่ขยับองค์ประกอบ</option>
+            <option value="stretch">ยืดเต็มกรอบ (ภาพจะผิดสัดส่วน)</option>
+          </select>
+          <div class="dnaline" style="margin-top:7px" id="adFitNote"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg"><input type="checkbox" id="adKeepScene"><span class="tl">คงฉากหลังเดิมทั้งหมด<em>ติ๊กเมื่อต้องการแค่เปลี่ยนป้าย ไม่เปลี่ยนสถานที่ แสง หรือเวลา · ไม่ติ๊ก = จัดฉากใหม่ตามขั้น 4–6</em></span></label>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="block" id="dnaBlock" hidden>
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M7 3c0 5 10 6 10 11M17 3c0 5-10 6-10 11M7 21c0-2.5 10-3 10-7"/><path d="M8.5 7h7M8 11h8M9 16h6"/></svg>
+        <h2>01B · Reference DNA</h2><span class="th">ถอดค่าจากภาพร่าง</span>
+      </div>
+
+      <div class="field">
+        <label class="lbl">สีที่ตรวจพบบนสื่อ <b id="dnaRatio">—</b></label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">สีหลัก / สีรอง — แก้ได้ถ้าจับผิด <b>LOCK</b></label>
+        <div class="pickrow">
+          <div class="pick"><input type="color" id="col1" value="#1E3A8A"><span id="col1n">royal blue</span></div>
+          <div class="pick"><input type="color" id="col2" value="#FFFFFF"><span id="col2n">white</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="bodyNotes">ลักษณะโครงสร้างที่เห็นในภาพต้นแบบ <b>BODY</b></label>
+        <textarea id="bodyNotes" placeholder="เช่น รถชานต่ำ 2 เพลา ประตูกลาง 2 บาน กระจกยาวต่อเนื่อง"></textarea>
+      </div>
+
+      <div class="field">
+        <div class="toggles">
+          <label class="tg"><input type="checkbox" id="lockColor" checked><span class="tl">ล็อกสีตามภาพต้นแบบ<em>บังคับให้ AI ใช้สีที่ถอดได้ ห้ามเปลี่ยนเอง</em></span></label>
+          <label class="tg"><input type="checkbox" id="lockBody" checked><span class="tl">ล็อกสัดส่วนและโครงสร้าง<em>ความยาว แนวกรอบ แนวกระจก ตามต้นแบบ</em></span></label>
+          <label class="tg"><input type="checkbox" id="lockView"><span class="tl">ล็อกมุมมองตามภาพร่าง<em>ถ้าต้นแบบเป็นภาพด้านข้าง จะบังคับมุมด้านข้าง</em></span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="fidelity">ความเหมือนต้นแบบ <b id="fidVal">80%</b></label>
+        <input type="range" id="fidelity" min="0" max="100" value="80" step="10">
+      </div>
+
+      <div class="field">
+        <div class="toggles">
+          <label class="tg"><input type="checkbox" id="srcRatio" checked><span class="tl">ใช้อัตราส่วนเดียวกับภาพต้นฉบับ<em>บังคับกรอบใหม่ทำให้ AI ครอปและวาดรถใหม่ — เปิดไว้จะเหมือนกว่า</em></span></label>
+          <label class="tg"><input type="checkbox" id="editStyle"><span class="tl">ใส่คำสั่งสไตล์เรนเดอร์ (UE5 / Octane)<em>ปิดไว้ดีกว่าในโหมดแก้ภาพ เพราะเป็นคำสั่งให้ AI วาดใหม่ทั้งคัน</em></span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="dnaline" id="dnaLine">ยังไม่มีภาพร่าง</div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M3 16V8a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8"/><path d="M3 12h15"/><circle cx="7" cy="17" r="1.5"/><circle cx="15" cy="17" r="1.5"/></svg>
+        <h2>02 · Media</h2><span class="th">ประเภทสื่อและยานพาหนะ</span>
+      </div>
+      <div class="chips" id="vehicleChips"></div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
+        <h2>03 · Brief</h2><span class="th">โจทย์เพิ่มเติม</span>
+      </div>
+      <div class="field">
+        <label class="lbl" for="detail">สิ่งที่อยากให้เปลี่ยนหรือเพิ่มในภาพ <b>BRIEF</b></label>
+        <textarea id="detail" placeholder="เช่น ให้มีคนรอรถที่ป้ายด้านหน้า, ถนนโล่งไม่มีรถคันอื่น, มุมมองกว้างเห็นตึกทั้งหลัง"></textarea>
+        <div class="dnaline" style="margin-top:7px">
+          เขียนสั้นๆ ได้ทั้งไทยและอังกฤษ · ข้อความนี้จะต่อท้ายคำสั่งเสมอ ไม่ว่าจะโหมดไหน
+        </div>
+      </div>
+      <div class="field" id="artworkField">
+        <label class="lbl" for="artwork">ลายกราฟิกที่อยากให้ AI วาดขึ้นเอง <b>ARTWORK</b></label>
+        <textarea id="artwork" placeholder="เช่น ลายไล่สีส้ม-ดำ ตัวอักษรใหญ่ด้านข้าง">bold orange and charcoal gradient wrap, oversized typography across the flank, clean vector shapes</textarea>
+        <div class="dnaline" style="margin-top:7px">
+          ช่องนี้ใช้เฉพาะตอน <b>ไม่มีภาพต้นแบบ</b> — ถ้าอัปโหลดภาพแล้ว ลายกราฟิกจะถูกคัดลอกจากภาพจริง ช่องนี้จะถูกซ่อนอัตโนมัติ
+        </div>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- ================= CENTER : STAGE ================= -->
+  <main class="stage">
+
+    <div class="viewport" id="viewport">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <div class="vp-inner">
+        <svg class="big" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+        <h3>Prompt Studio</h3>
+        <p>ระบบนี้ <strong style="color:var(--amber)">เขียนคำสั่งระดับมืออาชีพให้ ไม่เจนภาพเอง</strong> — ไม่ต้องใส่ API Key และไม่มีข้อมูลใดถูกส่งออกจากเครื่องคุณ<br>ตั้งค่าครบแล้วกด <strong style="color:var(--amber)">คัดลอกคำสั่ง</strong> แล้วนำไปวางใน Gemini · AI Studio · ChatGPT พร้อมแนบภาพสื่อต้นแบบ</p>
+      </div>
+    </div>
+
+    <div class="promptbar">
+      <div class="ph">
+        <span>Prompt Preview</span>
+        <span class="ptabs">
+          <button type="button" class="ptab on" data-lang="en">EN</button>
+          <button type="button" class="ptab" data-lang="th">ไทย</button>
+          <button type="button" class="ptab" data-lang="both">ทั้งคู่</button>
+        </span>
+        <span class="count" id="pcount">0 chars</span>
+      </div>
+      <pre id="promptOut"></pre>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="copyBtn" type="button">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+        คัดลอกคำสั่ง
+      </button>
+      <button class="btn" id="reviewBtn" type="button">
+        <svg viewBox="0 0 24 24"><path d="M9 11.5 11 13.5 15.5 9"/><circle cx="12" cy="12" r="9"/></svg>
+        ตรวจสอบคำสั่ง
+      </button>
+      <button class="btn" id="handoffBtn" type="button">
+        <svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+        เลือกเว็บ AI ปลายทาง
+      </button>
+      <span class="hint" id="statusHint">ไม่ต้องใส่ API Key · ไม่มีการส่งข้อมูลออกจากเครื่อง</span>
+    </div>
+
+
+  </main>
+
+  <!-- ================= RIGHT RAIL : SCENE ================= -->
+  <aside class="rail rail-right">
+
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+        <h2>04 · Location</h2><span class="th">โลเคชั่นกรุงเทพฯ</span>
+      </div>
+      <div class="loc-grid chips" id="locChips"></div>
+    </section>
+
+    <section class="block" id="mapBlock">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg>
+        <h2>10 · Route Map</h2><span class="th">แผนที่ &amp; สายรถเมล์ที่ผ่าน</span>
+      </div>
+
+      <div class="field">
+        <div id="mapBox">
+          <div class="mapoff" id="mapOff"></div>
+          <div class="maptools" id="mapTools" hidden>
+            <button type="button" data-z="in"  title="ซูมเข้า">+</button>
+            <button type="button" data-z="out" title="ซูมออก">−</button>
+            <button type="button" data-z="fit" title="กลับมุมมองเริ่มต้น">
+              <svg viewBox="0 0 24 24"><path d="M3 9V4h5M21 9V4h-5M3 15v5h5M21 15v5h-5"/></svg>
+            </button>
+            <button type="button" data-z="full" title="ดูเต็มจอ">
+              <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>
+          </div>
+          <div class="maphint" id="mapHint">ลากเพื่อเลื่อน · หมุนล้อเพื่อซูม · ดับเบิลคลิกเพื่อย้ายหมุด</div>
+        </div>
+        <div class="dnaline" style="margin-top:7px" id="mapNote"></div>
+        <div class="stopbox" id="stopBox" hidden></div>
+        <div class="routelegend" id="routeLegend" hidden></div>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="mapZoom">ความกว้างของภาพแผนที่ <b>VIEW</b></label>
+        <select id="mapZoom">
+          <option value="300">300 เมตร — เห็นรายละเอียดหน้าสื่อ</option>
+          <option value="600" selected>600 เมตร — มาตรฐานสำหรับนำเสนอ</option>
+          <option value="1200">1.2 กิโลเมตร — เห็นโครงข่ายถนนกว้าง</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="mapNear">ระยะหาป้ายรถเมล์รอบจุด <b>STOP RADIUS</b></label>
+        <select id="mapNear">
+          <option value="120">120 เมตร — เฉพาะป้ายที่ติดหน้าสื่อ</option>
+          <option value="250" selected>250 เมตร — แนะนำ ครอบคลุมป้ายทั้งสองฝั่งถนน</option>
+          <option value="450">450 เมตร — รวมป้ายรอบแยก</option>
+        </select>
+        <div class="dnaline" style="margin-top:7px">
+          ระบบหาป้ายรถเมล์ในวงกลมประนี้ แล้วเอาเฉพาะสายที่<b>จอดป้ายนั้น</b> ไม่ใช่สายที่แค่ขับผ่านถนนแถวนี้
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">พิกัดหมุด — แก้ได้ถ้าตำแหน่งไม่ตรง <b>LAT / LNG</b></label>
+        <div style="display:flex;gap:7px">
+          <input type="text" id="llLat" inputmode="decimal" style="flex:1" aria-label="ละติจูด">
+          <input type="text" id="llLng" inputmode="decimal" style="flex:1" aria-label="ลองจิจูด">
+        </div>
+      </div>
+
+      <div class="field">
+        <button class="btn primary" id="ovpBtn" type="button" style="width:100%">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg>
+          ดึงแผนที่และเส้นทางเดินรถ
+        </button>
+        <div class="dnaline" style="margin-top:7px" id="ovpStat">
+          ระบบวาดแผนที่เองจากข้อมูลจริงของ OpenStreetMap — ถนน รางรถไฟฟ้า แม่น้ำ สวน และถนนที่มีรถเมล์วิ่งผ่าน เป็นข้อมูลสดตอนกด ไม่ใช่รายการที่พิมพ์ไว้
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">สายรถเมล์ที่ผ่านจุดนี้ <b class="buscount" id="busCount">0 สาย</b></label>
+        <div class="buslines" id="busChips"></div>
+      </div>
+
+      <div class="field">
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <input type="text" id="busAdd" placeholder="เพิ่มสายเอง เช่น 511 หรือ 3-22E แล้วกด Enter" style="flex:1;min-width:190px">
+          <button class="btn" id="busReset" type="button" style="padding:8px 12px;font-size:11.5px">คืนค่าเดิม</button>
+        </div>
+        <div class="dnaline" style="margin-top:7px">
+          แก้ไขได้ทุกสาย — ที่เพิ่มหรือลบจะถูกบันทึกไว้ในเครื่องและใช้ครั้งต่อไป
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:0;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" id="sheetBtn" type="button">
+          <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
+          ใบนำเสนอฝ่ายขาย
+        </button>
+        <button class="btn" id="gmapBtn" type="button">
+          <svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+          เปิด Google Maps
+        </button>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.4"/></svg>
+        <h2>05 · Camera</h2><span class="th">มุมกล้อง &amp; เลนส์</span>
+      </div>
+      <div class="field"><div class="chips" id="angleChips"></div></div>
+      <div class="field">
+        <label class="lbl" for="lens">เลนส์ <b id="lensVal">35 MM</b></label>
+        <select id="lens"></select>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+        <h2>06 · Lighting</h2><span class="th">แสงและเวลา</span>
+      </div>
+      <div class="field"><div class="chips" id="lightChips"></div></div>
+      <div class="field">
+        <label class="lbl" for="weather">สภาพอากาศ / พื้นผิวถนน <b>ATMOS</b></label>
+        <select id="weather"></select>
+      </div>
+      <div class="field">
+        <label class="lbl" for="hdr">ความเข้ม HDR &amp; Contrast <b id="hdrVal">75%</b></label>
+        <input type="range" id="hdr" min="0" max="100" value="75" step="5">
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 5v14"/></svg>
+        <h2>07 · Output</h2><span class="th">สเกลภาพและคุณภาพ</span>
+      </div>
+      <div class="field">
+        <label class="lbl" for="ratio">อัตราส่วน <b>ASPECT</b></label>
+        <select id="ratio"></select>
+      </div>
+      <div class="field">
+        <label class="lbl" for="scale">ตัวคูณสเกล <b id="scaleVal">1.0×</b></label>
+        <input type="range" id="scale" min="50" max="200" value="100" step="10">
+      </div>
+      <dl class="readout">
+        <dt>RESOLUTION</dt><dd id="roRes">1920 × 1080</dd>
+        <dt>MEGAPIXELS</dt><dd id="roMp">2.07 MP</dd>
+      </dl>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><path d="M12 3 3 7l9 4 9-4-9-4Z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+        <h2>08 · Render Stack</h2><span class="th">สไตล์การเรนเดอร์</span>
+      </div>
+      <div class="field"><div class="chips" id="styleChips"></div></div>
+      <div class="field">
+        <label class="lbl" for="negative">สิ่งที่ไม่ต้องการในภาพ <b>NEGATIVE</b></label>
+        <textarea id="negative">blurry, low resolution, distorted wheels, warped text, cartoon, watermark, extra windows, melted bodywork</textarea>
+      </div>
+    </section>
+
+    <section class="block" id="exportBlock">
+      <div class="block-head">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+        <h2>09 · Export</h2><span class="th">คัดลอกคำสั่ง &amp; ส่งงาน</span>
+      </div>
+      <div class="field">
+        <div class="dnaline" id="exNote">ระบบนี้ไม่เจนภาพเองและไม่เก็บ API Key ใดๆ — คำสั่งถูกเขียนในเครื่องคุณล้วนๆ ปลอดภัย 100%</div>
+      </div>
+      <div class="field" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" id="exCopy" type="button">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+          คัดลอกคำสั่ง
+        </button>
+        <button class="btn" id="exSave" type="button">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+          บันทึกภาพสื่อ
+        </button>
+        <button class="btn" id="exSaveAd" type="button" hidden>
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+          บันทึกอาร์ตเวิร์ก
+        </button>
+        <button class="btn" id="exOpen" type="button">
+          <svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+          เลือกเว็บ AI ปลายทาง
+        </button>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="lbl">คำสั่งฉบับเต็มที่จะคัดลอก <b id="exCount">0 chars</b></label>
+        <pre class="final" id="exPrompt" style="max-height:200px"></pre>
+      </div>
+    </section>
+
+  </aside>
+</div>
+
+<footer class="foot">
+  <span>AUTOSTUDIO 3D · PLAN B MEDIA</span>
+  <span class="sp"></span>
+  <span id="footStat">PROMPT READY · NO API · NO UPLOAD</span>
+</footer>
+</div>
+
+<!-- ============ REVIEW MODAL ============ -->
+<div class="veil" id="veil" hidden role="dialog" aria-modal="true" aria-labelledby="revTitle">
+  <div class="modal">
+    <div class="mh">
+      <svg viewBox="0 0 24 24"><path d="M9 11.5 11 13.5 15.5 9"/><circle cx="12" cy="12" r="9"/></svg>
+      <h2 id="revTitle">ตรวจสอบคำสั่ง · Pre-flight</h2>
+      <span class="sp"></span>
+      <button class="iconbtn" id="revClose" type="button" aria-label="ปิด">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div class="checklist" id="checklist"></div>
+      <p class="mini-lbl">สรุปคำสั่งภาษาไทย · อ่านตรวจสอบก่อนยืนยัน</p>
+      <pre class="final" id="finalPromptTH" style="color:var(--txt);margin-bottom:14px"></pre>
+      <p class="mini-lbl">Final Prompt · ฉบับอังกฤษที่ใช้คัดลอกไปวางใน AI</p>
+      <pre class="final" id="finalPrompt"></pre>
+    </div>
+    <div class="mf">
+      <button class="btn" id="revBack" type="button">กลับไปแก้ไข</button>
+      <button class="btn primary" id="revGo" type="button">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+        คัดลอกคำสั่ง &amp; เลือกปลายทาง
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WIZARD ============ -->
+<div class="wz" id="wz" hidden>
+  <div class="wzhead">
+    <div class="wzbar">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#160802" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 16V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v9"/><path d="M3 11h15"/>
+          <circle cx="7" cy="17.5" r="1.6"/><circle cx="15.5" cy="17.5" r="1.6"/><path d="M19 9h2l1 4v3h-3"/>
+        </svg>
+      </span>
+      <h1>โหมดแนะนำทีละขั้น</h1>
+      <span class="sp"></span>
+      <button class="btn" id="wzSfx" type="button" style="padding:7px 12px;font-size:11.5px">
+        <svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18.5 7a7 7 0 0 1 0 10"/></svg>
+        <span id="wzSfxLab">เสียง: เปิด</span>
+      </button>
+      <button class="btn" id="wzExit" type="button" style="padding:7px 12px;font-size:11.5px">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        ออกไปหน้าเต็ม
+      </button>
+    </div>
+    <div class="wzrail" id="wzRail"></div>
+  </div>
+
+  <div class="wzbody">
+    <div class="wzinner">
+      <h2 class="wztitle" id="wzTitle"><span class="n" id="wzNum">ขั้นที่ 1 / 8</span>หัวข้อ</h2>
+      <p class="wzsub" id="wzSub"></p>
+      <div class="wzslot" id="wzSlot"></div>
+      <div class="wzlive" id="wzLive"></div>
+    </div>
+  </div>
+
+  <div class="wzfoot">
+    <button class="btn big" id="wzBack" type="button">
+      <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg> ย้อนกลับ
+    </button>
+    <label class="tg" style="padding:6px 8px;border-color:var(--line-soft)">
+      <input type="checkbox" id="wzDefault" checked>
+      <span class="tl">เริ่มด้วยโหมดนี้ทุกครั้ง<em>เอาออกถ้าอยากเข้าหน้าเต็มทันที</em></span>
+    </label>
+    <span class="hintline" id="wzHint"></span>
+    <span class="sp"></span>
+    <button class="btn big" id="wzHandoff" type="button" hidden>
+      <svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+      เลือกเว็บ AI ปลายทาง
+    </button>
+    <button class="btn primary big" id="wzNext" type="button">
+      ถัดไป <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ============ ADD CUSTOM MODAL ============ -->
+<div class="veil" id="addVeil" hidden role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <div class="modal">
+    <div class="mh">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <h2 id="addTitle">เพิ่มรายการเอง</h2>
+      <span class="sp"></span>
+      <button class="iconbtn" id="addClose" type="button" aria-label="ปิด">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div class="hintbox" id="addHint"></div>
+      <div class="field">
+        <label class="lbl" for="addTh">ชื่อที่จะแสดงบนปุ่ม <b>ภาษาไทย</b></label>
+        <input type="text" id="addTh" placeholder="เช่น แยกรัชโยธิน">
+      </div>
+      <div class="field">
+        <label class="lbl" for="addEn">ชื่อย่อภาษาอังกฤษ <b>บรรทัดเล็ก</b></label>
+        <input type="text" id="addEn" placeholder="เช่น Ratchayothin Jct">
+      </div>
+      <div class="field">
+        <label class="lbl" for="addP">คำอธิบายที่จะส่งให้ AI <b>สำคัญที่สุด</b></label>
+        <textarea id="addP" placeholder="เขียนเป็นภาษาอังกฤษจะได้ผลดีที่สุด"></textarea>
+      </div>
+      <p class="mini-lbl" id="myLabel" hidden>รายการที่คุณเพิ่มไว้</p>
+      <div class="mylist" id="myList"></div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="addExport" type="button" style="margin-right:auto">สำรองรายการทั้งหมด</button>
+      <button class="btn" id="addImport" type="button">กู้คืนจากไฟล์</button>
+      <input type="file" id="addImportFile" accept="application/json,.json" hidden>
+      <button class="btn" id="addCancel" type="button">ปิด</button>
+      <button class="btn primary" id="addSave" type="button">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        เพิ่มเข้ารายการ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HANDOFF MODAL ============ -->
+<div class="veil" id="hoVeil" hidden role="dialog" aria-modal="true" aria-labelledby="hoTitle">
+  <div class="modal">
+    <div class="mh">
+      <svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+      <h2 id="hoTitle">คัดลอกคำสั่ง &amp; ส่งงานเข้าเว็บ AI · 9 ปลายทาง</h2>
+      <span class="sp"></span>
+      <button class="iconbtn" id="hoClose" type="button" aria-label="ปิด">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div class="checklist">
+        <div class="checkrow"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="k">ขั้นที่ 1</span>
+          <span class="v">บันทึกภาพไว้แนบ<em>โหมดเปลี่ยนโฆษณาต้องแนบ 2 ไฟล์ — ภาพสื่อก่อน แล้วอาร์ตเวิร์กตามหลัง ลำดับสำคัญมาก</em></span></div>
+        <div class="checkrow"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="k">ขั้นที่ 2</span>
+          <span class="v">คัดลอกคำสั่งฉบับเต็ม<em>รวมโลเคชั่น มุมกล้อง แสง และสีรถที่ล็อกไว้ครบ</em></span></div>
+        <div class="checkrow"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="k">ขั้นที่ 3</span>
+          <span class="v">เปิดเว็บ แนบภาพ วางคำสั่ง กดส่ง<em>ใช้โควตาฟรีของบัญชีที่คุณล็อกอินอยู่ — ระบบนี้ไม่ขอและไม่เก็บ API Key ใดๆ</em></span></div>
+      </div>
+
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="btn" id="hoSave" type="button">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+          บันทึกภาพสื่อ (ใบที่ 1)
+        </button>
+        <button class="btn" id="hoSaveAd" type="button" hidden>
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+          บันทึกอาร์ตเวิร์ก (ใบที่ 2)
+        </button>
+        <button class="btn" id="hoCopy" type="button">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+          คัดลอกคำสั่ง
+        </button>
+      </div>
+
+      <p class="mini-lbl">เปิดเว็บปลายทาง — สามอันแรกแนบภาพต้นแบบได้ จึงคงสื่อต้นแบบไว้ได้จริง</p>
+      <div class="dest" id="hoDest"></div>
+
+      <p class="mini-lbl">คำสั่งที่จะวาง</p>
+      <pre class="final" id="hoPrompt"></pre>
+    </div>
+    <div class="mf">
+      <button class="btn primary" id="hoDone" type="button">เสร็จแล้ว</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ ใบนำเสนอฝ่ายขาย ============ -->
+<div class="veil" id="sheetVeil" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="modal">
+    <div class="mh">
+      <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
+      <h2 id="sheetTitle">ใบนำเสนอฝ่ายขาย · หน้าเดียว</h2>
+      <span class="sp"></span>
+      <button class="iconbtn" id="sheetClose" type="button" aria-label="ปิด">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mb">
+      <div id="sheet">
+        <div class="sh-top">
+          <div>
+            <div class="bm">PLAN B MEDIA</div>
+            <div class="sub">OUT-OF-HOME · BANGKOK BUS &amp; BILLBOARD NETWORK</div>
+          </div>
+        </div>
+        <div class="sh-body">
+          <h3 id="shTh">—</h3>
+          <div class="en" id="shEn">—</div>
+          <img class="shmap" id="shMap" alt="แผนที่โลเคชั่น">
+      <div class="shnomap" id="shNoMap" hidden>ยังไม่ได้ดึงข้อมูลแผนที่สำหรับจุดนี้<br>
+        กดปุ่ม <b>ดึงแผนที่และเส้นทางเดินรถ</b> ในแผง 10 · Route Map ก่อน แล้วออกใบนำเสนอใหม่</div>
+          <div class="shkey" id="shKey" hidden>แต่ละสีบนแผนที่คือหนึ่งสายรถเมล์<span class="k2"></span>วงกลมประ = ระยะหาป้ายรถเมล์รอบจุดนี้</div>
+          <div class="sh-lbl">สายรถเมล์ที่ผ่านจุดนี้ · <span id="shCount"></span></div>
+          <div class="shlines" id="shLines"></div>
+          <div class="shmeta" id="shMeta"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="sheetPng" type="button">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+        บันทึกเป็นภาพ PNG
+      </button>
+      <span class="sp"></span>
+      <button class="btn primary" id="sheetPrint" type="button">
+        <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>
+        พิมพ์ / บันทึก PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ แผนที่เต็มจอ ============ -->
+<div id="mapFull" hidden role="dialog" aria-modal="true" aria-label="แผนที่เต็มจอ">
+  <div class="fh">
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--amber);stroke-width:1.7"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4Z"/><path d="M9 4v13M15 6.5v13"/></svg>
+    <h2 id="fullTitle">แผนที่เส้นทางเดินรถ</h2>
+    <span class="sp"></span>
+    <button class="btn" type="button" data-z="in" style="padding:6px 12px">+</button>
+    <button class="btn" type="button" data-z="out" style="padding:6px 12px">−</button>
+    <button class="btn" type="button" data-z="fit" style="padding:6px 12px;font-size:11.5px">พอดีจอ</button>
+    <button class="btn" id="fullPng" type="button" style="padding:6px 12px;font-size:11.5px">
+      <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+      บันทึกภาพแผนที่
+    </button>
+    <button class="iconbtn" id="fullClose" type="button" aria-label="ปิด">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div id="fullBox"><canvas id="fullCv" style="display:block;width:100%;height:100%;touch-action:none"></canvas></div>
+  <div class="fl" id="fullLegend"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>@@JS@@</script>
+</body>
+</html>
