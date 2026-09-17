@@ -135,7 +135,7 @@ document.addEventListener("click",e=>{
 
 sync();
 renderBus();
-mapInit(); mapNote(); renderRouteLegend();
+mapInit(); mapGo(); mapNote(); renderRouteLegend();
 /* ย้ายแผงเข้า/ออกหน้าต่างแนะนำแล้วขนาดกล่องเปลี่ยน ต้องบอก Leaflet ให้วัดใหม่ */
 /* ค่าเริ่มต้นของโปรแกรม = โหมดแนะนำทีละขั้น (ปิดได้ที่สวิตช์ท้ายหน้าต่าง) */
 if(startInWizard()) wzOpen(true);

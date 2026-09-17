@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-32N8KRzE7glu8q9EweDv444KI7xaTfPao0lkdSKpYG4='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-BvWDTDhTEQvSbgKdvRbxl4W3aCDNzLQxfgK4Z3CkaR8='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -592,6 +592,7 @@ pre.final{
   vertical-align:baseline;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
 #sheet .shline{padding:5px 10px;border:1px solid #c9d0d9;border-radius:999px;background:#f4f6f9;
   font-family:var(--mono);font-size:12px;color:#14181f}
+#sheet .shline em{font-style:normal;color:#6b7684;margin-left:5px}
 #sheet .shmeta{margin-top:16px;padding-top:12px;border-top:1px solid #e3e7ec;
   font-size:10.5px;line-height:1.75;color:#6b7684}
 @media print{
@@ -1025,10 +1026,10 @@ footer.foot .sp{flex:1}
       <div class="field">
         <button class="btn primary" id="ovpBtn" type="button" style="width:100%">
           <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg>
-          ดึงแผนที่และเส้นทางเดินรถ
+          ดึงสายรถเมล์ที่จอดจุดนี้
         </button>
         <div class="dnaline" style="margin-top:7px" id="ovpStat">
-          ระบบวาดแผนที่เองจากข้อมูลจริงของ OpenStreetMap — ถนน รางรถไฟฟ้า แม่น้ำ สวน และถนนที่มีรถเมล์วิ่งผ่าน เป็นข้อมูลสดตอนกด ไม่ใช่รายการที่พิมพ์ไว้
+          ตรวจสอบรายชื่อสายรถเมล์ที่จอดป้ายใกล้จุดนี้จากข้อมูลจริงของ OpenStreetMap พร้อมสีและต้นทาง-ปลายทางแยกตามสาย เป็นข้อมูลสดตอนกด ไม่ใช่รายการที่พิมพ์ไว้ — แผนที่แสดงแค่จุดโลเคชั่น ยังไม่วาดเส้นทางเดินรถ
         </div>
       </div>
 
@@ -1378,9 +1379,9 @@ footer.foot .sp{flex:1}
           <h3 id="shTh">—</h3>
           <div class="en" id="shEn">—</div>
           <img class="shmap" id="shMap" alt="แผนที่โลเคชั่น">
-      <div class="shnomap" id="shNoMap" hidden>ยังไม่ได้ดึงข้อมูลแผนที่สำหรับจุดนี้<br>
-        กดปุ่ม <b>ดึงแผนที่และเส้นทางเดินรถ</b> ในแผง 10 · Route Map ก่อน แล้วออกใบนำเสนอใหม่</div>
-          <div class="shkey" id="shKey" hidden>แต่ละสีบนแผนที่คือหนึ่งสายรถเมล์<span class="k2"></span>วงกลมประ = ระยะหาป้ายรถเมล์รอบจุดนี้</div>
+      <div class="shnomap" id="shNoMap" hidden>ยังไม่ได้เลือกโลเคชั่น<br>
+        เลือกโลเคชั่นในแผง 4 · Route Map ก่อน แล้วออกใบนำเสนอใหม่</div>
+          <div class="shkey" id="shKey" hidden>แต่ละสีในรายการด้านล่างคือหนึ่งสายรถเมล์<span class="k2"></span>วงกลมประบนแผนที่ = ระยะหาป้ายรถเมล์รอบจุดนี้</div>
           <div class="sh-lbl">สายรถเมล์ที่ผ่านจุดนี้ · <span id="shCount"></span></div>
           <div class="shlines" id="shLines"></div>
           <div class="shmeta" id="shMeta"></div>
@@ -2633,13 +2634,42 @@ function routeColour(i,dark){
   return "hsl("+h.toFixed(0)+","+sat+"%,"+lig+"%)";
 }
 
+/* v41: วาดแค่จุดโลเคชั่น (หมุด+วงรัศมี+ชื่อ) เมื่อยังไม่มีข้อมูลถนน — ใช้ได้แม้ offline ทั้งหมด
+   เพราะ MAPD.at ตั้งจากพิกัดที่ตรวจสอบไว้แล้วทันทีที่เปลี่ยนโลเคชั่น (ดู mapGo()) ไม่ต้องรอ
+   ดึง Overpass เลย ตามคำขอ "แสดงผลแค่จุดโลเคชั่น...ยังไม่ต้องแสดงเส้นทางเดินรถในแผนที่" */
+function drawPointOnly(cx,W,H,T,K,c){
+  const P=makeProj(viewC(),W,H,viewR());
+  const pin=P(c[0],c[1]);
+  const rPix=(H/2)*(MAPD.near/viewR());
+  cx.beginPath(); cx.arc(pin[0],pin[1],rPix,0,Math.PI*2);
+  cx.fillStyle=T.ring; cx.fill();
+  cx.strokeStyle=T.ringLine; cx.lineWidth=1.1*K; cx.setLineDash([5*K,4*K]); cx.stroke(); cx.setLineDash([]);
+  const mx=pin[0], my=pin[1];
+  cx.beginPath(); cx.arc(mx,my-9*K,8*K,0,Math.PI*2);
+  cx.moveTo(mx-8*K,my-5*K); cx.lineTo(mx,my+9*K); cx.lineTo(mx+8*K,my-5*K); cx.closePath();
+  cx.fillStyle=T.pin; cx.fill(); cx.strokeStyle=T.pinEdge; cx.lineWidth=2*K; cx.stroke();
+  cx.beginPath(); cx.arc(mx,my-9*K,3*K,0,Math.PI*2); cx.fillStyle=T.pinEdge; cx.fill();
+  const lname=MAPD.title||"";
+  if(lname){
+    cx.font="600 "+(11.5*K)+"px "+THAI; cx.textAlign="center";
+    const w=cx.measureText(lname).width;
+    cx.fillStyle=T.labelBg; cx.fillRect(mx-w/2-6*K,my+12*K,w+12*K,17*K);
+    cx.fillStyle=T.pin; cx.fillText(lname,mx,my+21*K);
+  }
+  cx.textBaseline="bottom"; cx.font=(9.5*K)+"px "+MONO;
+  cx.fillStyle=T.text; cx.textAlign="left";
+  cx.fillText("จุดโลเคชั่น + รัศมี "+MAPD.near+" ม. ที่นับว่าจอดป้ายนี้ — ยังไม่วาดถนน/เส้นทางเดินรถ",6*K,H-6*K);
+  cx.restore();
+  return true;
+}
 function drawMap(cx,W,H,T,K){
   K=K||1;
   const dark=(T===THEME_DARK);
   cx.save();
   cx.fillStyle=T.bg; cx.fillRect(0,0,W,H);
   const d=MAPD.data, c=MAPD.at;
-  if(!d||!d.length||!c){ cx.restore(); return false; }   /* [] เป็น truthy เคยทำให้วาดแผนที่เปล่าแล้วบอกว่าสำเร็จ */
+  if(!c){ cx.restore(); return false; }
+  if(!d||!d.length) return drawPointOnly(cx,W,H,T,K,c);   /* [] เป็น truthy เคยทำให้วาดแผนที่เปล่าแล้วบอกว่าสำเร็จ */
   const P=makeProj(viewC(),W,H,viewR());
 
   const pts=g=>g.map(q=>P(q.lat,q.lon));
@@ -2846,9 +2876,9 @@ function paintMap(){
   $("mapOff").hidden=ok;
   $("mapTools").hidden=!ok;
   if(!ok) $("mapOff").innerHTML = MAPD.busy
-    ? "กำลังดึงข้อมูลแผนที่จาก OpenStreetMap…"
+    ? "กำลังดึงข้อมูลสายรถเมล์จาก OpenStreetMap…"
     : (MAPD.err?'<span style="color:var(--bad)">'+esc(MAPD.err)+"</span><br>กดปุ่มด้านล่างเพื่อลองใหม่"
-               :"กดปุ่ม <b>ดึงแผนที่และเส้นทางเดินรถ</b> ด้านล่าง<br>ระบบจะวาดถนน รางรถไฟฟ้า และเส้นทางรถเมล์จริงรอบจุดนี้ให้");
+               :"เลือกโลเคชั่นด้านบนเพื่อดูจุดที่ตั้ง แล้วกดปุ่มด้านล่างเพื่อดึงรายชื่อสายรถเมล์ที่จอดจุดนี้");
 }
 window.addEventListener("resize",()=>{clearTimeout(window.__mrz);window.__mrz=setTimeout(paintAll,180)});
 
@@ -2903,12 +2933,14 @@ function mapInit(){
   bindPanZoom($("fullCv"));
   paintMap();
 }
-function mapGo(){          /* เปลี่ยนโลเคชั่น = ล้างแผนที่เดิม รอผู้ใช้กดดึงใหม่ */
-  MAPD.data=null; MAPD.at=null; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null;
-  MAPD.solo=null; MAPD.err=""; MAPD.view=null; MAPD.stops=[];
+function mapGo(){          /* เปลี่ยนโลเคชั่น = ล้างแผนที่เดิม แต่วาดจุดโลเคชั่นได้ทันทีโดยไม่ต้องรอเน็ต
+   (v41: MAPD.at ตั้งจาก locPos() ที่รู้อยู่แล้วเสมอ ไม่ต้องรอ loadMap() สำเร็จก่อนถึงจะเห็นจุด) */
+  const l=curLoc(), p=locPos(l);
+  MAPD.data=null; MAPD.at=p; MAPD.title=l.th; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null;
+  MAPD.solo=null; MAPD.err=""; MAPD.stops=[];
   /* เก็บ GEO cache ไว้ — สายรถเมล์เป็นของทั้งเมือง ใช้ซ้ำข้ามโลเคชั่นได้ ไม่ต้องดึงใหม่ */
   MAPD.mode="local"; MAPD.localView=null; MAPD.routeFitR=0; MAPD.geomBusy="";
-  OVP.hits=null; syncLL(); paintMap(); mapNote(); renderRouteLegend();
+  OVP.hits=null; resetView(); syncLL(); paintMap(); mapNote(); renderRouteLegend();
 }
 function syncLL(){
   const p=locPos(curLoc());
@@ -3056,7 +3088,9 @@ function qStops(lat,lng,near){
     ".s out;"+
     'rel(bn.s)["route"="bus"];out tags;';
 }
-/* B) ฐานแผนที่ — ตัดถนนซอยย่อยออกเมื่อซูมกว้าง ไม่งั้นข้อมูลบานและแผนที่รก */
+/* B) ฐานแผนที่ — ตัดถนนซอยย่อยออกเมื่อซูมกว้าง ไม่งั้นข้อมูลบานและแผนที่รก
+   v41: loadMap() ไม่เรียกช่วง B/C ชั่วคราวตามคำขอ (ดูคอมเมนต์ที่ loadMap()) — เก็บฟังก์ชันไว้
+   เผื่อกลับมาใช้ทีหลังเมื่อมีทางแก้ปัญหา CORS จาก origin null ที่ดีกว่านี้ */
 function qBase(lat,lng,r){
   const A="(around:"+r+","+lat+","+lng+")";
   const drop = r>=1000
@@ -3134,7 +3168,7 @@ async function ovpFetch(q,onTry,ms){
 function ovpBtnLabel(busy){
   $("ovpBtn").innerHTML = busy
     ? '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg> ยกเลิกการดึงข้อมูล'
-    : '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg> ดึงแผนที่และเส้นทางเดินรถ';
+    : '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg> ดึงสายรถเมล์ที่จอดจุดนี้';
   $("ovpBtn").classList.toggle("primary",!busy);
 }
 
@@ -3239,62 +3273,11 @@ async function loadMap(){
         ? "พบป้ายรถเมล์ "+MAPD.stops.length+" ป้าย แต่ OSM ยังไม่ได้ผูกสายรถกับป้ายเหล่านี้ — ใช้รายการที่ตรวจสอบไว้ด้านล่างต่อได้"
         : "ไม่พบป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. — ลองขยายระยะ หรือเลื่อนหมุดให้ชิดป้ายจริง");
     }
-    say(notes.join("<br>"));
-
-    /* ---------- ช่วง B: ฐานแผนที่ ---------- */
-    t0=Date.now(); live(notes.join("<br>")+"<br>② กำลังวาดแผนที่ถนน…");
-    try{
-      const rb=await ovpFetch(qBase(p[0],p[1],MAPD.radius),prog("② ดึงแผนที่ถนน"),25000);
-      const eb=rb.data.elements||[];
-      const ways=eb.filter(e=>e.type==="way"&&e.geometry);
-      if(!ways.length) throw new Error("เซิร์ฟเวอร์ส่งแผนที่เปล่ากลับมา");
-      MAPD.data=ways;
-      const seen={};
-      MAPD.nodes=eb.filter(e=>e.type==="node"&&e.tags&&e.tags.name)
-        .map(e=>({lat:e.lat,lon:e.lon,name:e.tags["name:th"]||e.tags.name,
-                  kind:(e.tags.railway==="station"||e.tags.public_transport==="station")?"station":(e.tags.place?"place":"poi")}))
-        .filter(n=>{ if(seen[n.name])return false; seen[n.name]=1; return true; });
-      paintMap();
-      notes.push("แผนที่: ถนน "+ways.length.toLocaleString("th-TH")+" เส้น · ป้ายชื่อ "+MAPD.nodes.length+" จุด");
-    }catch(e){
-      notes.push('<span style="color:var(--warn)">วาดแผนที่ไม่สำเร็จ ('+esc(e.message)+
-                 ') — รายชื่อสายด้านบนยังใช้ได้ ลองลดความกว้างของภาพแล้วกดใหม่</span>');
-    }
-    say(notes.join("<br>"));
-
-    /* ---------- ช่วง C: เส้นทางรายสี ---------- */
-    if(MAPD.groups.length>40&&MAPD.data){
-      /* จุดเปลี่ยนถ่ายใหญ่ๆ อย่างอนุสาวรีย์ชัยฯ มีสายเป็นร้อย การระบายสีทุกสายจะช้าและอ่านไม่ออก
-         จึงให้เลือกดูทีละสายจากรายการแทน เร็วกว่าและชัดกว่า */
-      notes.push("มี "+MAPD.groups.length+" สาย มากเกินกว่าจะระบายสีพร้อมกันให้อ่านรู้เรื่อง — "+
-                 "<b>คลิกเลือกสายในรายการด้านล่าง แล้วกด \"ดูทั้งสาย\" เพื่อดึงเส้นทางเต็มสายมาดู</b>");
-    }else if(MAPD.groups.length&&MAPD.data){
-      t0=Date.now(); live(notes.join("<br>")+"<br>③ กำลังระบายสีเส้นทางรายสาย…");
-      try{
-        const rc=await ovpFetch(qLines(p[0],p[1],MAPD.radius,MAPD.near),prog("③ ดึงเส้นทางรายสาย"),25000);
-        const ec=rc.data.elements||[];
-        /* ผลลัพธ์เรียงเป็นชุด: relation ตามด้วย way ของสายนั้น */
-        const byId={};
-        MAPD.groups.forEach(g=>g.ids.forEach(id=>{byId[id]=g}));
-        let cur=null, hits=0;
-        ec.forEach(e=>{
-          if(e.type==="relation"){ cur=byId[e.id]||null; return; }
-          if(e.type==="way"&&cur){ cur.ways.add(e.id); hits++; }
-        });
-        if(!hits) throw new Error("ไม่ได้ข้อมูลถนนรายสาย");
-        MAPD.wayRoutes=new Map();
-        MAPD.groups.forEach((g,gi)=>g.ways.forEach(id=>{
-          let a=MAPD.wayRoutes.get(id);
-          if(!a){a=[];MAPD.wayRoutes.set(id,a)}
-          if(a.length<8) a.push(gi);
-        }));
-        paintMap();
-        notes.push("ระบายสีเส้นทางแล้ว "+hits.toLocaleString("th-TH")+" ช่วงถนน");
-      }catch(e){
-        notes.push('<span style="color:var(--warn)">ยังระบายสีเส้นทางบนแผนที่ไม่ได้ ('+esc(e.message)+
-                   ') — รายชื่อสายและแผนที่ยังถูกต้องครบ</span>');
-      }
-    }
+    /* v41: ตัดช่วง B (ฐานแผนที่ถนน) กับช่วง C (ระบายสีเส้นทางรายสาย) ออกชั่วคราวตามคำขอ —
+       "ยังไม่ต้องแสดงเส้นทางเดินรถในแผนที่" แค่จุดโลเคชั่น + รายชื่อสายพร้อมสี/ต้นทาง-ปลายทาง
+       ก็พอ อีกเหตุผลหนึ่งคือช่วง B/C เป็นคำขอที่หนักกว่าและยิงเซิร์ฟเวอร์เดียวกับช่วง A
+       เมื่อ CORS จาก origin null (ไฟล์ file://) บล็อกอยู่แล้ว การพยายามช่วง B/C ต่อมีแต่จะ
+       เสียเวลาซ้ำโดยไม่มีทางสำเร็จ — แผนที่ตอนนี้วาดแค่จุด/หมุด (ดู drawMap ใน 51-map-render.js) */
     notes.push('<span style="color:var(--txt-mute)">ที่มา OpenStreetMap ผ่าน '+esc(ra.host)+
                " · OSM อาจยังไม่ครบทุกสาย ควรกด <b>ตรวจใน Google Maps</b> ที่ป้ายด้านบนก่อนยืนยันกับลูกค้า</span>");
     clearInterval(tick); say(notes.join("<br>"));
@@ -3314,7 +3297,7 @@ async function loadMap(){
 }
 /* ---- ปุ่มซูม / เต็มจอ ---- */
 function openFull(){
-  if(!MAPD.data){toast("ยังไม่มีข้อมูลแผนที่ — กดปุ่มดึงแผนที่ก่อน",true);return}
+  if(!MAPD.at){toast("ยังไม่ได้เลือกโลเคชั่น — เลือกโลเคชั่นก่อน",true);return}
   $("fullTitle").textContent="แผนที่เส้นทางเดินรถ · "+curLoc().th;
   $("mapFull").hidden=false;
   $("fullLegend").appendChild($("routeLegend"));
@@ -3344,7 +3327,7 @@ $("fullPng").addEventListener("click",()=>{
   cv.width=W*K; cv.height=H*K;
   const cx=cv.getContext("2d"); cx.setTransform(K,0,0,K,0,0);
   /* v41: บังคับธีมสว่างเสมอ ไม่ตามธีมของแอป — ไฟล์นี้คือของที่ส่งให้ลูกค้าดู */
-  if(!drawMap(cx,W,H,THEME_LIGHT,1)){toast("ยังไม่มีข้อมูลแผนที่",true);return}
+  if(!drawMap(cx,W,H,THEME_LIGHT,1)){toast("ยังไม่ได้เลือกโลเคชั่น",true);return}
   const a=document.createElement("a");
   a.href=cv.toDataURL("image/png");
   a.download="planb_map_"+(curLoc().en||curLoc().id).replace(/[^\w]+/g,"_").toLowerCase()+".png";
@@ -3407,7 +3390,7 @@ function sheetMapCanvas(W,H,K){
     cx.fillStyle=THEME_LIGHT.bg; cx.fillRect(0,0,W,H);
     cx.fillStyle="#6b7684"; cx.font="13px "+THAI;
     cx.textAlign="center"; cx.textBaseline="middle";
-    cx.fillText("ยังไม่ได้ดึงข้อมูลแผนที่ — กดปุ่ม ดึงแผนที่และเส้นทางเดินรถ ในแผง 10 ก่อน",W/2,H/2);
+    cx.fillText("ยังไม่ได้เลือกโลเคชั่น — เลือกโลเคชั่นในแผง 4 ก่อน",W/2,H/2);
     cx.textAlign="left"; cx.textBaseline="alphabetic";
   }
   return {cv:cv,ok:ok};
@@ -3415,12 +3398,11 @@ function sheetMapCanvas(W,H,K){
 const MONO='"JetBrains Mono",ui-monospace,monospace';
 const THAI='"IBM Plex Sans Thai","Chakra Petch",system-ui,sans-serif';
 
-/* v41: จุดสีในใบนำเสนอต้องมีเฉพาะสายที่ "วาดจริง" บนแผนที่เท่านั้น — เดิมให้จุดสีตาม MAPD.groups
-   ทุกตัวเสมอ แม้ตอนที่ stage C (ระบายสี) พังหรือถูกข้ามเพราะมีเกิน 40 สาย ทำให้กุญแจสีในใบนำเสนอ
-   อ้างสีที่ไม่มีอยู่จริงบนแผนที่เลย — painted() คือความจริงเดียวกับที่ drawMap() ใช้ตัดสิน */
-function painted(g){
-  return !!((g.ways&&g.ways.size>0) || (typeof GEO!=="undefined"&&GEO.has(geoKeyOf(g.ids))));
-}
+/* v41: เดิม painted(g) เช็กว่าสายนี้ถูกระบายสีจริงบนแผนที่หรือไม่ (stage C) ก่อนให้จุดสีในใบนำเสนอ
+   ตอนนี้แผนที่ไม่วาดเส้นทางเดินรถเลยตามคำขอ ("ยังไม่ต้องแสดงเส้นทางเดินรถในแผนที่") จุดสีจึง
+   ปรากฏเฉพาะในรายการสาย/ใบนำเสนอเท่านั้น ไม่มีแผนที่ให้ตรงกันอีกต่อไป — ให้สีตาม MAPD.groups
+   ทุกตัวที่มาจากข้อมูลสด (มี .col/.colL จาก groupRoutes() เสมออยู่แล้ว) */
+function painted(g){ return !!(g&&g.colL); }
 
 /* ---- ใบนำเสนอฝ่ายขาย ---- */
 let sheetPngUrl="";
@@ -3433,7 +3415,8 @@ async function openSheet(){
     $("shCount").textContent=G.length+" สาย (ตรวจสดจาก OpenStreetMap ในรัศมี "+MAPD.near+" ม.)";
     $("shLines").innerHTML=G.map(g=>
       painted(g)
-        ? '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+"</span>"
+        ? '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+
+          (g.pair?' <em>'+esc(g.pair)+"</em>":"")+"</span>"
         : '<span class="shline">'+esc(g.ref)+"</span>"
     ).join("");
   }else{
@@ -4045,7 +4028,7 @@ document.addEventListener("click",e=>{
 
 sync();
 renderBus();
-mapInit(); mapNote(); renderRouteLegend();
+mapInit(); mapGo(); mapNote(); renderRouteLegend();
 /* ย้ายแผงเข้า/ออกหน้าต่างแนะนำแล้วขนาดกล่องเปลี่ยน ต้องบอก Leaflet ให้วัดใหม่ */
 /* ค่าเริ่มต้นของโปรแกรม = โหมดแนะนำทีละขั้น (ปิดได้ที่สวิตช์ท้ายหน้าต่าง) */
 if(startInWizard()) wzOpen(true);

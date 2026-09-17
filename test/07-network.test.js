@@ -109,7 +109,7 @@ function fixture(lat, lng) {
   await pg.evaluate(() => document.querySelector('#locChips [data-id="sathorn"]').click());
   await pg.waitForTimeout(250);
   await pg.click("#ovpBtn");
-  await pg.waitForFunction(() => /ดึงแผนที่/.test(document.getElementById("ovpBtn").textContent), { timeout: 30000 });
+  await pg.waitForFunction(() => /ดึงสายรถเมล์/.test(document.getElementById("ovpBtn").textContent), { timeout: 30000 });
   await pg.click("#sheetBtn");
   await pg.waitForTimeout(500);
   await pg.click("#sheetClose").catch(() => {});

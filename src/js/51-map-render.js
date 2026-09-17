@@ -64,13 +64,42 @@ function routeColour(i,dark){
   return "hsl("+h.toFixed(0)+","+sat+"%,"+lig+"%)";
 }
 
+/* v41: วาดแค่จุดโลเคชั่น (หมุด+วงรัศมี+ชื่อ) เมื่อยังไม่มีข้อมูลถนน — ใช้ได้แม้ offline ทั้งหมด
+   เพราะ MAPD.at ตั้งจากพิกัดที่ตรวจสอบไว้แล้วทันทีที่เปลี่ยนโลเคชั่น (ดู mapGo()) ไม่ต้องรอ
+   ดึง Overpass เลย ตามคำขอ "แสดงผลแค่จุดโลเคชั่น...ยังไม่ต้องแสดงเส้นทางเดินรถในแผนที่" */
+function drawPointOnly(cx,W,H,T,K,c){
+  const P=makeProj(viewC(),W,H,viewR());
+  const pin=P(c[0],c[1]);
+  const rPix=(H/2)*(MAPD.near/viewR());
+  cx.beginPath(); cx.arc(pin[0],pin[1],rPix,0,Math.PI*2);
+  cx.fillStyle=T.ring; cx.fill();
+  cx.strokeStyle=T.ringLine; cx.lineWidth=1.1*K; cx.setLineDash([5*K,4*K]); cx.stroke(); cx.setLineDash([]);
+  const mx=pin[0], my=pin[1];
+  cx.beginPath(); cx.arc(mx,my-9*K,8*K,0,Math.PI*2);
+  cx.moveTo(mx-8*K,my-5*K); cx.lineTo(mx,my+9*K); cx.lineTo(mx+8*K,my-5*K); cx.closePath();
+  cx.fillStyle=T.pin; cx.fill(); cx.strokeStyle=T.pinEdge; cx.lineWidth=2*K; cx.stroke();
+  cx.beginPath(); cx.arc(mx,my-9*K,3*K,0,Math.PI*2); cx.fillStyle=T.pinEdge; cx.fill();
+  const lname=MAPD.title||"";
+  if(lname){
+    cx.font="600 "+(11.5*K)+"px "+THAI; cx.textAlign="center";
+    const w=cx.measureText(lname).width;
+    cx.fillStyle=T.labelBg; cx.fillRect(mx-w/2-6*K,my+12*K,w+12*K,17*K);
+    cx.fillStyle=T.pin; cx.fillText(lname,mx,my+21*K);
+  }
+  cx.textBaseline="bottom"; cx.font=(9.5*K)+"px "+MONO;
+  cx.fillStyle=T.text; cx.textAlign="left";
+  cx.fillText("จุดโลเคชั่น + รัศมี "+MAPD.near+" ม. ที่นับว่าจอดป้ายนี้ — ยังไม่วาดถนน/เส้นทางเดินรถ",6*K,H-6*K);
+  cx.restore();
+  return true;
+}
 function drawMap(cx,W,H,T,K){
   K=K||1;
   const dark=(T===THEME_DARK);
   cx.save();
   cx.fillStyle=T.bg; cx.fillRect(0,0,W,H);
   const d=MAPD.data, c=MAPD.at;
-  if(!d||!d.length||!c){ cx.restore(); return false; }   /* [] เป็น truthy เคยทำให้วาดแผนที่เปล่าแล้วบอกว่าสำเร็จ */
+  if(!c){ cx.restore(); return false; }
+  if(!d||!d.length) return drawPointOnly(cx,W,H,T,K,c);   /* [] เป็น truthy เคยทำให้วาดแผนที่เปล่าแล้วบอกว่าสำเร็จ */
   const P=makeProj(viewC(),W,H,viewR());
 
   const pts=g=>g.map(q=>P(q.lat,q.lon));
@@ -277,9 +306,9 @@ function paintMap(){
   $("mapOff").hidden=ok;
   $("mapTools").hidden=!ok;
   if(!ok) $("mapOff").innerHTML = MAPD.busy
-    ? "กำลังดึงข้อมูลแผนที่จาก OpenStreetMap…"
+    ? "กำลังดึงข้อมูลสายรถเมล์จาก OpenStreetMap…"
     : (MAPD.err?'<span style="color:var(--bad)">'+esc(MAPD.err)+"</span><br>กดปุ่มด้านล่างเพื่อลองใหม่"
-               :"กดปุ่ม <b>ดึงแผนที่และเส้นทางเดินรถ</b> ด้านล่าง<br>ระบบจะวาดถนน รางรถไฟฟ้า และเส้นทางรถเมล์จริงรอบจุดนี้ให้");
+               :"เลือกโลเคชั่นด้านบนเพื่อดูจุดที่ตั้ง แล้วกดปุ่มด้านล่างเพื่อดึงรายชื่อสายรถเมล์ที่จอดจุดนี้");
 }
 window.addEventListener("resize",()=>{clearTimeout(window.__mrz);window.__mrz=setTimeout(paintAll,180)});
 
@@ -334,12 +363,14 @@ function mapInit(){
   bindPanZoom($("fullCv"));
   paintMap();
 }
-function mapGo(){          /* เปลี่ยนโลเคชั่น = ล้างแผนที่เดิม รอผู้ใช้กดดึงใหม่ */
-  MAPD.data=null; MAPD.at=null; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null;
-  MAPD.solo=null; MAPD.err=""; MAPD.view=null; MAPD.stops=[];
+function mapGo(){          /* เปลี่ยนโลเคชั่น = ล้างแผนที่เดิม แต่วาดจุดโลเคชั่นได้ทันทีโดยไม่ต้องรอเน็ต
+   (v41: MAPD.at ตั้งจาก locPos() ที่รู้อยู่แล้วเสมอ ไม่ต้องรอ loadMap() สำเร็จก่อนถึงจะเห็นจุด) */
+  const l=curLoc(), p=locPos(l);
+  MAPD.data=null; MAPD.at=p; MAPD.title=l.th; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null;
+  MAPD.solo=null; MAPD.err=""; MAPD.stops=[];
   /* เก็บ GEO cache ไว้ — สายรถเมล์เป็นของทั้งเมือง ใช้ซ้ำข้ามโลเคชั่นได้ ไม่ต้องดึงใหม่ */
   MAPD.mode="local"; MAPD.localView=null; MAPD.routeFitR=0; MAPD.geomBusy="";
-  OVP.hits=null; syncLL(); paintMap(); mapNote(); renderRouteLegend();
+  OVP.hits=null; resetView(); syncLL(); paintMap(); mapNote(); renderRouteLegend();
 }
 function syncLL(){
   const p=locPos(curLoc());

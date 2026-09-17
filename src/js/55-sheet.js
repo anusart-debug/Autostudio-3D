@@ -10,7 +10,7 @@ function sheetMapCanvas(W,H,K){
     cx.fillStyle=THEME_LIGHT.bg; cx.fillRect(0,0,W,H);
     cx.fillStyle="#6b7684"; cx.font="13px "+THAI;
     cx.textAlign="center"; cx.textBaseline="middle";
-    cx.fillText("ยังไม่ได้ดึงข้อมูลแผนที่ — กดปุ่ม ดึงแผนที่และเส้นทางเดินรถ ในแผง 10 ก่อน",W/2,H/2);
+    cx.fillText("ยังไม่ได้เลือกโลเคชั่น — เลือกโลเคชั่นในแผง 4 ก่อน",W/2,H/2);
     cx.textAlign="left"; cx.textBaseline="alphabetic";
   }
   return {cv:cv,ok:ok};
@@ -18,12 +18,11 @@ function sheetMapCanvas(W,H,K){
 const MONO='"JetBrains Mono",ui-monospace,monospace';
 const THAI='"IBM Plex Sans Thai","Chakra Petch",system-ui,sans-serif';
 
-/* v41: จุดสีในใบนำเสนอต้องมีเฉพาะสายที่ "วาดจริง" บนแผนที่เท่านั้น — เดิมให้จุดสีตาม MAPD.groups
-   ทุกตัวเสมอ แม้ตอนที่ stage C (ระบายสี) พังหรือถูกข้ามเพราะมีเกิน 40 สาย ทำให้กุญแจสีในใบนำเสนอ
-   อ้างสีที่ไม่มีอยู่จริงบนแผนที่เลย — painted() คือความจริงเดียวกับที่ drawMap() ใช้ตัดสิน */
-function painted(g){
-  return !!((g.ways&&g.ways.size>0) || (typeof GEO!=="undefined"&&GEO.has(geoKeyOf(g.ids))));
-}
+/* v41: เดิม painted(g) เช็กว่าสายนี้ถูกระบายสีจริงบนแผนที่หรือไม่ (stage C) ก่อนให้จุดสีในใบนำเสนอ
+   ตอนนี้แผนที่ไม่วาดเส้นทางเดินรถเลยตามคำขอ ("ยังไม่ต้องแสดงเส้นทางเดินรถในแผนที่") จุดสีจึง
+   ปรากฏเฉพาะในรายการสาย/ใบนำเสนอเท่านั้น ไม่มีแผนที่ให้ตรงกันอีกต่อไป — ให้สีตาม MAPD.groups
+   ทุกตัวที่มาจากข้อมูลสด (มี .col/.colL จาก groupRoutes() เสมออยู่แล้ว) */
+function painted(g){ return !!(g&&g.colL); }
 
 /* ---- ใบนำเสนอฝ่ายขาย ---- */
 let sheetPngUrl="";
@@ -36,7 +35,8 @@ async function openSheet(){
     $("shCount").textContent=G.length+" สาย (ตรวจสดจาก OpenStreetMap ในรัศมี "+MAPD.near+" ม.)";
     $("shLines").innerHTML=G.map(g=>
       painted(g)
-        ? '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+"</span>"
+        ? '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+
+          (g.pair?' <em>'+esc(g.pair)+"</em>":"")+"</span>"
         : '<span class="shline">'+esc(g.ref)+"</span>"
     ).join("");
   }else{

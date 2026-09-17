@@ -18,7 +18,9 @@ function qStops(lat,lng,near){
     ".s out;"+
     'rel(bn.s)["route"="bus"];out tags;';
 }
-/* B) ฐานแผนที่ — ตัดถนนซอยย่อยออกเมื่อซูมกว้าง ไม่งั้นข้อมูลบานและแผนที่รก */
+/* B) ฐานแผนที่ — ตัดถนนซอยย่อยออกเมื่อซูมกว้าง ไม่งั้นข้อมูลบานและแผนที่รก
+   v41: loadMap() ไม่เรียกช่วง B/C ชั่วคราวตามคำขอ (ดูคอมเมนต์ที่ loadMap()) — เก็บฟังก์ชันไว้
+   เผื่อกลับมาใช้ทีหลังเมื่อมีทางแก้ปัญหา CORS จาก origin null ที่ดีกว่านี้ */
 function qBase(lat,lng,r){
   const A="(around:"+r+","+lat+","+lng+")";
   const drop = r>=1000
@@ -96,7 +98,7 @@ async function ovpFetch(q,onTry,ms){
 function ovpBtnLabel(busy){
   $("ovpBtn").innerHTML = busy
     ? '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg> ยกเลิกการดึงข้อมูล'
-    : '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg> ดึงแผนที่และเส้นทางเดินรถ';
+    : '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg> ดึงสายรถเมล์ที่จอดจุดนี้';
   $("ovpBtn").classList.toggle("primary",!busy);
 }
 
@@ -201,62 +203,11 @@ async function loadMap(){
         ? "พบป้ายรถเมล์ "+MAPD.stops.length+" ป้าย แต่ OSM ยังไม่ได้ผูกสายรถกับป้ายเหล่านี้ — ใช้รายการที่ตรวจสอบไว้ด้านล่างต่อได้"
         : "ไม่พบป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. — ลองขยายระยะ หรือเลื่อนหมุดให้ชิดป้ายจริง");
     }
-    say(notes.join("<br>"));
-
-    /* ---------- ช่วง B: ฐานแผนที่ ---------- */
-    t0=Date.now(); live(notes.join("<br>")+"<br>② กำลังวาดแผนที่ถนน…");
-    try{
-      const rb=await ovpFetch(qBase(p[0],p[1],MAPD.radius),prog("② ดึงแผนที่ถนน"),25000);
-      const eb=rb.data.elements||[];
-      const ways=eb.filter(e=>e.type==="way"&&e.geometry);
-      if(!ways.length) throw new Error("เซิร์ฟเวอร์ส่งแผนที่เปล่ากลับมา");
-      MAPD.data=ways;
-      const seen={};
-      MAPD.nodes=eb.filter(e=>e.type==="node"&&e.tags&&e.tags.name)
-        .map(e=>({lat:e.lat,lon:e.lon,name:e.tags["name:th"]||e.tags.name,
-                  kind:(e.tags.railway==="station"||e.tags.public_transport==="station")?"station":(e.tags.place?"place":"poi")}))
-        .filter(n=>{ if(seen[n.name])return false; seen[n.name]=1; return true; });
-      paintMap();
-      notes.push("แผนที่: ถนน "+ways.length.toLocaleString("th-TH")+" เส้น · ป้ายชื่อ "+MAPD.nodes.length+" จุด");
-    }catch(e){
-      notes.push('<span style="color:var(--warn)">วาดแผนที่ไม่สำเร็จ ('+esc(e.message)+
-                 ') — รายชื่อสายด้านบนยังใช้ได้ ลองลดความกว้างของภาพแล้วกดใหม่</span>');
-    }
-    say(notes.join("<br>"));
-
-    /* ---------- ช่วง C: เส้นทางรายสี ---------- */
-    if(MAPD.groups.length>40&&MAPD.data){
-      /* จุดเปลี่ยนถ่ายใหญ่ๆ อย่างอนุสาวรีย์ชัยฯ มีสายเป็นร้อย การระบายสีทุกสายจะช้าและอ่านไม่ออก
-         จึงให้เลือกดูทีละสายจากรายการแทน เร็วกว่าและชัดกว่า */
-      notes.push("มี "+MAPD.groups.length+" สาย มากเกินกว่าจะระบายสีพร้อมกันให้อ่านรู้เรื่อง — "+
-                 "<b>คลิกเลือกสายในรายการด้านล่าง แล้วกด \"ดูทั้งสาย\" เพื่อดึงเส้นทางเต็มสายมาดู</b>");
-    }else if(MAPD.groups.length&&MAPD.data){
-      t0=Date.now(); live(notes.join("<br>")+"<br>③ กำลังระบายสีเส้นทางรายสาย…");
-      try{
-        const rc=await ovpFetch(qLines(p[0],p[1],MAPD.radius,MAPD.near),prog("③ ดึงเส้นทางรายสาย"),25000);
-        const ec=rc.data.elements||[];
-        /* ผลลัพธ์เรียงเป็นชุด: relation ตามด้วย way ของสายนั้น */
-        const byId={};
-        MAPD.groups.forEach(g=>g.ids.forEach(id=>{byId[id]=g}));
-        let cur=null, hits=0;
-        ec.forEach(e=>{
-          if(e.type==="relation"){ cur=byId[e.id]||null; return; }
-          if(e.type==="way"&&cur){ cur.ways.add(e.id); hits++; }
-        });
-        if(!hits) throw new Error("ไม่ได้ข้อมูลถนนรายสาย");
-        MAPD.wayRoutes=new Map();
-        MAPD.groups.forEach((g,gi)=>g.ways.forEach(id=>{
-          let a=MAPD.wayRoutes.get(id);
-          if(!a){a=[];MAPD.wayRoutes.set(id,a)}
-          if(a.length<8) a.push(gi);
-        }));
-        paintMap();
-        notes.push("ระบายสีเส้นทางแล้ว "+hits.toLocaleString("th-TH")+" ช่วงถนน");
-      }catch(e){
-        notes.push('<span style="color:var(--warn)">ยังระบายสีเส้นทางบนแผนที่ไม่ได้ ('+esc(e.message)+
-                   ') — รายชื่อสายและแผนที่ยังถูกต้องครบ</span>');
-      }
-    }
+    /* v41: ตัดช่วง B (ฐานแผนที่ถนน) กับช่วง C (ระบายสีเส้นทางรายสาย) ออกชั่วคราวตามคำขอ —
+       "ยังไม่ต้องแสดงเส้นทางเดินรถในแผนที่" แค่จุดโลเคชั่น + รายชื่อสายพร้อมสี/ต้นทาง-ปลายทาง
+       ก็พอ อีกเหตุผลหนึ่งคือช่วง B/C เป็นคำขอที่หนักกว่าและยิงเซิร์ฟเวอร์เดียวกับช่วง A
+       เมื่อ CORS จาก origin null (ไฟล์ file://) บล็อกอยู่แล้ว การพยายามช่วง B/C ต่อมีแต่จะ
+       เสียเวลาซ้ำโดยไม่มีทางสำเร็จ — แผนที่ตอนนี้วาดแค่จุด/หมุด (ดู drawMap ใน 51-map-render.js) */
     notes.push('<span style="color:var(--txt-mute)">ที่มา OpenStreetMap ผ่าน '+esc(ra.host)+
                " · OSM อาจยังไม่ครบทุกสาย ควรกด <b>ตรวจใน Google Maps</b> ที่ป้ายด้านบนก่อนยืนยันกับลูกค้า</span>");
     clearInterval(tick); say(notes.join("<br>"));

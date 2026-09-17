@@ -121,7 +121,7 @@ async function dvApplyProject(p, refDataUrl, adDataUrl) {
     if (m.near) MAPD.near = m.near;
     $("mapZoom").value = String(MAPD.radius); $("mapNear").value = String(MAPD.near);
     renderBus();
-    toast("เปิดโปรเจกต์แล้ว — กดปุ่มดึงแผนที่และเส้นทางเดินรถในแผง 10 เพื่อโหลดแผนที่ใหม่");
+    toast("เปิดโปรเจกต์แล้ว — กดปุ่มดึงสายรถเมล์ที่จอดจุดนี้ในแผง 4 เพื่อโหลดข้อมูลใหม่");
   }
 
   updateDnaLine();

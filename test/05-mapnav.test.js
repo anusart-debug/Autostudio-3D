@@ -4,6 +4,8 @@ require('fs').mkdirSync(join(__dirname,'out'),{recursive:true});
 const {chromium}=require(process.env.PW||'playwright');
 const {expect,done}=require('./_expect');
 const LAT=13.7995,LNG=100.5500;
+/* v41: loadMap() ไม่ดึงฐานแผนที่ถนน/เส้นทางเดินรถแยกอีกต่อไป (ดู 52-overpass.js) เทสต์นี้จึง
+   เหลือแค่ยืนยันว่าซูม/เลื่อน/เต็มจอ/บันทึกภาพ ยังทำงานได้ปกติกับแผนที่ "จุดโลเคชั่นเท่านั้น" */
 function stopsPayload(){
   const el=[];
   for(let i=0;i<4;i++) el.push({type:'node',id:100+i,lat:LAT+0.0008*i,lon:LNG+0.0005*i,
@@ -16,37 +18,13 @@ function stopsPayload(){
   }
   return {elements:el};
 }
-function basePayload(){
-  const el=[];let id=1;
-  const road=(n,c,a,b,x,y)=>el.push({type:'way',id:id++,tags:{highway:c,name:n},
-    geometry:[{lat:a,lon:b},{lat:(a+x)/2,lon:(b+y)/2},{lat:x,lon:y}]});
-  road('ถนนพหลโยธิน','primary',LAT-0.008,LNG,LAT+0.008,LNG);
-  road('ถนนกำแพงเพชร 2','primary',LAT,LNG-0.008,LAT,LNG+0.008);
-  for(let i=0;i<160;i++){const a=LAT+(Math.random()-.5)*0.014,b=LNG+(Math.random()-.5)*0.014;
-    road('ซอย '+i,['residential','tertiary','secondary'][i%3],a,b,a+0.001,b+0.001)}
-  el.push({type:'node',id:900,lat:LAT+0.002,lon:LNG-0.002,tags:{railway:'station',name:'สถานีหมอชิต'}});
-  el.push({type:'node',id:901,lat:LAT-0.003,lon:LNG+0.002,tags:{place:'neighbourhood',name:'จตุจักร'}});
-  return {elements:el};
-}
-function linesPayload(){
-  const el=[];let rid=9000;
-  for(let i=0;i<32;i++){ el.push({type:'relation',id:rid,tags:{ref:'x'}});
-    el.push({type:'way',id:1});el.push({type:'way',id:2});el.push({type:'way',id:3+i}); rid+=2; }
-  return {elements:el};
-}
 (async()=>{
  const b=await chromium.launch();
  const pg=await b.newPage({viewport:{width:1500,height:1050}});
  const errs=[];pg.on('pageerror',e=>errs.push(e.message));
- let qLines='';
  await pg.route('**/api/interpreter',async r=>{
-   const q=r.request().postData()||'';
-   let body;
-   if(/as3d:lines/.test(q)){qLines=q;body=linesPayload()}
-   else if(/as3d:stops/.test(q)) body=stopsPayload();
-   else body=basePayload();
    r.fulfill({status:200,contentType:'application/json',
-     headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(body)});
+     headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(stopsPayload())});
  });
  await pg.goto(PAGE_URL);
  await pg.waitForTimeout(800);
@@ -55,12 +33,10 @@ function linesPayload(){
  await pg.evaluate(()=>document.querySelector('#locChips [data-id="chatuchak"]').click());
  await pg.waitForTimeout(300);
  await pg.click('#ovpBtn');
- await pg.waitForFunction(()=>/ดึงแผนที่/.test(document.getElementById('ovpBtn').textContent),{timeout:60000});
+ await pg.waitForFunction(()=>/ดึงสายรถเมล์/.test(document.getElementById('ovpBtn').textContent),{timeout:60000});
  const R={};
- R.qLinesFiltered = /highway"~\^\(motorway/.test(qLines.replace(/\\/g,'')) || /motorway\|trunk\|primary/.test(qLines);
- R.qLinesNoFootway = !/\["highway"\]->\.w/.test(qLines);
- R.qLinesRadius = (qLines.match(/around:(\d+)/)||[])[1];
  R.routes = await pg.$$eval('#routeLegend .lgd-i',n=>n.length);
+ R.pairs = await pg.$$eval('#routeLegend .lgd-i em',n=>n.length);
  R.toolsVisible = await pg.$eval('#mapTools',n=>!n.hidden);
  // zoom in
  const r0 = await pg.evaluate(()=>__as3d.map().view.r);
@@ -89,7 +65,7 @@ function linesPayload(){
  R.fullPainted = await pg.evaluate(()=>{const c=document.getElementById('fullCv');
    const x=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
    const s=new Set();for(let i=0;i<x.length;i+=1500)s.add(x[i]+','+x[i+1]+','+x[i+2]);return s.size});
- await pg.screenshot({path:'./test/out/v40full.png'});
+ await pg.screenshot({path:'./test/out/v41full.png'});
  const dl=pg.waitForEvent('download',{timeout:15000}).catch(()=>null);
  await pg.click('#fullPng'); const d=await dl;
  R.mapPng=d?d.suggestedFilename():null;
@@ -98,10 +74,8 @@ function linesPayload(){
  R.legendBack = await pg.$$eval('#routeLegend .lgd-i',n=>n.length);
  R.errs=errs;
  console.log(JSON.stringify(R,null,1));
- expect('qLines กรองเฉพาะชั้นถนนที่รถเมล์วิ่งได้', R.qLinesFiltered);
- expect('qLines ไม่ลากทางเท้า/ซอยแบบไม่กรอง', R.qLinesNoFootway);
- expect('qLines จำกัดรัศมีไม่เกิน 900 ม.', +R.qLinesRadius<=900, R.qLinesRadius);
  expect('มีสายรถเมล์ในตำนาน (เคส >30 สาย)', R.routes>0, R.routes);
+ expect('มีข้อความต้นทาง-ปลายทางต่อสาย', R.pairs>0, R.pairs);
  expect('แถบเครื่องมือแผนที่มองเห็นได้', R.toolsVisible);
  expect('ซูมเข้าลดรัศมีมุมมอง', R.zoom.inWorks, R.zoom);
  expect('ซูมออกเพิ่มรัศมีมุมมอง', R.zoom.outWorks, R.zoom);
@@ -109,7 +83,7 @@ function linesPayload(){
  expect('ปุ่ม fit คืนมุมมองเดิม', R.fitWorks);
  expect('เต็มจอเปิดได้', R.fullOpen);
  expect('legend ย้ายเข้าโหมดเต็มจอ', R.legendMovedIntoFull);
- expect('แผนที่เต็มจอถูกวาด (สีหลากหลาย)', R.fullPainted>3, R.fullPainted);
+ expect('แผนที่เต็มจอถูกวาด (ไม่ว่างเปล่า)', R.fullPainted>1, R.fullPainted);
  expect('ดาวน์โหลด PNG แผนที่ได้', !!R.mapPng, R.mapPng);
  expect('ปิดเต็มจอด้วย Escape ได้', R.fullClosed);
  expect('legend กลับมาที่แผงเดิมหลังปิดเต็มจอ', R.legendBack>0, R.legendBack);

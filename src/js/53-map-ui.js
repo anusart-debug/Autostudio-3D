@@ -1,6 +1,6 @@
 /* ---- ปุ่มซูม / เต็มจอ ---- */
 function openFull(){
-  if(!MAPD.data){toast("ยังไม่มีข้อมูลแผนที่ — กดปุ่มดึงแผนที่ก่อน",true);return}
+  if(!MAPD.at){toast("ยังไม่ได้เลือกโลเคชั่น — เลือกโลเคชั่นก่อน",true);return}
   $("fullTitle").textContent="แผนที่เส้นทางเดินรถ · "+curLoc().th;
   $("mapFull").hidden=false;
   $("fullLegend").appendChild($("routeLegend"));
@@ -30,7 +30,7 @@ $("fullPng").addEventListener("click",()=>{
   cv.width=W*K; cv.height=H*K;
   const cx=cv.getContext("2d"); cx.setTransform(K,0,0,K,0,0);
   /* v41: บังคับธีมสว่างเสมอ ไม่ตามธีมของแอป — ไฟล์นี้คือของที่ส่งให้ลูกค้าดู */
-  if(!drawMap(cx,W,H,THEME_LIGHT,1)){toast("ยังไม่มีข้อมูลแผนที่",true);return}
+  if(!drawMap(cx,W,H,THEME_LIGHT,1)){toast("ยังไม่ได้เลือกโลเคชั่น",true);return}
   const a=document.createElement("a");
   a.href=cv.toDataURL("image/png");
   a.download="planb_map_"+(curLoc().en||curLoc().id).replace(/[^\w]+/g,"_").toLowerCase()+".png";

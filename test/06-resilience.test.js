@@ -86,7 +86,7 @@ function fixture(lat,lng){
   await pg.click('#ovpBtn');
   await pg.waitForTimeout(1500);
   const midBtn=await pg.$eval('#ovpBtn',n=>n.textContent.trim().slice(0,6));
-  await pg.waitForFunction(()=>/ดึงแผนที่/.test(document.getElementById('ovpBtn').textContent),{timeout:120000});
+  await pg.waitForFunction(()=>/ดึงสายรถเมล์/.test(document.getElementById('ovpBtn').textContent),{timeout:120000});
   results.hang={recovered:true,btnDuring:midBtn,
     stat:await pg.$eval('#ovpStat',n=>n.textContent.trim().slice(0,150)),
     secs:await pg.evaluate(()=>Math.round((Date.now()-window.__t0)/1000)),errs};

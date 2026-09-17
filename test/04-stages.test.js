@@ -4,7 +4,12 @@ require('fs').mkdirSync(join(__dirname,'out'),{recursive:true});
 const {chromium}=require(process.env.PW||'playwright');
 const {expect,done}=require('./_expect');
 const LAT=13.7466, LNG=100.5396;
-// --- A: ป้าย + สาย (12 relation = 6 สาย 2 ทิศ) ---
+/* v41: ตัดช่วง B (ฐานแผนที่ถนน) กับ C (ระบายสีเส้นทาง) ออกจาก loadMap() ตามคำขอ
+   "ยังไม่ต้องแสดงเส้นทางเดินรถในแผนที่" เหลือแค่ช่วง A (ป้าย+สายที่จอด) เทสต์นี้จึงเหลือแค่
+   ทดสอบช่วง A กับยืนยันว่าแผนที่วาด "จุดโลเคชั่น" ได้เสมอไม่ว่าช่วง A จะสำเร็จ ว่าง หรือพังก็ตาม
+   (drawPointOnly ใน 51-map-render.js ใช้แค่ MAPD.at ที่ตั้งจาก locPos() ทันทีตอนเปลี่ยนโลเคชั่น
+   ไม่ต้องรอ Overpass เลย) — ดู test/06-resilience.test.js สำหรับเคสเซิร์ฟเวอร์ค้าง/ยกเลิก */
+// --- ป้าย + สาย (12 relation = 6 สาย 2 ทิศ) ---
 function stopsPayload(){
   const el=[];
   [['เซ็นทรัลเวิลด์ (จุดที่ 1)',LAT+0.0004,LNG+0.0003],
@@ -19,41 +24,9 @@ function stopsPayload(){
   });
   return {elements:el};
 }
-// --- B: ฐานแผนที่ ---
-function basePayload(){
-  const el=[];let id=1;
-  const road=(n,c,a,b,x,y)=>el.push({type:'way',id:id++,tags:{highway:c,name:n},
-    geometry:[{lat:a,lon:b},{lat:(a+x)/2,lon:(b+y)/2},{lat:x,lon:y}]});
-  road('ถนนราชดำริ','primary',LAT-0.005,LNG,LAT+0.005,LNG);
-  road('ถนนพระรามที่ 1','primary',LAT,LNG-0.005,LAT,LNG+0.005);
-  road('ถนนเพลินจิต','secondary',LAT+0.001,LNG-0.004,LAT+0.001,LNG+0.004);
-  for(let i=0;i<90;i++){const a=LAT+(Math.random()-.5)*0.009,b=LNG+(Math.random()-.5)*0.009;
-    road('ซอย '+i,['residential','tertiary'][i%2],a,b,a+0.0008,b+0.0008)}
-  el.push({type:'node',id:900,lat:LAT+0.0015,lon:LNG-0.001,tags:{railway:'station',name:'สถานีชิดลม'}});
-  el.push({type:'node',id:901,lat:LAT-0.002,lon:LNG-0.002,tags:{railway:'station',name:'สถานีสยาม'}});
-  el.push({type:'node',id:902,lat:LAT+0.003,lon:LNG+0.003,tags:{place:'neighbourhood',name:'ราชประสงค์'}});
-  return {elements:el};
-}
-// --- C: foreach — relation แล้วตามด้วย way ของสายนั้น ---
-function linesPayload(){
-  const el=[];let rid=9000;
-  for(let i=0;i<6;i++){
-    el.push({type:'relation',id:rid,tags:{ref:'r'+i}});
-    el.push({type:'way',id:1}); el.push({type:'way',id:2});
-    rid+=2;
-  }
-  return {elements:el};
-}
-function route(pg,map){
+function route(pg,body){
   return pg.route('**/api/interpreter',async r=>{
-    const q=r.request().postData()||'';
-    let body;
-    if(/as3d:lines/.test(q)) body=map.C;
-    else if(/as3d:stops/.test(q)) body=map.A;
-    else if(/as3d:base/.test(q)) body=map.B;
-    else body=map.B; // ไม่รู้จัก marker — ปลอดภัยไว้ก่อนด้วยฐานแผนที่
     if(body===null){ r.fulfill({status:504,body:'x'}); return; }
-    if(body==='empty'){ r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({elements:[]})}); return; }
     r.fulfill({status:200,contentType:'application/json',
       headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(body)});
   });
@@ -61,35 +34,37 @@ function route(pg,map){
 (async()=>{
  const b=await chromium.launch();const out={};
  const scenarios={
-   full:   {A:stopsPayload(),B:basePayload(),C:linesPayload()},
-   emptyB: {A:stopsPayload(),B:'empty',     C:linesPayload()},
-   failC:  {A:stopsPayload(),B:basePayload(),C:null},
-   noStops:{A:{elements:[]},B:basePayload(),C:linesPayload()}
+   withStops:stopsPayload(),
+   noStops:{elements:[]},
+   serverFail:null
  };
- for(const [name,map] of Object.entries(scenarios)){
+ for(const [name,body] of Object.entries(scenarios)){
    const pg=await b.newPage({viewport:{width:1500,height:1050}});
    const errs=[];pg.on('pageerror',e=>errs.push(e.message));
-   await route(pg,map);
+   await route(pg,body);
    await pg.goto(PAGE_URL);
    await pg.waitForTimeout(700);
    await pg.evaluate(()=>document.getElementById('wzExit').click());
    await pg.waitForTimeout(250);
+   // เลือกโลเคชั่นแล้วต้องเห็นจุดบนแผนที่ทันที ก่อนกดปุ่มดึงข้อมูลด้วยซ้ำ
    await pg.evaluate(()=>document.querySelector('#locChips [data-id="centralworld"]').click());
    await pg.waitForTimeout(250);
+   const mapDrawnBeforeFetch=await pg.$eval('#mapOff',n=>n.hidden);
    const t0=Date.now();
    await pg.click('#ovpBtn');
-   // legend should appear fast (stage A)
    let legendAt=null;
    try{await pg.waitForFunction(()=>document.querySelectorAll('#routeLegend .lgd-i').length>0,{timeout:6000});
        legendAt=Date.now()-t0}catch(e){}
-   await pg.waitForFunction(()=>/ดึงแผนที่/.test(document.getElementById('ovpBtn').textContent),{timeout:60000});
+   await pg.waitForFunction(()=>/ดึงสายรถเมล์/.test(document.getElementById('ovpBtn').textContent),{timeout:60000});
    out[name]={
+     mapDrawnBeforeFetch,
      legendMs:legendAt,
      totalMs:Date.now()-t0,
      routes:await pg.$$eval('#routeLegend .lgd-i',n=>n.length),
+     pairs:await pg.$$eval('#routeLegend .lgd-i em',n=>n.length),
      stops:await pg.$$eval('#stopBox .stop-i',n=>n.length),
      gmapsLinks:await pg.$$eval('#stopBox .stop-i a',n=>n.length),
-     mapDrawn:await pg.$eval('#mapOff',n=>n.hidden),
+     mapDrawnAfterFetch:await pg.$eval('#mapOff',n=>n.hidden),
      stat:(await pg.$eval('#ovpStat',n=>n.textContent)).replace(/\s+/g,' ').slice(0,190),
      note:(await pg.$eval('#mapNote',n=>n.textContent)).replace(/\s+/g,' ').slice(0,80),
      colours:await pg.$$eval('#routeLegend .lgd-i .dot',n=>[...new Set(n.map(x=>x.style.background))].length),
@@ -98,7 +73,7 @@ function route(pg,map){
        const s=new Set();for(let i=0;i<x.length;i+=900)s.add(x[i]+','+x[i+1]+','+x[i+2]);return s.size}),
      errs
    };
-   if(name==='full') await pg.locator('#mapBox').screenshot({path:'./test/out/v39map.png'});
+   if(name==='withStops') await pg.locator('#mapBox').screenshot({path:'./test/out/v41map.png'});
    await pg.close();
  }
  console.log(JSON.stringify(out,null,1));
@@ -106,15 +81,19 @@ function route(pg,map){
  for(const name of Object.keys(scenarios)){
    expect('['+name+'] ไม่มี pageerror', out[name].errs.length===0, out[name].errs);
  }
- // full: ทุกช่วงสำเร็จ ต้องได้สายรถเมล์ + แผนที่ถูกวาด
- expect('[full] มีสายรถเมล์ในตำนาน', out.full.routes>0, out.full.routes);
- expect('[full] แผนที่ถูกวาด (ไม่โชว์ placeholder)', out.full.mapDrawn===true, out.full.mapDrawn);
- // emptyB: ฐานแผนที่ว่างแต่รายการสายยังต้องมา (มาจาก stage A ไม่ใช่ B)
- expect('[emptyB] รายการสายไม่หายไปเมื่อฐานแผนที่ว่าง', out.emptyB.routes>0, out.emptyB.routes);
- // failC: stage C พังแต่รายการสายจาก stage A ต้องไม่ถูกลบ (กฎ "ช่วงหลังพังไม่ลบผลช่วงก่อน")
- expect('[failC] รายการสายไม่หายไปเมื่อ stage C พัง', out.failC.routes>0, out.failC.routes);
+ // ทุกฉาก: จุดโลเคชั่นต้องขึ้นทันทีตอนเปลี่ยนโลเคชั่น ไม่ต้องรอกดปุ่ม/รอเน็ตเลย
+ for(const name of Object.keys(scenarios)){
+   expect('['+name+'] แผนที่วาดจุดโลเคชั่นได้ทันทีก่อนกดดึงข้อมูล', out[name].mapDrawnBeforeFetch===true, out[name].mapDrawnBeforeFetch);
+   expect('['+name+'] แผนที่ยังวาดอยู่หลังกดดึงข้อมูล (ไม่กลับไปเป็น placeholder)', out[name].mapDrawnAfterFetch===true, out[name].mapDrawnAfterFetch);
+ }
+ // withStops: มีสายรถเมล์ในตำนาน พร้อมสีและต้นทาง-ปลายทาง
+ expect('[withStops] มีสายรถเมล์ในตำนาน', out.withStops.routes>0, out.withStops.routes);
+ expect('[withStops] แต่ละสายมีสีต่างกัน', out.withStops.colours>1, out.withStops.colours);
+ expect('[withStops] มีข้อความต้นทาง-ปลายทางต่อสาย', out.withStops.pairs>0, out.withStops.pairs);
  // noStops: ไม่มีป้ายในรัศมี ต้องไม่มีสายให้แสดง (นับสายจากป้ายที่จอด ไม่ใช่ถนนที่ผ่าน)
  expect('[noStops] ไม่มีป้าย = ไม่มีสาย', out.noStops.routes===0, out.noStops.routes);
+ // serverFail: เซิร์ฟเวอร์พังหมด แต่จุดโลเคชั่นต้องยังอยู่ (แยกจากการดึงสายรถเมล์โดยสิ้นเชิง)
+ expect('[serverFail] ไม่มีสายรถเมล์เมื่อเซิร์ฟเวอร์พัง', out.serverFail.routes===0, out.serverFail.routes);
  done();
  await b.close();
 })();

@@ -327,10 +327,10 @@
       <div class="field">
         <button class="btn primary" id="ovpBtn" type="button" style="width:100%">
           <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg>
-          ดึงแผนที่และเส้นทางเดินรถ
+          ดึงสายรถเมล์ที่จอดจุดนี้
         </button>
         <div class="dnaline" style="margin-top:7px" id="ovpStat">
-          ระบบวาดแผนที่เองจากข้อมูลจริงของ OpenStreetMap — ถนน รางรถไฟฟ้า แม่น้ำ สวน และถนนที่มีรถเมล์วิ่งผ่าน เป็นข้อมูลสดตอนกด ไม่ใช่รายการที่พิมพ์ไว้
+          ตรวจสอบรายชื่อสายรถเมล์ที่จอดป้ายใกล้จุดนี้จากข้อมูลจริงของ OpenStreetMap พร้อมสีและต้นทาง-ปลายทางแยกตามสาย เป็นข้อมูลสดตอนกด ไม่ใช่รายการที่พิมพ์ไว้ — แผนที่แสดงแค่จุดโลเคชั่น ยังไม่วาดเส้นทางเดินรถ
         </div>
       </div>
 
@@ -680,9 +680,9 @@
           <h3 id="shTh">—</h3>
           <div class="en" id="shEn">—</div>
           <img class="shmap" id="shMap" alt="แผนที่โลเคชั่น">
-      <div class="shnomap" id="shNoMap" hidden>ยังไม่ได้ดึงข้อมูลแผนที่สำหรับจุดนี้<br>
-        กดปุ่ม <b>ดึงแผนที่และเส้นทางเดินรถ</b> ในแผง 10 · Route Map ก่อน แล้วออกใบนำเสนอใหม่</div>
-          <div class="shkey" id="shKey" hidden>แต่ละสีบนแผนที่คือหนึ่งสายรถเมล์<span class="k2"></span>วงกลมประ = ระยะหาป้ายรถเมล์รอบจุดนี้</div>
+      <div class="shnomap" id="shNoMap" hidden>ยังไม่ได้เลือกโลเคชั่น<br>
+        เลือกโลเคชั่นในแผง 4 · Route Map ก่อน แล้วออกใบนำเสนอใหม่</div>
+          <div class="shkey" id="shKey" hidden>แต่ละสีในรายการด้านล่างคือหนึ่งสายรถเมล์<span class="k2"></span>วงกลมประบนแผนที่ = ระยะหาป้ายรถเมล์รอบจุดนี้</div>
           <div class="sh-lbl">สายรถเมล์ที่ผ่านจุดนี้ · <span id="shCount"></span></div>
           <div class="shlines" id="shLines"></div>
           <div class="shmeta" id="shMeta"></div>

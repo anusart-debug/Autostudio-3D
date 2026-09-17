@@ -59,7 +59,7 @@ function geomPayload(){
   await pg.evaluate(()=>document.querySelector('#locChips [data-id="sathorn"]').click());
   await pg.waitForTimeout(250);
   await pg.click('#ovpBtn');
-  await pg.waitForFunction(()=>/ดึงแผนที่/.test(document.getElementById('ovpBtn').textContent),{timeout:30000});
+  await pg.waitForFunction(()=>/ดึงสายรถเมล์/.test(document.getElementById('ovpBtn').textContent),{timeout:30000});
 
   const radiusBefore=await pg.evaluate(()=>__as3d.map().radius);
   const clampBefore=await pg.evaluate(()=>{const v=__as3d.map().view;return v?v.r:null});
@@ -95,14 +95,16 @@ function geomPayload(){
   await pg.waitForFunction(()=>__as3d.mode()==='route',{timeout:15000});
   expect('คลิกซ้ำไม่ยิง Overpass ใหม่ (มาจาก cache)', geomHits===1, geomHits);
 
-  // ใบนำเสนอ: สาย A1 (ดึง geometry เต็มสายแล้ว) ต้องมีจุดสี ส่วน B2/C3 (stage C พัง) ต้องไม่มี
+  // ใบนำเสนอ: v41 ไม่วาดเส้นทางบนแผนที่แล้ว painted() จึงให้จุดสีตามข้อมูลสด (MAPD.groups)
+  // ทุกสายเท่ากัน ไม่ใช่เฉพาะสายที่เคยดึง geometry เต็มสายผ่าน "ดูทั้งสาย" อีกต่อไป
   await pg.click('#routeLegend [data-exitroute]');
   await pg.click('#sheetBtn');
   await pg.waitForTimeout(600);
   const shLines=await pg.$$eval('#shLines .shline',n=>n.map(x=>({txt:x.textContent.trim(),dot:!!x.querySelector('i')})));
-  const a1=shLines.find(x=>x.txt==='A1'), b2=shLines.find(x=>x.txt==='B2');
-  expect('ใบนำเสนอ: A1 มีจุดสี (วาดจริงผ่าน geometry เต็มสาย)', !!(a1&&a1.dot), a1);
-  expect('ใบนำเสนอ: B2 ไม่มีจุดสี (stage C พัง ไม่เคยถูกวาดจริง)', !!(b2&&!b2.dot), b2);
+  // v41: ต่อท้ายด้วยข้อความต้นทาง-ปลายทาง (g.pair) แล้ว จึงจับคู่ด้วย startsWith แทนเทียบเป๊ะ
+  const a1=shLines.find(x=>x.txt.indexOf('A1')===0), b2=shLines.find(x=>x.txt.indexOf('B2')===0);
+  expect('ใบนำเสนอ: A1 มีจุดสี', !!(a1&&a1.dot), a1);
+  expect('ใบนำเสนอ: B2 ก็มีจุดสีเหมือนกัน (มาจากข้อมูลสด ไม่ผูกกับการวาดบนแผนที่แล้ว)', !!(b2&&b2.dot), b2);
 
   expect('ไม่มี pageerror', errs.length===0, errs);
   done();
