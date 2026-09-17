@@ -1050,6 +1050,9 @@ footer.foot .sp{flex:1}
         <dt>RESOLUTION</dt><dd id="roRes">1920 × 1080</dd>
         <dt>MEGAPIXELS</dt><dd id="roMp">2.07 MP</dd>
       </dl>
+      <div class="dnaline" id="roSrcNote" hidden style="margin-top:7px">
+        กำลังใช้อัตราส่วนของภาพต้นฉบับแทนเมนูด้านบน — ปิด "ใช้อัตราส่วนเดียวกับภาพต้นฉบับ" ในแผง 01B ถ้าต้องการบังคับอัตราส่วนนี้
+      </div>
     </section>
 
     <section class="block">
@@ -1250,6 +1253,9 @@ footer.foot .sp{flex:1}
         <div class="checkrow"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
           <span class="k">ขั้นที่ 3</span>
           <span class="v">เปิดเว็บ แนบภาพ วางคำสั่ง กดส่ง<em>ใช้โควตาฟรีของบัญชีที่คุณล็อกอินอยู่ — ระบบนี้ไม่ขอและไม่เก็บ API Key ใดๆ</em></span></div>
+        <div class="checkrow warn"><span class="tick"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></svg></span>
+          <span class="k">อย่าลืม</span>
+          <span class="v">ตั้งอัตราส่วนภาพที่ปลายทางด้วย<em>คำสั่งบอกอัตราส่วนเป็นข้อความ แต่ปลายทางบางเว็บมีเมนูอัตราส่วนของตัวเอง — ตั้งให้ตรงกันเพื่อสัดส่วนที่แม่นยำ</em></span></div>
       </div>
 
       <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px">
@@ -1455,20 +1461,22 @@ const WEATHERS=[
  {v:"thin mist and drifting exhaust at ground level",t:"ไอหมอกระดับพื้น / Ground Mist"}
 ];
 
+/* v41: เพิ่ม ar/en/th ให้แต่ละอัตราส่วน — ใช้เขียนลงในคำสั่งจริง (30-prompt.js ratioClause())
+   ก่อนหน้านี้มีแค่ w/h/t ที่ใช้แสดงผลอย่างเดียว ตัวเลขไม่เคยถูกส่งเข้าคำสั่งเลย */
 const RATIOS=[
- {id:"16x9",w:1920,h:1080,t:"16:9 — Cinematic / คีย์วิชวล (1920×1080)"},
- {id:"21x9",w:2016,h:864,t:"21:9 — Ultrawide / บิลบอร์ด (2016×864)"},
- {id:"3x2",w:1620,h:1080,t:"3:2 — Print / งานพิมพ์ (1620×1080)"},
- {id:"1x1",w:1440,h:1440,t:"1:1 — Square / โซเชียล (1440×1440)"},
- {id:"4x5",w:1152,h:1440,t:"4:5 — Feed / ฟีดแนวตั้ง (1152×1440)"},
- {id:"9x16",w:1080,h:1920,t:"9:16 — Story / สตอรี่ (1080×1920)"}
+ {id:"16x9",w:1920,h:1080,t:"16:9 — Cinematic / คีย์วิชวล (1920×1080)",ar:"16:9",en:"widescreen",th:"จอกว้าง"},
+ {id:"21x9",w:2016,h:864,t:"21:9 — Ultrawide / บิลบอร์ด (2016×864)",ar:"21:9",en:"ultra-widescreen",th:"จอกว้างพิเศษ"},
+ {id:"3x2",w:1620,h:1080,t:"3:2 — Print / งานพิมพ์ (1620×1080)",ar:"3:2",en:"landscape",th:"แนวนอน"},
+ {id:"1x1",w:1440,h:1440,t:"1:1 — Square / โซเชียล (1440×1440)",ar:"1:1",en:"square",th:"สี่เหลี่ยมจัตุรัส"},
+ {id:"4x5",w:1152,h:1440,t:"4:5 — Feed / ฟีดแนวตั้ง (1152×1440)",ar:"4:5",en:"portrait",th:"แนวตั้ง"},
+ {id:"9x16",w:1080,h:1920,t:"9:16 — Story / สตอรี่ (1080×1920)",ar:"9:16",en:"vertical story",th:"แนวตั้งสตอรี่"}
 ];
 
 /* ---------------- state ---------------- */
 const S={vehicle:"wrap",loc:"sathorn",angle:"hero34",light:"golden",
   styles:new Set(STYLES.filter(s=>s.on).map(s=>s.id)),
   lens:2,weather:0,ratio:0,scale:1,hdr:75,refData:null,refFileName:"",
-  refExtra:[],refBody:"",refOrient:"",refB64:"",refMime:"image/png",
+  refExtra:[],refBody:"",refOrient:"",refB64:"",refMime:"image/png",refW:0,refH:0,
   adData:null,adB64:"",adMime:"image/jpeg",adFileName:""};
 
 const $=id=>document.getElementById(id);
@@ -1777,6 +1785,40 @@ function dims(){
   return {w:w,h:h};
 }
 
+/* ---- อัตราส่วนภาพ: ต้องมาจาก dims() เท่านั้น ----
+   dims() คูณ S.scale และตัดเพดานที่ MAXPX ให้แล้ว ใช้ตรงนี้เสมอเพื่อไม่ให้คำสั่ง / #roRes /
+   เช็กลิสต์ / บรรทัดสรุปของโหมดแนะนำ รายงานตัวเลขไม่ตรงกัน (ห้ามอ่าน RATIOS[i].w/h ตรงๆ) */
+function orientWord(w,h){return w>h?"landscape":w<h?"portrait":"square"}
+function gcdOf(a,b){return b?gcdOf(b,a%b):a}
+/* ย่ออัตราส่วนให้เป็นเลขเล็กสวยๆ เช่น "3:2" — ถ้าย่อไม่ลงตัว (ภาพถ่ายจริงมักไม่ลงตัวเป๊ะ)
+   ให้ใช้ทศนิยมแทนดีกว่าเลข gcd เพี้ยนๆ อย่าง "2016:1134" */
+function ratioLabel(w,h){
+  const g=gcdOf(Math.round(w),Math.round(h))||1;
+  const rw=Math.round(w/g), rh=Math.round(h/g);
+  if(rw<=32&&rh<=32) return rw+":"+rh;
+  return (w/h).toFixed(2)+":1";
+}
+function ratioClause(){
+  const r=RATIOS[S.ratio], d=dims();
+  return " Compose and output the image in a "+r.ar+" "+r.en+" frame, "+d.w+" × "+d.h+" pixels ("+orientWord(d.w,d.h)+").";
+}
+function ratioClauseTH(){
+  const r=RATIOS[S.ratio], d=dims();
+  return " กรอบภาพ "+r.ar+" "+r.th+" ขนาด "+d.w+" × "+d.h+" พิกเซล";
+}
+/* true เมื่อควรบังคับสัดส่วนของภาพต้นฉบับแทนเมนู #ratio — ใช้เฉพาะตอนมีภาพอ้างอิงและติ๊กไว้เท่านั้น
+   (ค่านี้ใช้ร่วมกันทั้ง prompt builder และ UI ที่ต้องโชว์ว่ากำลัง override เมนูอยู่) */
+function srcRatioActive(){return !!(S.refData&&S.refW&&S.refH&&$("srcRatio")&&$("srcRatio").checked)}
+function srcRatioClause(){
+  if(!srcRatioActive()) return ratioClause();
+  return " Keep the output at the same aspect ratio and framing as the source photograph (about "+
+    ratioLabel(S.refW,S.refH)+", "+S.refW+" × "+S.refH+" pixels, "+orientWord(S.refW,S.refH)+").";
+}
+function srcRatioClauseTH(){
+  if(!srcRatioActive()) return ratioClauseTH();
+  return " ใช้อัตราส่วนเดียวกับภาพต้นฉบับ (ประมาณ "+ratioLabel(S.refW,S.refH)+", "+S.refW+" × "+S.refH+" พิกเซล)";
+}
+
 /* สิ่งที่ไม่ต้องการในภาพ — เดิมส่งเป็นพารามิเตอร์ negative_prompt ของ API
    ตอนนี้ไม่มี API แล้ว จึงต้องเขียนลงในตัวคำสั่งเอง ไม่งั้นช่องนี้จะไม่มีผลใดๆ
    ถ้าเลือกสไตล์ "เส้นสายไฟวิ่ง" ต้องตัดคำที่ห้ามเบลอออก ไม่งั้นจะขัดกันเอง */
@@ -1852,13 +1894,15 @@ function buildPrompt(){
       : "8K resolution, ultra detailed reflections on glass and clearcoat, accurate tyre and wheel geometry, professional colour grading",
     notes
   ].filter(Boolean);
-  return parts.join(", ")+"."+negClause();
+  return parts.join(", ")+"."+ratioClause()+negClause();
 }
 
 function sync(){
-  const d=dims();
+  const srcActive=srcRatioActive();
+  const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;
   $("roMp").textContent=(d.w*d.h/1e6).toFixed(2)+" MP";
+  $("roSrcNote").hidden=!srcActive;
   $("lensVal").textContent=lensList()[S.lens].s;
   $("scaleVal").textContent=S.scale.toFixed(1)+"×";
   $("hdrVal").textContent=S.hdr+"%";
@@ -1913,6 +1957,9 @@ function readRef(f){
     S.refMime=f.type||"image/png";
     const probe=new Image();
     probe.onload=()=>{
+      /* ขนาดจริงของภาพต้นฉบับ — ใช้เขียนสัดส่วนลงในคำสั่งตอนติ๊ก #srcRatio (30-prompt.js srcRatioClause())
+         ต้องเก็บจากภาพจริง ห้ามใช้ ar จาก analyze() เพราะอันนั้นคือกรอบของตัวรถในภาพ ไม่ใช่กรอบของภาพ */
+      S.refW=probe.naturalWidth; S.refH=probe.naturalHeight;
       analyze(probe);
       /* ย่อภาพไว้ส่งเข้าโมเดล — กันไฟล์ใหญ่เกินและเร็วขึ้น */
       const M=1152, sc=Math.min(1,M/Math.max(probe.naturalWidth,probe.naturalHeight));
@@ -1936,7 +1983,7 @@ function readRef(f){
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("hoVeil").hidden=true;$("addVeil").hidden=true}});
 $("refClear").addEventListener("click",()=>{
-  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";
+  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";S.refW=0;S.refH=0;
   $("refBox").hidden=true;$("dnaBlock").hidden=true;file.value="";sync();
 });
 
@@ -2051,7 +2098,7 @@ function buildEditPromptTH(){
     ? " เก็บงานแบบภาพโฆษณารถ: "+list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th).join(", ")
     : " คงความเป็นภาพถ่ายจริง ชัดลึกธรรมชาติ เงาใต้ล้อถูกต้อง";
   const notes=$("detail").value.trim();
-  return keep+hero+col+body+scene+fin+(notes?" "+notes:"")+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อหลายช่อง";
+  return keep+hero+col+body+scene+fin+(notes?" "+notes:"")+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อหลายช่อง";
 }
 function buildPromptTH(){
   const v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
@@ -2069,7 +2116,7 @@ function buildPromptTH(){
   return [head,hero,lock.join(" "),art,"ฉาก "+l.th,"มุมกล้อง "+a.th,"เลนส์ "+thLens(),
     "แสง "+li.th,thWeather(),thHdr(),
     list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th).join(", "),
-    "ความละเอียดสูง รายละเอียดคมชัด เก็บงานระดับมืออาชีพ",notes].filter(Boolean).join(" · ")+negClauseTH();
+    "ความละเอียดสูง รายละเอียดคมชัด เก็บงานระดับมืออาชีพ",notes].filter(Boolean).join(" · ")+ratioClauseTH()+negClauseTH();
 }
 function activePromptTH(){return adReady()?buildAdPromptTH():editMode()?buildEditPromptTH():buildPromptTH()}
 
@@ -2207,6 +2254,7 @@ function buildEditPrompt(){
 
   return keep+heroClause()+colours+body+scene+finish+hdrWord+
          (notes?" "+notes+".":"")+
+         srcRatioClause()+
          negClause()+
          " Output one single photorealistic image, no text overlay, no watermark, no collage.";
 }
@@ -2251,7 +2299,7 @@ function buildAdPrompt(){
     t+=heroClause();
   }
   if(notes) t+=" "+notes+".";
-  return t+negClause()+" Output one single photorealistic image, no text overlay, no watermark, no collage, no before-after split.";
+  return t+srcRatioClause()+negClause()+" Output one single photorealistic image, no text overlay, no watermark, no collage, no before-after split.";
 }
 function buildAdPromptTH(){
   const v=find(list("vehicle"),S.vehicle), N=v.th;
@@ -2281,7 +2329,7 @@ function buildAdPromptTH(){
       " · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+" · แสง "+li.th+" · "+thWeather()+
       " · สร้างท้องฟ้า ฉากหลัง ผิวถนน และเงาสะท้อนใหม่ให้ตรงกับสถานที่และแสงนั้น พร้อมจัดแสงบนตัวสื่อใหม่ให้เงา ไฮไลต์ และอุณหภูมิสีเข้ากับฉากใหม่";
   if(notes) t+=" "+notes;
-  return t+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อเทียบก่อนหลัง";
+  return t+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อเทียบก่อนหลัง";
 }
 function activePrompt(){return adReady()?buildAdPrompt():editMode()?buildEditPrompt():buildPrompt()}
 

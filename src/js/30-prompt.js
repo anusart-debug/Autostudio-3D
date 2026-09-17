@@ -34,6 +34,40 @@ function dims(){
   return {w:w,h:h};
 }
 
+/* ---- อัตราส่วนภาพ: ต้องมาจาก dims() เท่านั้น ----
+   dims() คูณ S.scale และตัดเพดานที่ MAXPX ให้แล้ว ใช้ตรงนี้เสมอเพื่อไม่ให้คำสั่ง / #roRes /
+   เช็กลิสต์ / บรรทัดสรุปของโหมดแนะนำ รายงานตัวเลขไม่ตรงกัน (ห้ามอ่าน RATIOS[i].w/h ตรงๆ) */
+function orientWord(w,h){return w>h?"landscape":w<h?"portrait":"square"}
+function gcdOf(a,b){return b?gcdOf(b,a%b):a}
+/* ย่ออัตราส่วนให้เป็นเลขเล็กสวยๆ เช่น "3:2" — ถ้าย่อไม่ลงตัว (ภาพถ่ายจริงมักไม่ลงตัวเป๊ะ)
+   ให้ใช้ทศนิยมแทนดีกว่าเลข gcd เพี้ยนๆ อย่าง "2016:1134" */
+function ratioLabel(w,h){
+  const g=gcdOf(Math.round(w),Math.round(h))||1;
+  const rw=Math.round(w/g), rh=Math.round(h/g);
+  if(rw<=32&&rh<=32) return rw+":"+rh;
+  return (w/h).toFixed(2)+":1";
+}
+function ratioClause(){
+  const r=RATIOS[S.ratio], d=dims();
+  return " Compose and output the image in a "+r.ar+" "+r.en+" frame, "+d.w+" × "+d.h+" pixels ("+orientWord(d.w,d.h)+").";
+}
+function ratioClauseTH(){
+  const r=RATIOS[S.ratio], d=dims();
+  return " กรอบภาพ "+r.ar+" "+r.th+" ขนาด "+d.w+" × "+d.h+" พิกเซล";
+}
+/* true เมื่อควรบังคับสัดส่วนของภาพต้นฉบับแทนเมนู #ratio — ใช้เฉพาะตอนมีภาพอ้างอิงและติ๊กไว้เท่านั้น
+   (ค่านี้ใช้ร่วมกันทั้ง prompt builder และ UI ที่ต้องโชว์ว่ากำลัง override เมนูอยู่) */
+function srcRatioActive(){return !!(S.refData&&S.refW&&S.refH&&$("srcRatio")&&$("srcRatio").checked)}
+function srcRatioClause(){
+  if(!srcRatioActive()) return ratioClause();
+  return " Keep the output at the same aspect ratio and framing as the source photograph (about "+
+    ratioLabel(S.refW,S.refH)+", "+S.refW+" × "+S.refH+" pixels, "+orientWord(S.refW,S.refH)+").";
+}
+function srcRatioClauseTH(){
+  if(!srcRatioActive()) return ratioClauseTH();
+  return " ใช้อัตราส่วนเดียวกับภาพต้นฉบับ (ประมาณ "+ratioLabel(S.refW,S.refH)+", "+S.refW+" × "+S.refH+" พิกเซล)";
+}
+
 /* สิ่งที่ไม่ต้องการในภาพ — เดิมส่งเป็นพารามิเตอร์ negative_prompt ของ API
    ตอนนี้ไม่มี API แล้ว จึงต้องเขียนลงในตัวคำสั่งเอง ไม่งั้นช่องนี้จะไม่มีผลใดๆ
    ถ้าเลือกสไตล์ "เส้นสายไฟวิ่ง" ต้องตัดคำที่ห้ามเบลอออก ไม่งั้นจะขัดกันเอง */
@@ -109,13 +143,15 @@ function buildPrompt(){
       : "8K resolution, ultra detailed reflections on glass and clearcoat, accurate tyre and wheel geometry, professional colour grading",
     notes
   ].filter(Boolean);
-  return parts.join(", ")+"."+negClause();
+  return parts.join(", ")+"."+ratioClause()+negClause();
 }
 
 function sync(){
-  const d=dims();
+  const srcActive=srcRatioActive();
+  const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;
   $("roMp").textContent=(d.w*d.h/1e6).toFixed(2)+" MP";
+  $("roSrcNote").hidden=!srcActive;
   $("lensVal").textContent=lensList()[S.lens].s;
   $("scaleVal").textContent=S.scale.toFixed(1)+"×";
   $("hdrVal").textContent=S.hdr+"%";

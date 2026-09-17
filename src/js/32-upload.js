@@ -14,6 +14,9 @@ function readRef(f){
     S.refMime=f.type||"image/png";
     const probe=new Image();
     probe.onload=()=>{
+      /* ขนาดจริงของภาพต้นฉบับ — ใช้เขียนสัดส่วนลงในคำสั่งตอนติ๊ก #srcRatio (30-prompt.js srcRatioClause())
+         ต้องเก็บจากภาพจริง ห้ามใช้ ar จาก analyze() เพราะอันนั้นคือกรอบของตัวรถในภาพ ไม่ใช่กรอบของภาพ */
+      S.refW=probe.naturalWidth; S.refH=probe.naturalHeight;
       analyze(probe);
       /* ย่อภาพไว้ส่งเข้าโมเดล — กันไฟล์ใหญ่เกินและเร็วขึ้น */
       const M=1152, sc=Math.min(1,M/Math.max(probe.naturalWidth,probe.naturalHeight));
@@ -37,7 +40,7 @@ function readRef(f){
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("hoVeil").hidden=true;$("addVeil").hidden=true}});
 $("refClear").addEventListener("click",()=>{
-  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";
+  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";S.refW=0;S.refH=0;
   $("refBox").hidden=true;$("dnaBlock").hidden=true;file.value="";sync();
 });
 
