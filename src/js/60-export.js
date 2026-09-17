@@ -26,9 +26,22 @@ const DESTS=[
  {n:"Ideogram",u:"https://ideogram.ai/t/explore",
   d:"ตัวอักษรบนภาพคมที่สุด เหมาะกับงานที่ต้องมีข้อความ",t:"ฟรีจำกัด",f:1,img:0},
  {n:"Hugging Face · FLUX.1",u:"https://huggingface.co/spaces/black-forest-labs/FLUX.1-schnell",
-  d:"โมเดลโอเพนซอร์สคุณภาพสูง ไม่ต้องสมัคร",t:"ฟรี",f:1,img:0}
+  d:"โมเดลโอเพนซอร์สคุณภาพสูง ไม่ต้องสมัคร",t:"ฟรี",f:1,img:0},
+ {n:"Arena AI",u:"https://arena.ai",
+  d:"เว็บจัดอันดับ/แข่งขันโมเดล AI หลายด้าน มีโหมด Design to Code แนบภาพแล้วให้ AI สร้างต่อ",
+  t:"ฟรี",f:1,img:1},
+ {n:"Adobe Firefly",u:"https://firefly.adobe.com",
+  d:"สตูดิโอสร้างภาพของ Adobe รวมกว่า 30 โมเดล มี Structure Reference แนบภาพต้นแบบคุมองค์ประกอบได้",
+  t:"ต้องล็อกอิน",f:0,img:1},
+ {n:"Design Arena",u:"https://designarena.ai",
+  d:"เว็บเปรียบเทียบโมเดล AI แบบ crowdsourced มีหมวด Image และ Image Editing ให้แนบภาพต้นแบบ",
+  t:"ฟรี",f:1,img:1},
+ {n:"Dola AI",u:"https://dola.com",
+  d:"ผู้ช่วย AI อเนกประสงค์ มีโหมด Create Images แนบภาพต้นแบบผ่านปุ่มแนบไฟล์ได้",
+  t:"ต้องล็อกอิน",f:0,img:1}
 ];
 function renderDests(){
+  $("hoTitle").textContent="คัดลอกคำสั่ง & ส่งงานเข้าเว็บ AI · "+DESTS.length+" ปลายทาง";
   $("hoDest").innerHTML=DESTS.map((x,i)=>
     '<button class="dcard'+(x.img?' keeps':'')+'" data-i="'+i+'"><b>'+esc(x.n)+'</b><em>'+esc(x.d)+'</em>'+
     '<span class="tags"><span class="tagi'+(x.f?' free':'')+'">'+esc(x.t)+'</span>'+

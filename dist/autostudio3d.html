@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-h4m66bEgJoRG4AIjFXwVwv3NMeEcEoSgF/S3h0tNzYo='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-0MIHnWsUiZhDS92sw8HXDlKAz99Wfy/CNeSYQAjFs9k='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -1305,7 +1305,7 @@ footer.foot .sp{flex:1}
   <div class="modal">
     <div class="mh">
       <svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
-      <h2 id="hoTitle">คัดลอกคำสั่ง &amp; ส่งงานเข้าเว็บ AI · 9 ปลายทาง</h2>
+      <h2 id="hoTitle">คัดลอกคำสั่ง &amp; ส่งงานเข้าเว็บ AI</h2>
       <span class="sp"></span>
       <button class="iconbtn" id="hoClose" type="button" aria-label="ปิด">
         <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
@@ -3796,9 +3796,22 @@ const DESTS=[
  {n:"Ideogram",u:"https://ideogram.ai/t/explore",
   d:"ตัวอักษรบนภาพคมที่สุด เหมาะกับงานที่ต้องมีข้อความ",t:"ฟรีจำกัด",f:1,img:0},
  {n:"Hugging Face · FLUX.1",u:"https://huggingface.co/spaces/black-forest-labs/FLUX.1-schnell",
-  d:"โมเดลโอเพนซอร์สคุณภาพสูง ไม่ต้องสมัคร",t:"ฟรี",f:1,img:0}
+  d:"โมเดลโอเพนซอร์สคุณภาพสูง ไม่ต้องสมัคร",t:"ฟรี",f:1,img:0},
+ {n:"Arena AI",u:"https://arena.ai",
+  d:"เว็บจัดอันดับ/แข่งขันโมเดล AI หลายด้าน มีโหมด Design to Code แนบภาพแล้วให้ AI สร้างต่อ",
+  t:"ฟรี",f:1,img:1},
+ {n:"Adobe Firefly",u:"https://firefly.adobe.com",
+  d:"สตูดิโอสร้างภาพของ Adobe รวมกว่า 30 โมเดล มี Structure Reference แนบภาพต้นแบบคุมองค์ประกอบได้",
+  t:"ต้องล็อกอิน",f:0,img:1},
+ {n:"Design Arena",u:"https://designarena.ai",
+  d:"เว็บเปรียบเทียบโมเดล AI แบบ crowdsourced มีหมวด Image และ Image Editing ให้แนบภาพต้นแบบ",
+  t:"ฟรี",f:1,img:1},
+ {n:"Dola AI",u:"https://dola.com",
+  d:"ผู้ช่วย AI อเนกประสงค์ มีโหมด Create Images แนบภาพต้นแบบผ่านปุ่มแนบไฟล์ได้",
+  t:"ต้องล็อกอิน",f:0,img:1}
 ];
 function renderDests(){
+  $("hoTitle").textContent="คัดลอกคำสั่ง & ส่งงานเข้าเว็บ AI · "+DESTS.length+" ปลายทาง";
   $("hoDest").innerHTML=DESTS.map((x,i)=>
     '<button class="dcard'+(x.img?' keeps':'')+'" data-i="'+i+'"><b>'+esc(x.n)+'</b><em>'+esc(x.d)+'</em>'+
     '<span class="tags"><span class="tagi'+(x.f?' free':'')+'">'+esc(x.t)+'</span>'+
