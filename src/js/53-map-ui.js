@@ -29,7 +29,8 @@ $("fullPng").addEventListener("click",()=>{
   const cv=document.createElement("canvas"), W=1600, H=1000, K=2;
   cv.width=W*K; cv.height=H*K;
   const cx=cv.getContext("2d"); cx.setTransform(K,0,0,K,0,0);
-  if(!drawMap(cx,W,H,THEME_DARK,1)){toast("ยังไม่มีข้อมูลแผนที่",true);return}
+  /* v41: บังคับธีมสว่างเสมอ ไม่ตามธีมของแอป — ไฟล์นี้คือของที่ส่งให้ลูกค้าดู */
+  if(!drawMap(cx,W,H,THEME_LIGHT,1)){toast("ยังไม่มีข้อมูลแผนที่",true);return}
   const a=document.createElement("a");
   a.href=cv.toDataURL("image/png");
   a.download="planb_map_"+(curLoc().en||curLoc().id).replace(/[^\w]+/g,"_").toLowerCase()+".png";

@@ -209,7 +209,7 @@ async function loadMap(){
       paintMap();
       notes.push("แผนที่: ถนน "+ways.length.toLocaleString("th-TH")+" เส้น · ป้ายชื่อ "+MAPD.nodes.length+" จุด");
     }catch(e){
-      notes.push('<span style="color:var(--amber)">วาดแผนที่ไม่สำเร็จ ('+esc(e.message)+
+      notes.push('<span style="color:var(--warn)">วาดแผนที่ไม่สำเร็จ ('+esc(e.message)+
                  ') — รายชื่อสายด้านบนยังใช้ได้ ลองลดความกว้างของภาพแล้วกดใหม่</span>');
     }
     say(notes.join("<br>"));
@@ -243,7 +243,7 @@ async function loadMap(){
         paintMap();
         notes.push("ระบายสีเส้นทางแล้ว "+hits.toLocaleString("th-TH")+" ช่วงถนน");
       }catch(e){
-        notes.push('<span style="color:var(--amber)">ยังระบายสีเส้นทางบนแผนที่ไม่ได้ ('+esc(e.message)+
+        notes.push('<span style="color:var(--warn)">ยังระบายสีเส้นทางบนแผนที่ไม่ได้ ('+esc(e.message)+
                    ') — รายชื่อสายและแผนที่ยังถูกต้องครบ</span>');
       }
     }
@@ -256,7 +256,7 @@ async function loadMap(){
     MAPD.err=cancelled?"":"ดึงข้อมูลไม่สำเร็จ";
     clearInterval(tick);
     say(cancelled ? "ยกเลิกแล้ว — กดปุ่มอีกครั้งเมื่อพร้อมลองใหม่"
-      : '<span style="color:#ff6b6b">ดึงข้อมูลไม่สำเร็จจากทุกเซิร์ฟเวอร์</span><br>'+esc(e.message)+
+      : '<span style="color:var(--bad)">ดึงข้อมูลไม่สำเร็จจากทุกเซิร์ฟเวอร์</span><br>'+esc(e.message)+
         "<br>ตรวจอินเทอร์เน็ตแล้วกดใหม่ — ส่วนอื่นของโปรแกรมยังใช้งานได้ตามปกติ");
   }finally{
     clearInterval(tick);

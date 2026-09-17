@@ -179,6 +179,6 @@ function sync(){
   }
   const md = adReady()?"AD SWAP · 2 IMAGES" : hasSketch()?"KEEP REFERENCE · 1 IMAGE" : "TEXT ONLY";
   $("badgeMode").textContent=md;
-  $("liveDot").style.background = hasSketch()?"var(--ok,#3ddc84)":"var(--amber)";
+  $("liveDot").style.background = hasSketch()?"var(--ok)":"var(--warn)";
 }
 

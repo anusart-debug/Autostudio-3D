@@ -1,6 +1,7 @@
 [
   "_prelude.js",
   "00-store.js",
+  "01-theme.js",
   "10-data.js",
   "11-state.js",
   "20-chips.js",

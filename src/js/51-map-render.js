@@ -39,6 +39,10 @@ const THEME_LIGHT={
   ring:"rgba(255,107,44,.05)", text:"#6B7684", label:"#2A3340",
   labelBg:"rgba(255,255,255,.86)", pinEdge:"#ffffff", roadName:"#8C96A3"
 };
+/* v41: แผนที่บนจอตามธีมสว่าง/มืดของแอป (themeIsLight() มาจาก 01-theme.js) —
+   ใบนำเสนอฝ่ายขาย (55-sheet.js) และ PNG เต็มจอ (53-map-ui.js) ยังคงบังคับ THEME_LIGHT เสมอ
+   เพราะเป็นของที่ส่งให้ลูกค้าเห็น ไม่ควรขึ้นกับธีมที่คนในบริษัทตั้งไว้ตอนนั้น */
+function mapTheme(){return (typeof themeIsLight==="function"&&themeIsLight())?THEME_LIGHT:THEME_DARK}
 
 const ROADW={
   motorway:5.4, trunk:4.6, primary:3.9, secondary:3.1, tertiary:2.4,
@@ -249,7 +253,7 @@ function paintCanvas(cvId,boxId){
   cv.style.width=W+"px"; cv.style.height=H+"px";
   const cx=cv.getContext("2d");
   cx.setTransform(dpr,0,0,dpr,0,0);
-  return drawMap(cx,W,H,THEME_DARK,1);
+  return drawMap(cx,W,H,mapTheme(),1);
 }
 function paintAll(){ paintMap(); if(!$("mapFull").hidden) paintCanvas("fullCv","fullBox"); }
 function paintMap(){
@@ -259,7 +263,7 @@ function paintMap(){
   $("mapTools").hidden=!ok;
   if(!ok) $("mapOff").innerHTML = MAPD.busy
     ? "กำลังดึงข้อมูลแผนที่จาก OpenStreetMap…"
-    : (MAPD.err?'<span style="color:#ff6b6b">'+esc(MAPD.err)+"</span><br>กดปุ่มด้านล่างเพื่อลองใหม่"
+    : (MAPD.err?'<span style="color:var(--bad)">'+esc(MAPD.err)+"</span><br>กดปุ่มด้านล่างเพื่อลองใหม่"
                :"กดปุ่ม <b>ดึงแผนที่และเส้นทางเดินรถ</b> ด้านล่าง<br>ระบบจะวาดถนน รางรถไฟฟ้า และเส้นทางรถเมล์จริงรอบจุดนี้ให้");
 }
 window.addEventListener("resize",()=>{clearTimeout(window.__mrz);window.__mrz=setTimeout(paintAll,180)});
