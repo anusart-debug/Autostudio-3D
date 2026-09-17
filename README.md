@@ -28,8 +28,8 @@ npm run open         # build แล้วเปิดไฟล์ออฟไล
 ```
 
 ผลลัพธ์คือไฟล์ **`dist/autostudio3d.html`** ส่งให้ฝ่ายขายดับเบิลคลิกเปิดได้เลย ไม่ต้องติดตั้งอะไร
-ไม่ต้องมีเซิร์ฟเวอร์ — ขั้นตอนขึ้นเว็บแอพ (Firebase + Google sign-in + Drive) จะเพิ่มเอกสารแยก
-ตอนเฟส 6-7 ทำเสร็จ
+ไม่ต้องมีเซิร์ฟเวอร์ — ขั้นตอนขึ้นเว็บแอพ (Firebase Hosting + Google sign-in + Firestore +
+Drive) อยู่ที่ `docs/drive-setup.md`
 
 ---
 

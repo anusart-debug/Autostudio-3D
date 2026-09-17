@@ -55,9 +55,12 @@
   <div class="engine-badge"><span class="dot" id="liveDot"></span><span id="badgeEngine">PROMPT ENGINE</span></div>
   <div class="engine-badge" id="badgeMode">TEXT ONLY</div>
   <!--@@WEB@@-->
-  <!-- เนื้อหาจริง (ปุ่มล็อกอิน/บันทึกลง Drive) มาในเฟส 6-7 — ตอนนี้แค่พิสูจน์ว่ากลไกตัดบล็อก
-       ของ build.mjs ทำงานถูก: ไฟล์ออฟไลน์ต้องไม่มีคำว่า dvBar อยู่เลยแม้แต่ตัวอักษรเดียว -->
-  <div class="drivebar" id="dvBar" hidden></div>
+  <div class="drivebar" id="dvBar">
+    <button class="btn" id="auSignInBtn" type="button">เข้าสู่ระบบด้วย Google</button>
+    <span class="dvwho" id="auWho" hidden></span>
+    <button class="btn" id="auAdminBtn" type="button" hidden>อนุมัติผู้ใช้</button>
+    <button class="btn" id="auSignOutBtn" type="button" hidden>ออกจากระบบ</button>
+  </div>
   <!--@@/WEB@@-->
   <button class="iconbtn themebtn" type="button" aria-pressed="false" title="สลับธีมสว่าง/มืด">
     <svg viewBox="0 0 24 24" width="15" height="15"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
@@ -719,6 +722,46 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!--@@WEB@@-->
+<!-- หน้ากันเข้า (gate) — โผล่ทับทั้งจอเมื่อล็อกอินแล้วแต่ยังไม่ได้รับอนุมัติ
+     70-auth.web.js สั่งเปิด/ปิดผ่าน dvRenderAll() -->
+<div class="veil" id="auGateVeil" hidden role="dialog" aria-modal="true" aria-labelledby="auGateTitle">
+  <div class="modal">
+    <div class="mh"><h2 id="auGateTitle">รอการอนุมัติสิทธิ์การใช้งาน</h2></div>
+    <div class="mb">
+      <p id="auGateMsg" style="margin:0 0 14px"></p>
+      <button class="btn primary" id="auRequestBtn" type="button" hidden>ขอสิทธิ์การใช้งาน</button>
+    </div>
+  </div>
+</div>
+
+<!-- หน้าผู้ดูแล — อนุมัติ/ปฏิเสธคำขอที่รอดำเนินการ เห็นได้เฉพาะ ADMIN_EMAIL -->
+<div class="veil" id="auAdminVeil" hidden role="dialog" aria-modal="true" aria-labelledby="auAdminTitle">
+  <div class="modal">
+    <div class="mh">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+      <h2 id="auAdminTitle">อนุมัติสิทธิ์การใช้งาน</h2>
+      <span class="sp"></span>
+      <button class="iconbtn" id="auAdminClose" type="button" aria-label="ปิด">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mb"><div id="auAdminList" class="mylist"></div></div>
+  </div>
+</div>
+
+<!-- Firebase compat SDK — โหลดแบบ script src ธรรมดา ไม่ใช่ ES module ให้เข้ากับสถาปัตยกรรม
+     global scope เดียวของแอปนี้ (ไม่มี import/export ที่ไหนเลย) ต้องมาก่อนสคริปต์หลักด้านล่าง
+     เพราะ 79-web-boot.web.js เรียก auInit() ซึ่งต้องมี window.firebase อยู่แล้ว
+     ห้ามพิมพ์ชื่อ marker ของสคริปต์หลัก (สองแอต ตามด้วย JS ตามด้วยสองแอต) ซ้ำไว้ในคอมเมนต์
+     ไหนอีก — build.mjs เช็กว่า marker นี้ต้องเจอพอดี 1 ครั้งเท่านั้น เคยพลาดเขียนซ้ำไว้ในคอมเมนต์
+     บรรทัดนี้เองมาก่อนแล้วสองรอบ (String.replace แบบสตริงเปล่าแทนแค่ตัวที่เจอก่อนตัวเดียว) -->
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!--@@/WEB@@-->
 
 <script>@@JS@@</script>
 </body>
