@@ -26,6 +26,13 @@ const FORBIDDEN = [
   "GOCSPX-",
   "https://maps.mail.ru",
   "/drive/v3",
+  // v41 เฟส 6: Firebase Auth/Firestore เป็นของเว็บเท่านั้น
+  "firebasejs",
+  "firebase.initializeApp",
+  "identitytoolkit.googleapis.com",
+  "firestore.googleapis.com",
+  "FB_CONFIG",
+  "ADMIN_EMAIL",
 ];
 const hits = FORBIDDEN.filter((s) => html.includes(s));
 expect("ไฟล์ออฟไลน์ไม่มีสตริงที่เกี่ยวกับ Google sign-in/Drive", hits.length === 0, hits);
@@ -41,6 +48,8 @@ expect("มีไฟล์เว็บ dist/web/index.html ให้ตรวจ
 expect("ไฟล์ออฟไลน์ไม่มี dvBar (แถบ Drive เป็นของเว็บเท่านั้น)", !html.includes("dvBar"));
 expect("ไฟล์เว็บมี dvBar (พิสูจน์ว่ากลไกตัด/เก็บบล็อก @@WEB@@ ทำงานจริง ไม่ใช่เหมือนกันโดยบังเอิญ)", webHtml.includes("dvBar"));
 expect("ไฟล์ออฟไลน์ประกาศ TARGET เป็น file", html.includes('const TARGET="file"'));
+expect("ไฟล์เว็บมี Firebase SDK (พิสูจน์ .web.js ไม่ได้ถูกกรองออกผิดที่)", webHtml.includes("firebasejs"));
+expect("ไฟล์เว็บมี auInit (70-auth.web.js รวมเข้าไปจริง)", webHtml.includes("function auInit"));
 expect("ไฟล์เว็บประกาศ TARGET เป็น web", webHtml.includes('const TARGET="web"'));
 
 /* ---- ครึ่งหลัง: dynamic — ไล่ใช้งานครบวงจรแล้วเทียบ request ทุกตัวกับ allowlist ---- */
