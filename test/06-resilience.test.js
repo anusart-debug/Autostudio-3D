@@ -78,7 +78,6 @@ function fixture(lat,lng){
   pg.setDefaultTimeout(200000);
   await pg.route('**overpass-api.de/api/interpreter',r=>r.fulfill({status:500,body:'x'}));
   await pg.route('**overpass.private.coffee/api/interpreter',r=>r.fulfill({status:500,body:'x'}));
-  await pg.route('**maps.mail.ru/**',r=>r.fulfill({status:500,body:'x'}));
   await pg.route('**overpass.osm.ch/api/interpreter',r=>{/* hang */});
   await pg.goto(PAGE_URL);
   await pg.waitForTimeout(700);

@@ -1468,7 +1468,7 @@ const RATIOS=[
 const S={vehicle:"wrap",loc:"sathorn",angle:"hero34",light:"golden",
   styles:new Set(STYLES.filter(s=>s.on).map(s=>s.id)),
   lens:2,weather:0,ratio:0,scale:1,hdr:75,refData:null,refFileName:"",
-  refExtra:[],refBody:"",refOrient:"",refB64:"",refMime:"image/png",refHosted:"",
+  refExtra:[],refBody:"",refOrient:"",refB64:"",refMime:"image/png",
   adData:null,adB64:"",adMime:"image/jpeg",adFileName:""};
 
 const $=id=>document.getElementById(id);
@@ -1926,7 +1926,6 @@ function readRef(f){
         const durl=cv.toDataURL("image/jpeg",0.92);
         S.refB64=durl.split(",")[1];S.refMime="image/jpeg";
       }catch(e){S.refB64=(S.refData||"").split(",")[1]||"";S.refMime=f.type||"image/png"}
-      S.refHosted="";
       sync();
       toast(editMode()?"พร้อมแล้ว — ภาพร่างจะถูกส่งเข้าโมเดลโดยตรง":"ถอด DNA จากภาพร่างแล้ว — ตรวจสีในแผง 01B ก่อนเรนเดอร์");
     };
@@ -1937,7 +1936,7 @@ function readRef(f){
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("hoVeil").hidden=true;$("addVeil").hidden=true}});
 $("refClear").addEventListener("click",()=>{
-  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";S.refHosted="";
+  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";
   $("refBox").hidden=true;$("dnaBlock").hidden=true;file.value="";sync();
 });
 
@@ -2323,7 +2322,7 @@ function openReview(){
   if(hasAd()){
     rows.splice(1,0,row(adMode(),"Artwork",
       adReady()?("เปลี่ยนโฆษณาในจุดเดิม"+($("adKeepScene").checked?" · คงฉากเดิม":" · จัดฉากใหม่ด้วย")):"ยังไม่มีภาพสื่อต้นแบบ",
-      adReady()?S.adFileName:"อัปโหลดภาพสื่อต้นแบบในช่องบนด้วย"));
+      adReady()?esc(S.adFileName):"อัปโหลดภาพสื่อต้นแบบในช่องบนด้วย"));
   }
   if(S.refData){
     const fid=+$("fidelity").value;
@@ -2333,7 +2332,7 @@ function openReview(){
     if($("lockView").checked&&S.refOrient) locks.push("มุมมองตามต้นแบบ");
     rows.splice(1,0,row(fid>=30&&locks.length>0,"Reference",
       locks.length?("ล็อก "+locks.join(" · ")+" ที่ "+fid+"%"):"ไม่ได้ล็อกค่าใดจากภาพร่าง",
-      locks.length?S.refFileName:"ภาพที่ออกมาจะไม่อิงรถต้นแบบ — เปิดสวิตช์ในแผง 01B ก่อน"));
+      locks.length?esc(S.refFileName):"ภาพที่ออกมาจะไม่อิงรถต้นแบบ — เปิดสวิตช์ในแผง 01B ก่อน"));
   }
   $("checklist").innerHTML=rows.join("");
   $("finalPrompt").textContent=activePrompt();
@@ -2817,11 +2816,13 @@ $("routeLegend").addEventListener("click",e=>{
    ใช้ POST + Content-Type: text/plain เพื่อไม่ให้เบราว์เซอร์ยิง preflight OPTIONS
    สลับเซิร์ฟเวอร์สำรองอัตโนมัติ และ *มีตัวจับเวลาฝั่งเรา* เพราะ fetch ไม่มี timeout ในตัว
    (บั๊ก v36: เซิร์ฟเวอร์ค้าง → ปุ่มค้างที่ "กำลังถาม…" ตลอดไป) */
+/* v41: ถอด maps.mail.ru ออกจากรายการสำรอง — ทุกครั้งที่ดึงแผนที่คือการส่งพิกัดจุดสื่อ Plan B
+   จริงไปเซิร์ฟเวอร์ที่ตอบ mail.ru ดูแลโดย VK (รัสเซีย) ไม่ควรเป็นปลายทางของพิกัดสื่อโฆษณาบริษัท
+   เหลือ 3 ชั้นก็ยังพอสำหรับ failover — ดู README.md หัวข้อ "ข้อมูลภายนอกที่แอปเรียก" */
 const OVP={hits:null};
 const OVP_HOSTS=[
   "https://overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
   "https://overpass.osm.ch/api/interpreter"
 ];
 const OVP_TIMEOUT=20000;

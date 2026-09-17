@@ -63,8 +63,9 @@ referrer จาก origin ที่เป็น null ได้
 2. **ห้ามตั้ง `credentials`** — `Access-Control-Allow-Origin: *` ไม่ match origin `null` ถ้ามี credentials
 3. **ต้องมี AbortController จับเวลาเอง** — `fetch` ไม่มี timeout ในตัว
    (บั๊ก v36: เซิร์ฟเวอร์ค้าง → ปุ่มค้างที่ "กำลังถาม…" ตลอดไป) ปัจจุบัน 20 วินาทีต่อเซิร์ฟเวอร์
-4. **เซิร์ฟเวอร์สำรอง 4 ชั้น**: overpass-api.de → private.coffee → maps.mail.ru → osm.ch
+4. **เซิร์ฟเวอร์สำรอง 3 ชั้น**: overpass-api.de → private.coffee → osm.ch
    (overpass-api.de มีรายงาน HTTP 406 กับ client ที่ไม่มี Referer)
+   (v41 ถอด maps.mail.ru ออก — คำขอมีพิกัดจุดสื่อ Plan B จริง ไม่ควรหลุดไปเซิร์ฟเวอร์รัสเซียตอน failover)
 5. **กดปุ่มซ้ำระหว่างรอ = ยกเลิก** ไม่ให้ผู้ใช้ต้องรอจนครบทุกเซิร์ฟเวอร์
 6. **อย่าขอ `way(around:r)["highway"]` แบบไม่กรอง** — ลากทางเท้าและซอยบริการมาด้วย
    ในย่านกลางเมืองคือหลายพันเส้นที่ไม่มีทางเป็นเส้นทางรถเมล์ (ต้นเหตุความช้าใน v39)

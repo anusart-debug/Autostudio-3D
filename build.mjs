@@ -35,9 +35,13 @@ function build() {
   if (!html.includes("@@CSS@@")) throw new Error("index.html ไม่มี marker @@CSS@@");
   if (!html.includes("@@JS@@")) throw new Error("index.html ไม่มี marker @@JS@@");
 
+  /* ใช้ replace แบบ function เสมอ — string replacement ตีความ $&, $`, $', $$ เป็น
+     backreference pattern ได้ ถ้า CSS/JS มีอักขระพวกนี้จะทำให้ output เพี้ยนแบบไม่มี error ขึ้นเลย
+     วันนี้ไม่มีอักขระเหล่านี้ในซอร์ส (ตรวจแล้ว) จึงเปลี่ยนแล้วได้ผลลัพธ์เดิมทุกไบต์ —
+     แต่ทำไว้ก่อนตอนที่ --check ยังพิสูจน์ความเหมือนได้ ปลอดภัยกว่าไปแก้ตอนที่ payload ซับซ้อนขึ้น */
   return html
-    .replace("@@CSS@@", css)
-    .replace("@@JS@@", '\n(function(){\n"use strict";\n' + js + "\n})();\n");
+    .replace("@@CSS@@", () => css)
+    .replace("@@JS@@", () => '\n(function(){\n"use strict";\n' + js + "\n})();\n");
 }
 
 const out = build();

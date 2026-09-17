@@ -35,7 +35,7 @@ function openReview(){
   if(hasAd()){
     rows.splice(1,0,row(adMode(),"Artwork",
       adReady()?("เปลี่ยนโฆษณาในจุดเดิม"+($("adKeepScene").checked?" · คงฉากเดิม":" · จัดฉากใหม่ด้วย")):"ยังไม่มีภาพสื่อต้นแบบ",
-      adReady()?S.adFileName:"อัปโหลดภาพสื่อต้นแบบในช่องบนด้วย"));
+      adReady()?esc(S.adFileName):"อัปโหลดภาพสื่อต้นแบบในช่องบนด้วย"));
   }
   if(S.refData){
     const fid=+$("fidelity").value;
@@ -45,7 +45,7 @@ function openReview(){
     if($("lockView").checked&&S.refOrient) locks.push("มุมมองตามต้นแบบ");
     rows.splice(1,0,row(fid>=30&&locks.length>0,"Reference",
       locks.length?("ล็อก "+locks.join(" · ")+" ที่ "+fid+"%"):"ไม่ได้ล็อกค่าใดจากภาพร่าง",
-      locks.length?S.refFileName:"ภาพที่ออกมาจะไม่อิงรถต้นแบบ — เปิดสวิตช์ในแผง 01B ก่อน"));
+      locks.length?esc(S.refFileName):"ภาพที่ออกมาจะไม่อิงรถต้นแบบ — เปิดสวิตช์ในแผง 01B ก่อน"));
   }
   $("checklist").innerHTML=rows.join("");
   $("finalPrompt").textContent=activePrompt();

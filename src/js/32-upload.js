@@ -27,7 +27,6 @@ function readRef(f){
         const durl=cv.toDataURL("image/jpeg",0.92);
         S.refB64=durl.split(",")[1];S.refMime="image/jpeg";
       }catch(e){S.refB64=(S.refData||"").split(",")[1]||"";S.refMime=f.type||"image/png"}
-      S.refHosted="";
       sync();
       toast(editMode()?"พร้อมแล้ว — ภาพร่างจะถูกส่งเข้าโมเดลโดยตรง":"ถอด DNA จากภาพร่างแล้ว — ตรวจสีในแผง 01B ก่อนเรนเดอร์");
     };
@@ -38,7 +37,7 @@ function readRef(f){
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("hoVeil").hidden=true;$("addVeil").hidden=true}});
 $("refClear").addEventListener("click",()=>{
-  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";S.refHosted="";
+  S.refData=null;S.refFileName="";S.refExtra=[];S.refBody="";S.refOrient="";S.refB64="";
   $("refBox").hidden=true;$("dnaBlock").hidden=true;file.value="";sync();
 });
 

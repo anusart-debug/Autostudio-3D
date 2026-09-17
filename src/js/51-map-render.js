@@ -392,11 +392,13 @@ $("routeLegend").addEventListener("click",e=>{
    ใช้ POST + Content-Type: text/plain เพื่อไม่ให้เบราว์เซอร์ยิง preflight OPTIONS
    สลับเซิร์ฟเวอร์สำรองอัตโนมัติ และ *มีตัวจับเวลาฝั่งเรา* เพราะ fetch ไม่มี timeout ในตัว
    (บั๊ก v36: เซิร์ฟเวอร์ค้าง → ปุ่มค้างที่ "กำลังถาม…" ตลอดไป) */
+/* v41: ถอด maps.mail.ru ออกจากรายการสำรอง — ทุกครั้งที่ดึงแผนที่คือการส่งพิกัดจุดสื่อ Plan B
+   จริงไปเซิร์ฟเวอร์ที่ตอบ mail.ru ดูแลโดย VK (รัสเซีย) ไม่ควรเป็นปลายทางของพิกัดสื่อโฆษณาบริษัท
+   เหลือ 3 ชั้นก็ยังพอสำหรับ failover — ดู README.md หัวข้อ "ข้อมูลภายนอกที่แอปเรียก" */
 const OVP={hits:null};
 const OVP_HOSTS=[
   "https://overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
-  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
   "https://overpass.osm.ch/api/interpreter"
 ];
 const OVP_TIMEOUT=20000;
