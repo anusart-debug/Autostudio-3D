@@ -30,6 +30,19 @@ const FORBIDDEN = [
 const hits = FORBIDDEN.filter((s) => html.includes(s));
 expect("ไฟล์ออฟไลน์ไม่มีสตริงที่เกี่ยวกับ Google sign-in/Drive", hits.length === 0, hits);
 
+/* v41 เฟส 5: ยามคุมกลไก "ตัดออก ไม่ใช่ใส่ flag" ของ build.mjs เอง — ไฟล์ออฟไลน์กับไฟล์เว็บ
+   ต้องต่างกันจริง (ไม่ใช่บังเอิญเหมือนกันเพราะยังไม่มีใครใส่โค้ดเว็บ) ไฟล์ออฟไลน์ต้องไม่มี
+   คำว่า dvBar หลุดเข้าไปแม้แต่ตัวอักษรเดียว ไฟล์เว็บต้องมี — ถ้าข้อนี้แดงเพราะมีคนย้าย
+   marker @@WEB@@ ผิดที่ หรือลืมใส่ .web.js suffix ให้โมดูลใหม่ */
+const webHtmlPath = join(__dirname, "..", "dist", "web", "index.html");
+let webHtml = "";
+try { webHtml = readFileSync(webHtmlPath, "utf8"); } catch (e) {}
+expect("มีไฟล์เว็บ dist/web/index.html ให้ตรวจ (รัน node build.mjs ก่อน)", webHtml.length > 0);
+expect("ไฟล์ออฟไลน์ไม่มี dvBar (แถบ Drive เป็นของเว็บเท่านั้น)", !html.includes("dvBar"));
+expect("ไฟล์เว็บมี dvBar (พิสูจน์ว่ากลไกตัด/เก็บบล็อก @@WEB@@ ทำงานจริง ไม่ใช่เหมือนกันโดยบังเอิญ)", webHtml.includes("dvBar"));
+expect("ไฟล์ออฟไลน์ประกาศ TARGET เป็น file", html.includes('const TARGET="file"'));
+expect("ไฟล์เว็บประกาศ TARGET เป็น web", webHtml.includes('const TARGET="web"'));
+
 /* ---- ครึ่งหลัง: dynamic — ไล่ใช้งานครบวงจรแล้วเทียบ request ทุกตัวกับ allowlist ---- */
 const ALLOW = [
   /^file:\/\//,

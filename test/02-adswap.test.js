@@ -15,10 +15,16 @@ const {expect,done}=require('./_expect');
  // fabricate two images
  const mk=(c)=>pg.evaluate(col=>{const cv=document.createElement('canvas');cv.width=600;cv.height=300;const x=cv.getContext('2d');x.fillStyle=col;x.fillRect(0,0,600,300);x.fillStyle='#fff';x.fillRect(40,40,300,100);return cv.toDataURL('image/png')},c);
  const a=await mk('#1E3A8A'), c2=await mk('#C21807');
+ // แปลง dataURL เป็น Blob ด้วย atob ตรงๆ ไม่ใช้ fetch() — เดิม fetch(durl) ใช้ได้เพราะ
+ // ไม่มี CSP มาก่อน v41 เฟส 5 ใส่ CSP แล้ว fetch("data:...") ถูกบล็อกโดย connect-src
+ // (ตั้งใจไม่เปิดช่องนั้น เพราะแอปจริงไม่เคย fetch data: เลย มีแต่โค้ดเทสต์ที่ใช้ลัดแบบนี้)
  const setf=async(sel,durl,name)=>{
-   await pg.evaluate(async([sel,durl,name])=>{
-     const r=await fetch(durl); const bl=await r.blob();
-     const f=new File([bl],name,{type:'image/png'});
+   await pg.evaluate(([sel,durl,name])=>{
+     const [meta,b64]=durl.split(',');
+     const mime=(meta.match(/data:([^;]+)/)||[,'image/png'])[1];
+     const bin=atob(b64); const u=new Uint8Array(bin.length);
+     for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+     const f=new File([u],name,{type:mime});
      const dt=new DataTransfer(); dt.items.add(f);
      const el=document.querySelector(sel); el.files=dt.files;
      el.dispatchEvent(new Event('change',{bubbles:true}));

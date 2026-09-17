@@ -57,9 +57,13 @@ const {expect,done}=require('./_expect');
    x.fillStyle='#fff';x.fillRect(40,40,300,100);
    return cv.toDataURL('image/png');
  });
- await pg.evaluate(async(du)=>{
-   const r=await fetch(du); const bl=await r.blob();
-   const f=new File([bl],'ref.png',{type:'image/png'});
+ // atob ตรงๆ ไม่ใช้ fetch() — v41 เฟส 5 ใส่ CSP แล้ว fetch("data:...") ถูกบล็อกโดย connect-src
+ await pg.evaluate((du)=>{
+   const [meta,b64]=du.split(',');
+   const mime=(meta.match(/data:([^;]+)/)||[,'image/png'])[1];
+   const bin=atob(b64); const u=new Uint8Array(bin.length);
+   for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+   const f=new File([u],'ref.png',{type:mime});
    const dt=new DataTransfer(); dt.items.add(f);
    const el=document.getElementById('file'); el.files=dt.files;
    el.dispatchEvent(new Event('change',{bubbles:true}));
