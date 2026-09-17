@@ -2,6 +2,7 @@ const {join,dirname}=require('path');
 const PAGE_URL='file://'+join(__dirname,'..','dist','autostudio3d.html');
 require('fs').mkdirSync(join(__dirname,'out'),{recursive:true});
 const {chromium}=require(process.env.PW||'playwright');
+const {expect,done}=require('./_expect');
 (async()=>{
  const b=await chromium.launch();const pg=await b.newPage();
  const errs=[];pg.on('pageerror',e=>errs.push('PAGEERROR: '+e.message));
@@ -27,5 +28,14 @@ const {chromium}=require(process.env.PW||'playwright');
  const promptLen=await pg.$eval('#promptOut',n=>n.textContent.length);
  const restored=await pg.$$eval('.rail-right .block h2',n=>n.map(x=>x.textContent.trim()));
  console.log(JSON.stringify({wzOpen,steps,panels,exLen,exVis,wzStillOpen,apiFields,promptLen,restored,errs},null,1));
+ expect('โหมดแนะนำเปิดอัตโนมัติ', wzOpen);
+ expect('มี 8 ขั้นตอน', steps.length===8, steps.length);
+ // การ์ดกันไว้ตั้งแต่ v32 — ห้ามมีช่อง id ที่เข้าข่าย API/key/token/model/engine ฯลฯ
+ // ถ้าข้อนี้แดงเพราะ id ใหม่ (เช่นตอนเพิ่ม Drive) ห้ามแก้ regex — ให้เปลี่ยนชื่อ id แทน
+ expect('ไม่มีช่อง id ที่เข้าข่าย API key/token/model', apiFields.length===0, apiFields);
+ expect('มีคำสั่งที่ไม่ว่างเปล่าหลังจบโหมดแนะนำ', promptLen>0, promptLen);
+ expect('แผงด้านขวากลับที่เดิมหลังปิดโหมดแนะนำ', restored.length>0, restored);
+ expect('ไม่มี pageerror/console error', errs.length===0, errs);
+ done();
  await b.close();
 })();

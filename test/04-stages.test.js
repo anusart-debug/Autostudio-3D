@@ -2,6 +2,7 @@ const {join,dirname}=require('path');
 const PAGE_URL='file://'+join(__dirname,'..','dist','autostudio3d.html');
 require('fs').mkdirSync(join(__dirname,'out'),{recursive:true});
 const {chromium}=require(process.env.PW||'playwright');
+const {expect,done}=require('./_expect');
 const LAT=13.7466, LNG=100.5396;
 // --- A: ป้าย + สาย (12 relation = 6 สาย 2 ทิศ) ---
 function stopsPayload(){
@@ -47,9 +48,10 @@ function route(pg,map){
   return pg.route('**/api/interpreter',async r=>{
     const q=r.request().postData()||'';
     let body;
-    if(/foreach/.test(q)) body=map.C;
-    else if(/highway"="bus_stop"/.test(q)) body=map.A;
-    else body=map.B;
+    if(/as3d:lines/.test(q)) body=map.C;
+    else if(/as3d:stops/.test(q)) body=map.A;
+    else if(/as3d:base/.test(q)) body=map.B;
+    else body=map.B; // ไม่รู้จัก marker — ปลอดภัยไว้ก่อนด้วยฐานแผนที่
     if(body===null){ r.fulfill({status:504,body:'x'}); return; }
     if(body==='empty'){ r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({elements:[]})}); return; }
     r.fulfill({status:200,contentType:'application/json',
@@ -100,5 +102,19 @@ function route(pg,map){
    await pg.close();
  }
  console.log(JSON.stringify(out,null,1));
+ // ทุกฉาก: ไม่มี pageerror เด็ดขาด
+ for(const name of Object.keys(scenarios)){
+   expect('['+name+'] ไม่มี pageerror', out[name].errs.length===0, out[name].errs);
+ }
+ // full: ทุกช่วงสำเร็จ ต้องได้สายรถเมล์ + แผนที่ถูกวาด
+ expect('[full] มีสายรถเมล์ในตำนาน', out.full.routes>0, out.full.routes);
+ expect('[full] แผนที่ถูกวาด (ไม่โชว์ placeholder)', out.full.mapDrawn===true, out.full.mapDrawn);
+ // emptyB: ฐานแผนที่ว่างแต่รายการสายยังต้องมา (มาจาก stage A ไม่ใช่ B)
+ expect('[emptyB] รายการสายไม่หายไปเมื่อฐานแผนที่ว่าง', out.emptyB.routes>0, out.emptyB.routes);
+ // failC: stage C พังแต่รายการสายจาก stage A ต้องไม่ถูกลบ (กฎ "ช่วงหลังพังไม่ลบผลช่วงก่อน")
+ expect('[failC] รายการสายไม่หายไปเมื่อ stage C พัง', out.failC.routes>0, out.failC.routes);
+ // noStops: ไม่มีป้ายในรัศมี ต้องไม่มีสายให้แสดง (นับสายจากป้ายที่จอด ไม่ใช่ถนนที่ผ่าน)
+ expect('[noStops] ไม่มีป้าย = ไม่มีสาย', out.noStops.routes===0, out.noStops.routes);
+ done();
  await b.close();
 })();

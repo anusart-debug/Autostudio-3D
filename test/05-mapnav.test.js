@@ -2,6 +2,7 @@ const {join,dirname}=require('path');
 const PAGE_URL='file://'+join(__dirname,'..','dist','autostudio3d.html');
 require('fs').mkdirSync(join(__dirname,'out'),{recursive:true});
 const {chromium}=require(process.env.PW||'playwright');
+const {expect,done}=require('./_expect');
 const LAT=13.7995,LNG=100.5500;
 function stopsPayload(){
   const el=[];
@@ -41,8 +42,8 @@ function linesPayload(){
  await pg.route('**/api/interpreter',async r=>{
    const q=r.request().postData()||'';
    let body;
-   if(/foreach/.test(q)){qLines=q;body=linesPayload()}
-   else if(/highway"="bus_stop"/.test(q)) body=stopsPayload();
+   if(/as3d:lines/.test(q)){qLines=q;body=linesPayload()}
+   else if(/as3d:stops/.test(q)) body=stopsPayload();
    else body=basePayload();
    r.fulfill({status:200,contentType:'application/json',
      headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(body)});
@@ -97,5 +98,22 @@ function linesPayload(){
  R.legendBack = await pg.$$eval('#routeLegend .lgd-i',n=>n.length);
  R.errs=errs;
  console.log(JSON.stringify(R,null,1));
+ expect('qLines กรองเฉพาะชั้นถนนที่รถเมล์วิ่งได้', R.qLinesFiltered);
+ expect('qLines ไม่ลากทางเท้า/ซอยแบบไม่กรอง', R.qLinesNoFootway);
+ expect('qLines จำกัดรัศมีไม่เกิน 900 ม.', +R.qLinesRadius<=900, R.qLinesRadius);
+ expect('มีสายรถเมล์ในตำนาน (เคส >30 สาย)', R.routes>0, R.routes);
+ expect('แถบเครื่องมือแผนที่มองเห็นได้', R.toolsVisible);
+ expect('ซูมเข้าลดรัศมีมุมมอง', R.zoom.inWorks, R.zoom);
+ expect('ซูมออกเพิ่มรัศมีมุมมอง', R.zoom.outWorks, R.zoom);
+ expect('ลากแผนที่ (pan) ได้', R.panWorks);
+ expect('ปุ่ม fit คืนมุมมองเดิม', R.fitWorks);
+ expect('เต็มจอเปิดได้', R.fullOpen);
+ expect('legend ย้ายเข้าโหมดเต็มจอ', R.legendMovedIntoFull);
+ expect('แผนที่เต็มจอถูกวาด (สีหลากหลาย)', R.fullPainted>3, R.fullPainted);
+ expect('ดาวน์โหลด PNG แผนที่ได้', !!R.mapPng, R.mapPng);
+ expect('ปิดเต็มจอด้วย Escape ได้', R.fullClosed);
+ expect('legend กลับมาที่แผงเดิมหลังปิดเต็มจอ', R.legendBack>0, R.legendBack);
+ expect('ไม่มี pageerror', R.errs.length===0, R.errs);
+ done();
  await b.close();
 })();

@@ -10,7 +10,7 @@
       "สื่อตัวนี้อยู่ป้ายไหน และมีรถสายอะไรจอดบ้าง" ไม่ใช่ "มีสายอะไรขับผ่านแถวนี้" */
 function qStops(lat,lng,near){
   const N="(around:"+near+","+lat+","+lng+")";
-  return "[out:json][timeout:25];"+
+  return "/*as3d:stops*/[out:json][timeout:25];"+
     "(node"+N+'["highway"="bus_stop"];'+
      "node"+N+'["public_transport"="platform"]["bus"="yes"];'+
      "node"+N+'["public_transport"="stop_position"]["bus"="yes"];'+
@@ -24,7 +24,7 @@ function qBase(lat,lng,r){
   const drop = r>=1000
     ? "^(footway|path|steps|cycleway|track|corridor|platform|bridleway|proposed|construction|raceway|busway|service|living_street)$"
     : "^(footway|path|steps|cycleway|track|corridor|platform|bridleway|proposed|construction|raceway|busway)$";
-  return "[out:json][timeout:40];"+
+  return "/*as3d:base*/[out:json][timeout:40];"+
     "(way"+A+'["highway"]["highway"!~"'+drop+'"];'+
      "way"+A+'["railway"~"^(subway|light_rail|monorail|rail)$"];'+
      "way"+A+'["natural"="water"];'+
@@ -48,7 +48,7 @@ function qLines(lat,lng,r,near){
   const rr=Math.min(r,900);
   const A="(around:"+rr+","+lat+","+lng+")";
   const N="(around:"+near+","+lat+","+lng+")";
-  return "[out:json][timeout:45];"+
+  return "/*as3d:lines*/[out:json][timeout:45];"+
     "way"+A+'["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$"]->.w;'+
     "(node"+N+'["highway"="bus_stop"];'+
      "node"+N+'["public_transport"="platform"]["bus"="yes"];'+
@@ -57,16 +57,6 @@ function qLines(lat,lng,r,near){
     'rel(bn.s)["route"="bus"]->.b;'+
     "foreach.b->.r(.r out tags;way.w(r.r);out ids;);";
 }
-/* C สำรอง: ถ้าเซิร์ฟเวอร์ไม่รองรับ foreach ก็ยังได้ถนนที่มีรถเมล์ แต่ไม่แยกสี */
-function qLinesFallback(lat,lng,r,near){
-  const A="(around:"+r+","+lat+","+lng+")";
-  const N="(around:"+near+","+lat+","+lng+")";
-  return "[out:json][timeout:45];"+
-    "way"+A+'["highway"]->.w;'+
-    "(node"+N+'["highway"="bus_stop"];node'+N+'["public_transport"="platform"]["bus"="yes"];)->.s;'+
-    'rel(bn.s)["route"="bus"]->.b;way.w(r.b)->.bw;.bw out ids;';
-}
-
 async function ovpFetch(q,onTry,ms){
   const errs=[];
   for(let i=0;i<OVP_HOSTS.length;i++){

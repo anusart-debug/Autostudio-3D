@@ -2,6 +2,7 @@ const {join,dirname}=require('path');
 const PAGE_URL='file://'+join(__dirname,'..','dist','autostudio3d.html');
 require('fs').mkdirSync(join(__dirname,'out'),{recursive:true});
 const {chromium}=require(process.env.PW||'playwright');
+const {expect,done}=require('./_expect');
 // สร้างข้อมูล OSM จำลองรอบอนุสาวรีย์ชัยฯ: ถนน 240 เส้น, ราง, น้ำ, สวน, สายรถเมล์ 22 สาย
 function fixture(lat,lng){
   const el=[],R=0.006;
@@ -113,5 +114,21 @@ function fixture(lat,lng){
   await pg.close();
  }
  console.log(JSON.stringify(results,null,1));
+ // A) happy path — เซิร์ฟเวอร์แรกล่ม สำรองต้องทำงานต่อได้เอง
+ expect('happy: ล้มเหลวเซิร์ฟเวอร์แรกแล้วลองเซิร์ฟเวอร์สำรอง', results.happy.order[0]==='de'&&results.happy.order.includes('coffee'), results.happy.order);
+ expect('happy: มีสายรถเมล์ขึ้นในตำนาน', results.happy.legend>0, results.happy.legend);
+ expect('happy: แผนที่ถูกวาดจริง (สีหลากหลาย)', results.happy.canvasPainted>3, results.happy.canvasPainted);
+ expect('happy: แผนที่ไม่ค้างสถานะ placeholder', results.happy.offHidden===true, results.happy.offHidden);
+ expect('happy: ปุ่มดึงแผนที่กลับมาใช้ได้', results.happy.btnEnabled);
+ expect('happy: ไม่มี pageerror', results.happy.errs.length===0, results.happy.errs);
+ expect('happy: ใบนำเสนอมีแผนที่ (ไม่ใช่ placeholder)', results.happy.sheet.map===true, results.happy.sheet);
+ expect('happy: ดาวน์โหลด PNG ใบนำเสนอได้', !!results.happy.png, results.happy.png);
+ // B) ทุกเซิร์ฟเวอร์ค้าง — ต้อง timeout แล้วกู้คืนปุ่มได้เอง ไม่ค้างตลอดไป
+ expect('hang: กู้คืนสถานะปุ่มได้เองหลัง timeout', results.hang.recovered);
+ expect('hang: ไม่มี pageerror', results.hang.errs.length===0, results.hang.errs);
+ // C) กดปุ่มซ้ำระหว่างรอ = ยกเลิก
+ expect('cancel: ปุ่มกลับสภาพพร้อมกดใหม่หลังยกเลิก', results.cancel.btnBack.length>0, results.cancel.btnBack);
+ expect('cancel: ไม่มี pageerror', results.cancel.errs.length===0, results.cancel.errs);
+ done();
  await b.close();
 })();
