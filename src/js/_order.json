@@ -29,5 +29,8 @@
   "62-sfx.js",
   "63-wizard.js",
   "70-auth.web.js",
+  "71-drive.web.js",
+  "72-project.web.js",
+  "73-drive-ui.web.js",
   "79-web-boot.web.js"
 ]

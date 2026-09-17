@@ -53,7 +53,9 @@ function cspTemplate(scriptHashes, target, forHeader) {
   const connectSrc = "https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch " +
     "https://fonts.googleapis.com https://fonts.gstatic.com" +
     (target === "web"
-      ? " https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com"
+      /* เฟส 7: www.googleapis.com คือ Google Drive REST API (71-drive.web.js) —
+         ขอบเขตจริงถูกจำกัดด้วย scope drive.file ที่ขอไว้ตอน sign-in ไม่ใช่ด้วย CSP */
+      ? " https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com"
       : "");
   const frameSrc = target === "web" ? "https://*.firebaseapp.com" : "'none'";
   return "default-src 'none'; " +

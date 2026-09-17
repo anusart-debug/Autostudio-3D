@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://www.gstatic.com; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch https://fonts.googleapis.com https://fonts.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; form-action 'none'; base-uri 'none'; frame-src https://*.firebaseapp.com; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://www.gstatic.com; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch https://fonts.googleapis.com https://fonts.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com; form-action 'none'; base-uri 'none'; frame-src https://*.firebaseapp.com; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -766,6 +766,9 @@ footer.foot .sp{flex:1}
   <div class="drivebar" id="dvBar">
     <button class="btn" id="auSignInBtn" type="button">เข้าสู่ระบบด้วย Google</button>
     <span class="dvwho" id="auWho" hidden></span>
+    <button class="btn" id="dvOpenBtn" type="button" hidden>เปิดโปรเจกต์</button>
+    <button class="btn primary" id="dvSaveBtn" type="button" hidden>บันทึกลง Drive</button>
+    <button class="btn" id="dvNewBtn" type="button" hidden>ใหม่</button>
     <button class="btn" id="auAdminBtn" type="button" hidden>อนุมัติผู้ใช้</button>
     <button class="btn" id="auSignOutBtn" type="button" hidden>ออกจากระบบ</button>
   </div>
@@ -1456,6 +1459,21 @@ footer.foot .sp{flex:1}
       </button>
     </div>
     <div class="mb"><div id="auAdminList" class="mylist"></div></div>
+  </div>
+</div>
+
+<!-- โปรเจกต์ที่บันทึกไว้บน Google Drive (โฟลเดอร์ AUTOSTUDIO 3D ใน My Drive ของแต่ละคน) -->
+<div class="veil" id="dvVeil" hidden role="dialog" aria-modal="true" aria-labelledby="dvVeilTitle">
+  <div class="modal">
+    <div class="mh">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 5v14"/></svg>
+      <h2 id="dvVeilTitle">โปรเจกต์บน Google Drive</h2>
+      <span class="sp"></span>
+      <button class="iconbtn" id="dvClose" type="button" aria-label="ปิด">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mb"><div id="dvList" class="mylist"></div></div>
   </div>
 </div>
 
@@ -4242,6 +4260,12 @@ function dvRenderAll() {
   /* ล็อกส่วนแอปหลักไว้จนกว่าจะอนุมัติ — กันไม่ให้เห็นหรือใช้เครื่องมือก่อนได้รับอนุญาต */
   const ws = document.querySelector(".workspace");
   if (ws) ws.style.display = (!signedIn || approved) ? "" : "none";
+
+  /* ปุ่ม Drive (73-drive-ui.web.js) โผล่เฉพาะคนที่ล็อกอินแล้วและได้รับอนุมัติแล้วเท่านั้น */
+  const canUseDrive = signedIn && approved;
+  if ($("dvSaveBtn")) $("dvSaveBtn").hidden = !canUseDrive;
+  if ($("dvOpenBtn")) $("dvOpenBtn").hidden = !canUseDrive;
+  if ($("dvNewBtn")) $("dvNewBtn").hidden = !canUseDrive;
 }
 
 $("auSignInBtn").addEventListener("click", auSignIn);
@@ -4249,6 +4273,411 @@ $("auSignOutBtn").addEventListener("click", auSignOut);
 $("auRequestBtn").addEventListener("click", auRequestAccess);
 $("auAdminBtn").addEventListener("click", () => { $("auAdminVeil").hidden = false; auAdminRefresh(); });
 $("auAdminClose").addEventListener("click", () => { $("auAdminVeil").hidden = true; });
+
+/* ================= Google Drive REST wrapper (เฉพาะเว็บ) =========================
+   scope drive.file เท่านั้น (ขอไว้แล้วตอน sign-in ใน 70-auth.web.js) — แอปเห็นและแก้ได้
+   เฉพาะไฟล์ที่แอปนี้สร้างเอง ไม่ใช่ทั้ง Drive ของผู้ใช้ ถ้าโดน XSS วันไหน ความเสียหายจำกัด
+   อยู่แค่โฟลเดอร์ของแอปนี้ ไม่ใช่สัญญา/เรตการ์ด/ไฟล์ HR ของบริษัท
+
+   ฟรีทั้งหมด — Drive API ไม่มีค่าใช้จ่ายตามโควตาปกติของ Google Workspace/บัญชีส่วนตัว
+   ไม่ต้องเปิด billing account ใดๆ เพิ่มจากที่ Firebase Auth/Firestore ใช้อยู่แล้ว */
+const DV_API = "https://www.googleapis.com/drive/v3";
+const DV_UP = "https://www.googleapis.com/upload/drive/v3";
+const DV_FOLDER = "application/vnd.google-apps.folder";
+const DV_MAXUP = 4 * 1024 * 1024; /* multipart ปลอดภัยถึง 5MB — กันไว้ที่ 4MB เผื่อ overhead */
+let DV_ROOT_ID = "";
+
+async function dvFetch(url, opt) {
+  const tok = await auToken();
+  const o = Object.assign({}, opt);
+  o.headers = Object.assign({}, o.headers, { Authorization: "Bearer " + tok });
+  const r = await fetch(url, o);
+  if (r.status === 401) { AU_TOK = ""; AU_TOK_EXP = 0; throw new Error("เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่"); }
+  if (!r.ok) throw new Error("Drive HTTP " + r.status + " " + (await r.text()).slice(0, 200));
+  return r;
+}
+
+/* หาโฟลเดอร์ราก "AUTOSTUDIO 3D" ใน My Drive — หาก่อนเสมอ ไม่สร้างซ้ำ (idempotent) */
+async function dvRoot() {
+  if (DV_ROOT_ID) return DV_ROOT_ID;
+  const q = "mimeType='" + DV_FOLDER + "' and trashed=false and " +
+    "appProperties has { key='as3d' and value='root' }";
+  const r = await dvFetch(DV_API + "/files?q=" + encodeURIComponent(q) +
+    "&fields=files(id,name)&pageSize=10&spaces=drive");
+  const j = await r.json();
+  if (j.files && j.files.length) { DV_ROOT_ID = j.files[0].id; return DV_ROOT_ID; }
+  const c = await dvFetch(DV_API + "/files?fields=id", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "AUTOSTUDIO 3D", mimeType: DV_FOLDER, appProperties: { as3d: "root" } }),
+  });
+  DV_ROOT_ID = (await c.json()).id;
+  return DV_ROOT_ID;
+}
+
+/* รายชื่อโปรเจกต์ทั้งหมด (โฟลเดอร์ย่อยของราก) เรียงล่าสุดก่อน */
+async function dvList() {
+  const q = "'" + (await dvRoot()) + "' in parents and mimeType='" + DV_FOLDER + "' and trashed=false";
+  const r = await dvFetch(DV_API + "/files?q=" + encodeURIComponent(q) +
+    "&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=100");
+  return (await r.json()).files || [];
+}
+
+function dvMultipart(meta, blob) {
+  const B = "as3d" + Math.random().toString(36).slice(2);
+  const head = "--" + B + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+    JSON.stringify(meta) + "\r\n--" + B + "\r\nContent-Type: " + (blob.type || "application/octet-stream") + "\r\n\r\n";
+  const tail = "\r\n--" + B + "--";
+  return { body: new Blob([head, blob, tail]), type: "multipart/related; boundary=" + B };
+}
+
+async function dvCreateFolder(name, parentId) {
+  const r = await dvFetch(DV_API + "/files?fields=id,name,modifiedTime", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name, mimeType: DV_FOLDER, parents: [parentId] }),
+  });
+  return r.json();
+}
+
+/* สร้างไฟล์ใหม่ (metadata + เนื้อไฟล์ในคำขอเดียว) — ใช้ทั้ง project.json และรูปภาพ */
+async function dvCreateFile(name, parentId, blob) {
+  if (blob.size > DV_MAXUP) throw new Error("ไฟล์ใหญ่เกิน 4MB — ลดขนาดภาพก่อนบันทึก");
+  const m = dvMultipart({ name: name, parents: [parentId] }, blob);
+  const r = await dvFetch(DV_UP + "/files?uploadType=multipart&fields=id,name,modifiedTime,headRevisionId", {
+    method: "POST",
+    headers: { "Content-Type": m.type },
+    body: m.body,
+  });
+  return r.json();
+}
+
+/* อัปเดตเนื้อไฟล์เดิม (ไม่แก้ metadata) */
+async function dvUpdateFile(fileId, blob) {
+  if (blob.size > DV_MAXUP) throw new Error("ไฟล์ใหญ่เกิน 4MB");
+  const r = await dvFetch(DV_UP + "/files/" + fileId + "?uploadType=media&fields=id,modifiedTime,headRevisionId", {
+    method: "PATCH",
+    headers: { "Content-Type": blob.type },
+    body: blob,
+  });
+  return r.json();
+}
+
+async function dvRenameFolder(id, name) {
+  const r = await dvFetch(DV_API + "/files/" + id + "?fields=id,name", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name }),
+  });
+  return r.json();
+}
+
+/* ทิ้งลงถังขยะเท่านั้น — กู้คืนได้ 30 วันจาก Drive UI เอง ไม่ลบถาวร */
+async function dvTrash(id) {
+  return dvFetch(DV_API + "/files/" + id, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ trashed: true }),
+  });
+}
+
+async function dvListChildren(folderId) {
+  const r = await dvFetch(DV_API + "/files?q=" + encodeURIComponent("'" + folderId + "' in parents and trashed=false") +
+    "&fields=files(id,name,mimeType,modifiedTime,headRevisionId)&pageSize=50");
+  return (await r.json()).files || [];
+}
+
+async function dvGetBlob(fileId) {
+  const r = await dvFetch(DV_API + "/files/" + fileId + "?alt=media");
+  return r.blob();
+}
+async function dvGetText(fileId) {
+  const b = await dvGetBlob(fileId);
+  return b.text();
+}
+
+/* base64 (จาก S.refB64/S.adB64) → Blob — ไม่ใช้ fetch("data:...") เพราะ CSP ของไฟล์ออฟไลน์
+   บล็อกไว้ตั้งใจ (ดู build.mjs) ทำเหมือนกันไว้ที่นี่เพื่อความสม่ำเสมอ แม้ฝั่งเว็บจะไม่ติด CSP นี้ */
+function dvB64Blob(b64, mime) {
+  const bin = atob(b64);
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type: mime || "application/octet-stream" });
+}
+
+/* ================= แปลงสถานะแอป <-> ไฟล์โปรเจกต์บน Drive (เฉพาะเว็บ) =========================
+   ครึ่งหนึ่งของสถานะแอปนี้อยู่ใน DOM input ไม่ได้อยู่ใน S เลย (negative, artwork, detail,
+   bodyNotes, ล็อกต่างๆ, adFit ฯลฯ) — รายชื่อ field ต้องนิยามไว้ที่เดียวแล้วให้ save/load
+   ขับจากรายการเดียวกัน ไม่งั้นสองฝั่งจะแยกกันเดินเมื่อเพิ่ม field ใหม่ในอนาคต
+
+   S.styles เป็น Set — JSON.stringify(S) ธรรมดาจะได้ {} เงียบๆ ไม่ error ต้องแปลงเป็น [...] เอง
+   ตอน save แล้ว new Set(...) ตอน load เสมอ (ดู test/10-drive-roundtrip.test.js) */
+/* llLat/llLng ไม่อยู่ในรายการนี้โดยตั้งใจ — พิกัดหมุดเป็นของ PINX (ดู dvSerializeMap()/map.pin
+   ด้านล่าง) และ mapGo() ที่ dvApplyProject เรียกทีหลังจะเซ็ตช่องนี้ทับจากตำแหน่งของโลเคชั่นเสมอ
+   ใส่ไว้ใน DV_FIELD_IDS จะกลายเป็นค่าที่ไม่มีทางรอดถึงตอนโหลด (ยืนยันด้วย test/10-drive-roundtrip.test.js) */
+const DV_FIELD_IDS = [
+  "negative", "artwork", "detail", "bodyNotes", "fidelity",
+  "lockColor", "lockBody", "lockView", "srcRatio", "editStyle",
+  "col1", "col2", "adKeepScene", "adFit",
+];
+
+function dvFieldGet(id) {
+  const el = $(id);
+  if (!el) return undefined;
+  return el.type === "checkbox" ? el.checked : el.value;
+}
+function dvFieldSet(id, v) {
+  const el = $(id);
+  if (!el || v === undefined) return;
+  if (el.type === "checkbox") el.checked = !!v;
+  else el.value = v;
+  const evName = (el.tagName === "SELECT" || el.type === "checkbox") ? "change" : "input";
+  el.dispatchEvent(new Event(evName, { bubbles: true }));
+}
+
+/* เก็บแค่ at/radius/near/view/solo ของแผนที่ — ห้าม JSON.stringify(MAPD) ตรงๆ เด็ดขาด
+   MAPD.groups[].ways เป็น Set และ MAPD.data คือ payload ดิบจาก Overpass หลายเมกะไบต์
+   ดึงใหม่จาก Overpass ตอนเปิดโปรเจกต์แทน — ของพวกนี้ดึงซ้ำได้ ไม่ใช่ของที่ต้องเก็บ */
+function dvSerializeMap() {
+  const l = curLoc();
+  return {
+    locId: l.id,
+    at: MAPD.at, radius: MAPD.radius, near: MAPD.near,
+    view: MAPD.view, solo: MAPD.solo,
+    bus: BUSX[l.id] || null,
+    pin: PINX[l.id] || null,
+  };
+}
+
+function dvSerializeProject() {
+  const fields = {};
+  DV_FIELD_IDS.forEach((id) => { fields[id] = dvFieldGet(id); });
+  return {
+    as3d: 1, app: "AUTOSTUDIO 3D", appVersion: "41.0.0",
+    savedAt: new Date().toISOString(),
+    savedBy: (AU_USER && AU_USER.email) || "",
+    prompt: {
+      vehicle: S.vehicle, loc: S.loc, angle: S.angle, light: S.light,
+      styles: [...S.styles], /* Set -> array — จุดที่พังเงียบถ้าลืมแปลง */
+      lens: S.lens, weather: S.weather, ratio: S.ratio, scale: S.scale, hdr: S.hdr,
+    },
+    ref: { fileName: S.refFileName, mime: S.refMime, w: S.refW, h: S.refH,
+           body: S.refBody, orient: S.refOrient, extra: S.refExtra },
+    ad: { fileName: S.adFileName, mime: S.adMime },
+    fields: fields,
+    map: dvSerializeMap(),
+    lists: { custom: CUSTOM, hidden: HIDDEN },
+  };
+}
+
+/* คืนสถานะจาก project.json — imgUrls เป็น data: URL ของภาพ (ถ้ามี) ดึงมาจากไฟล์แยกบน Drive
+   ก่อนเรียกฟังก์ชันนี้แล้ว ฟังก์ชันนี้เองไม่ยิง Drive เพิ่ม */
+async function dvApplyProject(p, refDataUrl, adDataUrl) {
+  const pr = p.prompt || {};
+  S.vehicle = pr.vehicle || S.vehicle;
+  S.angle = pr.angle || S.angle;
+  S.light = pr.light || S.light;
+  S.styles = new Set(pr.styles || []);
+  S.lens = pr.lens || 0; S.weather = pr.weather || 0; S.ratio = pr.ratio || 0;
+  S.scale = pr.scale || 1; S.hdr = pr.hdr != null ? pr.hdr : 75;
+
+  const ref = p.ref || {};
+  S.refFileName = ref.fileName || ""; S.refMime = ref.mime || "image/jpeg";
+  S.refW = ref.w || 0; S.refH = ref.h || 0;
+  S.refBody = ref.body || ""; S.refOrient = ref.orient || ""; S.refExtra = ref.extra || [];
+  const ad = p.ad || {};
+  S.adFileName = ad.fileName || ""; S.adMime = ad.mime || "image/jpeg";
+
+  if (refDataUrl) {
+    S.refData = refDataUrl; S.refB64 = refDataUrl.split(",")[1] || "";
+    $("refImg").src = refDataUrl; $("refName").textContent = S.refFileName; $("refBox").hidden = false;
+    $("dnaBlock").hidden = false;
+  } else {
+    S.refData = null; S.refB64 = ""; $("refBox").hidden = true; $("dnaBlock").hidden = true;
+  }
+  if (adDataUrl) {
+    S.adData = adDataUrl; S.adB64 = adDataUrl.split(",")[1] || "";
+    $("adImg").src = adDataUrl; $("adName").textContent = S.adFileName; $("adBox").hidden = false;
+  } else {
+    S.adData = null; S.adB64 = ""; $("adBox").hidden = true;
+  }
+
+  DV_FIELD_IDS.forEach((id) => dvFieldSet(id, (p.fields || {})[id]));
+
+  if (p.lists) {
+    CUSTOM = p.lists.custom || CUSTOM; HIDDEN = p.lists.hidden || HIDDEN;
+    saveCustom();
+    try { store.set(HIDE_KEY, JSON.stringify(HIDDEN)); } catch (e) {}
+  }
+
+  ["vehicle", "loc", "angle", "light", "style"].forEach((k) => {
+    if (k !== "loc") renderChips(k);
+  });
+  refreshLens(); refreshWeather();
+  $("ratio").value = String(S.ratio);
+  $("scale").value = String(Math.round(S.scale * 100)); $("scaleVal").textContent = S.scale.toFixed(1) + "×";
+  $("hdr").value = String(S.hdr); $("hdrVal").textContent = S.hdr + "%";
+
+  const m = p.map || {};
+  if (m.locId) {
+    S.loc = m.locId; renderChips("loc");
+    if (m.bus) { BUSX[m.locId] = m.bus; saveBus(); }
+    if (m.pin) { PINX[m.locId] = m.pin; savePin(); }
+    mapGo(); /* ล้างแผนที่เดิม ตั้งพิกัด/รัศมีใหม่ตาม location — ยังไม่ดึง Overpass ใหม่ */
+    if (m.radius) MAPD.radius = m.radius;
+    if (m.near) MAPD.near = m.near;
+    $("mapZoom").value = String(MAPD.radius); $("mapNear").value = String(MAPD.near);
+    renderBus();
+    toast("เปิดโปรเจกต์แล้ว — กดปุ่มดึงแผนที่และเส้นทางเดินรถในแผง 10 เพื่อโหลดแผนที่ใหม่");
+  }
+
+  updateDnaLine();
+  sync();
+}
+
+/* ช่องมองสำหรับตรวจปัญหา/เทสต์ — อ่านอย่างเดียวเหมือน window.__as3d ใน 53-map-ui.js
+   แต่ผูกกับ 72-project.web.js เพราะ serialize/apply เป็นของเว็บเท่านั้น */
+window.__as3dProject = { serialize: dvSerializeProject, apply: dvApplyProject, fieldIds: DV_FIELD_IDS, S: () => S };
+
+/* ================= หน้าตาการบันทึก/เปิดโปรเจกต์บน Drive (เฉพาะเว็บ) =========================
+   DV_CUR ตามโปรเจกต์ที่เปิดอยู่ตอนนี้ — ว่างเปล่าหมายถึงยังไม่ได้บันทึก/เปิดอะไรเลย
+   headRevisionId เก็บไว้เช็กว่ามีคนอื่นแก้ไฟล์เดียวกันไปแล้วหรือยังก่อนบันทึกทับ (ใน My Drive
+   ของแต่ละคนจะไม่ชนกันจริงเพราะคนละที่เก็บ แต่ทำบัญชีนี้ไว้เผื่ออนาคตแชร์โฟลเดอร์ร่วมกัน) */
+let DV_CUR = {};
+
+function dvBlobToDataUrl(blob) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.onerror = () => rej(new Error("อ่านไฟล์ภาพไม่สำเร็จ"));
+    fr.readAsDataURL(blob);
+  });
+}
+
+async function dvCreateProject(name) {
+  toast("กำลังบันทึก…");
+  try {
+    const root = await dvRoot();
+    const folder = await dvCreateFolder(name, root);
+    const proj = dvSerializeProject();
+    const jsonBlob = new Blob([JSON.stringify(proj, null, 1)], { type: "application/json" });
+    const jsonFile = await dvCreateFile("project.json", folder.id, jsonBlob);
+    let refFileId = "", adFileId = "";
+    if (S.refB64) { const f = await dvCreateFile("reference.jpg", folder.id, dvB64Blob(S.refB64, S.refMime)); refFileId = f.id; }
+    if (S.adB64) { const f = await dvCreateFile("artwork.jpg", folder.id, dvB64Blob(S.adB64, S.adMime)); adFileId = f.id; }
+    DV_CUR = { folderId: folder.id, name: name, jsonId: jsonFile.id, rev: jsonFile.headRevisionId || "", refFileId: refFileId, adFileId: adFileId };
+    toast("บันทึกโปรเจกต์ " + name + " แล้ว");
+  } catch (e) {
+    toast("บันทึกไม่สำเร็จ: " + e.message, true);
+  }
+}
+
+async function dvSaveExisting() {
+  toast("กำลังบันทึก…");
+  try {
+    /* เช็ก conflict ก่อนทับ — เกิดได้เมื่อเปิดโฟลเดอร์เดียวกันจากหลายแท็บ/เครื่อง */
+    const r = await dvFetch(DV_API + "/files/" + DV_CUR.jsonId + "?fields=headRevisionId");
+    const meta = await r.json();
+    if (DV_CUR.rev && meta.headRevisionId && meta.headRevisionId !== DV_CUR.rev) {
+      const ok = window.confirm(
+        "ไฟล์นี้ถูกแก้ไขไปแล้วหลังจากที่คุณเปิดมา\nกด ตกลง เพื่อบันทึกทับ (เนื้อหาที่แก้ไว้ก่อนจะหายไป) หรือ ยกเลิก เพื่อไม่บันทึก"
+      );
+      if (!ok) return;
+    }
+    const proj = dvSerializeProject();
+    const jsonBlob = new Blob([JSON.stringify(proj, null, 1)], { type: "application/json" });
+    const updated = await dvUpdateFile(DV_CUR.jsonId, jsonBlob);
+    DV_CUR.rev = updated.headRevisionId || DV_CUR.rev;
+    if (S.refB64) {
+      if (DV_CUR.refFileId) await dvUpdateFile(DV_CUR.refFileId, dvB64Blob(S.refB64, S.refMime));
+      else { const f = await dvCreateFile("reference.jpg", DV_CUR.folderId, dvB64Blob(S.refB64, S.refMime)); DV_CUR.refFileId = f.id; }
+    }
+    if (S.adB64) {
+      if (DV_CUR.adFileId) await dvUpdateFile(DV_CUR.adFileId, dvB64Blob(S.adB64, S.adMime));
+      else { const f = await dvCreateFile("artwork.jpg", DV_CUR.folderId, dvB64Blob(S.adB64, S.adMime)); DV_CUR.adFileId = f.id; }
+    }
+    toast("บันทึกโปรเจกต์แล้ว");
+  } catch (e) {
+    toast("บันทึกไม่สำเร็จ: " + e.message, true);
+  }
+}
+
+function dvSaveFlow() {
+  if (!DV_CUR.folderId) {
+    const def = (curLoc().th || "") + " · " + ((find(list("vehicle"), S.vehicle) || {}).th || "");
+    const name = window.prompt("ชื่อโปรเจกต์:", def);
+    if (!name) return;
+    dvCreateProject(name);
+  } else {
+    dvSaveExisting();
+  }
+}
+
+async function dvOpenProject(folderId) {
+  toast("กำลังเปิดโปรเจกต์…");
+  try {
+    const kids = await dvListChildren(folderId);
+    const jsonFile = kids.find((k) => k.name === "project.json");
+    if (!jsonFile) throw new Error("ไม่พบ project.json ในโฟลเดอร์นี้");
+    const proj = JSON.parse(await dvGetText(jsonFile.id));
+    const refFile = kids.find((k) => k.name === "reference.jpg");
+    const adFile = kids.find((k) => k.name === "artwork.jpg");
+    const refUrl = refFile ? await dvBlobToDataUrl(await dvGetBlob(refFile.id)) : null;
+    const adUrl = adFile ? await dvBlobToDataUrl(await dvGetBlob(adFile.id)) : null;
+    await dvApplyProject(proj, refUrl, adUrl);
+    DV_CUR = {
+      folderId: folderId, jsonId: jsonFile.id, rev: jsonFile.headRevisionId || "",
+      refFileId: refFile ? refFile.id : "", adFileId: adFile ? adFile.id : "",
+    };
+    toast("เปิดโปรเจกต์แล้ว");
+  } catch (e) {
+    toast("เปิดโปรเจกต์ไม่สำเร็จ: " + e.message, true);
+  }
+}
+
+async function dvOpenDialogShow() {
+  $("dvVeil").hidden = false;
+  $("dvList").innerHTML = "กำลังโหลด…";
+  try {
+    const items = await dvList();
+    if (!items.length) { $("dvList").innerHTML = '<div class="empty">ยังไม่มีโปรเจกต์ที่บันทึกไว้</div>'; return; }
+    $("dvList").innerHTML = items.map((it) =>
+      '<div class="myrow"><div class="t"><b>' + esc(it.name) + '</b><em>' +
+      esc(new Date(it.modifiedTime).toLocaleString("th-TH")) + '</em></div>' +
+      '<button class="btn" data-open="' + esc(it.id) + '" type="button">เปิด</button>' +
+      '<button class="btn" data-rename="' + esc(it.id) + '" data-name="' + esc(it.name) + '" type="button">เปลี่ยนชื่อ</button>' +
+      '<button class="btn" data-trash="' + esc(it.id) + '" type="button">ลบ</button></div>'
+    ).join("");
+  } catch (e) {
+    $("dvList").innerHTML = '<div class="empty">โหลดรายการไม่สำเร็จ: ' + esc(e.message) + "</div>";
+  }
+}
+
+$("dvList").addEventListener("click", async (e) => {
+  const ob = e.target.closest("[data-open]"), rb = e.target.closest("[data-rename]"), tb = e.target.closest("[data-trash]");
+  if (ob) { $("dvVeil").hidden = true; await dvOpenProject(ob.dataset.open); return; }
+  if (rb) {
+    const nn = window.prompt("ชื่อใหม่:", rb.dataset.name);
+    if (nn && nn !== rb.dataset.name) {
+      try { await dvRenameFolder(rb.dataset.rename, nn); } catch (e2) { toast("เปลี่ยนชื่อไม่สำเร็จ: " + e2.message, true); }
+      dvOpenDialogShow();
+    }
+    return;
+  }
+  if (tb) {
+    if (!window.confirm("ย้ายโปรเจกต์นี้ไปถังขยะ? กู้คืนได้ 30 วันจาก Google Drive")) return;
+    try { await dvTrash(tb.dataset.trash); } catch (e2) { toast("ลบไม่สำเร็จ: " + e2.message, true); }
+    if (DV_CUR.folderId === tb.dataset.trash) DV_CUR = {};
+    dvOpenDialogShow();
+  }
+});
+$("dvOpenBtn").addEventListener("click", dvOpenDialogShow);
+$("dvSaveBtn").addEventListener("click", dvSaveFlow);
+$("dvClose").addEventListener("click", () => { $("dvVeil").hidden = true; });
+$("dvNewBtn").addEventListener("click", () => {
+  if (!window.confirm("เริ่มโปรเจกต์ใหม่? งานที่ยังไม่บันทึกลง Drive จะหายไป")) return;
+  location.reload();
+});
 
 /* ---------------- จุดเริ่มของโค้ดเว็บ (เฉพาะเว็บ) ----------------
    อยู่ท้ายสุดของ _order.json โดยตั้งใจ — ทุกอย่างของแอปโหลดและ sync() ไปแล้ว

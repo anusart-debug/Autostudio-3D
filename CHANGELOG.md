@@ -2,6 +2,29 @@
 
 เก็บเฉพาะการตัดสินใจที่เปลี่ยนสถาปัตยกรรม ไม่ใช่ทุกการแก้
 
+## v41 (กำลังทำ) — เฟส 7: Google Drive อ่าน/เขียนโปรเจกต์
+- `src/js/71-drive.web.js` (ใหม่): wrapper REST v3 ของ Drive ด้วย scope `drive.file` เท่านั้น
+  (เห็นแค่ไฟล์ที่แอปนี้สร้างเอง ไม่ใช่ทั้ง Drive) — สร้าง/หา root folder "AUTOSTUDIO 3D",
+  สร้างไฟล์ด้วย `multipart/related` ที่ประกอบ body เอง (ไม่ใช้ `FormData`), อัปเดตด้วย
+  `PATCH`+`uploadType=media`, ลบ = ตั้ง `trashed:true` เท่านั้น (กู้คืนได้ 30 วัน)
+- `src/js/72-project.web.js` (ใหม่): แปลงสถานะแอป <-> `project.json` — `DV_FIELD_IDS` เป็น
+  รายชื่อ field เดียวที่ทั้งบันทึกและโหลดใช้ร่วมกัน กัน save/load แยกกันเดินเมื่อเพิ่ม field ใหม่
+  · `S.styles` (เป็น `Set`) แปลงเป็น `[...S.styles]` ตอนบันทึกและ `new Set(...)` ตอนโหลดเสมอ
+  · แผนที่เก็บแค่ `at/radius/near/view/solo/bus/pin` ไม่ใช่ `MAPD` ทั้งก้อน (มีข้อมูล Overpass ดิบ
+    หลายเมกะไบต์ + มี `Set` ซ้อนอยู่ข้างใน) — ดึงใหม่จาก Overpass ตอนเปิดโปรเจกต์แทน
+- `src/js/73-drive-ui.web.js` (ใหม่): กล่องรายการโปรเจกต์ (เปิด/เปลี่ยนชื่อ/ทิ้ง) + บันทึก/
+  บันทึกทับ พร้อมเช็ก `headRevisionId` ก่อนบันทึกทับกันคนอื่นแก้ไฟล์เดียวกันไปแล้ว
+- `build.mjs`: เพิ่ม `https://www.googleapis.com` ใน `connect-src` ของเว็บ (โดเมนของ Drive API
+  ที่ 71-drive.web.js เรียก) — ขอบเขตจริงถูกจำกัดด้วย scope `drive.file` ตอน sign-in ไม่ใช่ CSP
+- **บั๊กที่เจอจากเทสต์ round-trip ก่อนส่งของ** (`test/10-drive-roundtrip.test.js`, ใหม่):
+  ตอนแรกใส่ `llLat`/`llLng` ไว้ใน `DV_FIELD_IDS` ด้วย แต่พิกัดหมุดที่แท้จริงถูกเก็บผ่าน `PINX`
+  (ดู `map.pin`) และ `mapGo()` ที่ `dvApplyProject` เรียกทีหลังจะเซ็ตช่องนี้ทับจากตำแหน่งของ
+  โลเคชั่นเสมอ ทำให้ค่าที่บันทึกไว้ใน `fields.llLat/llLng` ไม่มีทางรอดถึงตอนโหลด — เอาออกจาก
+  `DV_FIELD_IDS` เพราะมีกลไก `PINX`/`map.pin` ทำหน้าที่นี้อยู่แล้วจริงๆ
+- เพิ่ม `window.__as3dProject` (เฉพาะเว็บ) ข้าง `window.__as3d` เดิม — เปิดช่องให้เทสต์เรียก
+  `dvSerializeProject`/`dvApplyProject` ตรงๆ โดยไม่ต้องยิง Drive จริงเลย (ฟังก์ชันทั้งสองไม่เรียก
+  `dvFetch` อยู่แล้ว รับ/คืนแค่ข้อมูลในหน่วยความจำ)
+
 ## v41 (กำลังทำ) — เฟส 6: ล็อกอิน Google + ระบบขอสิทธิ์การใช้งาน
 เปลี่ยนจากแผนเดิม (Google Identity Services ตรงๆ อนุญาตทุกคนใน `@planbmedia.co.th`) เป็น
 **Firebase Authentication + Firestore** เพราะต้องมีระบบขอสิทธิ์เป็นรายบุคคล (คนใหม่กดขอ

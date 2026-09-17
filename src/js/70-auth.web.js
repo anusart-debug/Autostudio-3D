@@ -186,6 +186,12 @@ function dvRenderAll() {
   /* ล็อกส่วนแอปหลักไว้จนกว่าจะอนุมัติ — กันไม่ให้เห็นหรือใช้เครื่องมือก่อนได้รับอนุญาต */
   const ws = document.querySelector(".workspace");
   if (ws) ws.style.display = (!signedIn || approved) ? "" : "none";
+
+  /* ปุ่ม Drive (73-drive-ui.web.js) โผล่เฉพาะคนที่ล็อกอินแล้วและได้รับอนุมัติแล้วเท่านั้น */
+  const canUseDrive = signedIn && approved;
+  if ($("dvSaveBtn")) $("dvSaveBtn").hidden = !canUseDrive;
+  if ($("dvOpenBtn")) $("dvOpenBtn").hidden = !canUseDrive;
+  if ($("dvNewBtn")) $("dvNewBtn").hidden = !canUseDrive;
 }
 
 $("auSignInBtn").addEventListener("click", auSignIn);

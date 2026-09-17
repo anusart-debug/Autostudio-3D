@@ -58,6 +58,9 @@
   <div class="drivebar" id="dvBar">
     <button class="btn" id="auSignInBtn" type="button">เข้าสู่ระบบด้วย Google</button>
     <span class="dvwho" id="auWho" hidden></span>
+    <button class="btn" id="dvOpenBtn" type="button" hidden>เปิดโปรเจกต์</button>
+    <button class="btn primary" id="dvSaveBtn" type="button" hidden>บันทึกลง Drive</button>
+    <button class="btn" id="dvNewBtn" type="button" hidden>ใหม่</button>
     <button class="btn" id="auAdminBtn" type="button" hidden>อนุมัติผู้ใช้</button>
     <button class="btn" id="auSignOutBtn" type="button" hidden>ออกจากระบบ</button>
   </div>
@@ -748,6 +751,21 @@
       </button>
     </div>
     <div class="mb"><div id="auAdminList" class="mylist"></div></div>
+  </div>
+</div>
+
+<!-- โปรเจกต์ที่บันทึกไว้บน Google Drive (โฟลเดอร์ AUTOSTUDIO 3D ใน My Drive ของแต่ละคน) -->
+<div class="veil" id="dvVeil" hidden role="dialog" aria-modal="true" aria-labelledby="dvVeilTitle">
+  <div class="modal">
+    <div class="mh">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 5v14"/></svg>
+      <h2 id="dvVeilTitle">โปรเจกต์บน Google Drive</h2>
+      <span class="sp"></span>
+      <button class="iconbtn" id="dvClose" type="button" aria-label="ปิด">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="mb"><div id="dvList" class="mylist"></div></div>
   </div>
 </div>
 

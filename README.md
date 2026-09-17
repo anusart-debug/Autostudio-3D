@@ -1,12 +1,14 @@
 # AUTOSTUDIO 3D
 
 เครื่องมือภายในของ Plan B Media — เขียนคำสั่งสร้างภาพโฆษณา OOH + แผนที่เส้นทางรถเมล์ + ใบนำเสนอฝ่ายขาย
-ตอนนี้มีสองรูปแบบจากซอร์สเดียวกัน (v41 เฟส 5):
+ตอนนี้มีสองรูปแบบจากซอร์สเดียวกัน (v41 เฟส 7):
 
 1. **ไฟล์ออฟไลน์** `dist/autostudio3d.html` — ไฟล์เดียว ดับเบิลคลิกเปิดจาก `file://` ได้เลย
    ไม่มี Google sign-in ไม่มี Drive ไม่มี API key เหมือนเดิมทุกประการ
-2. **เว็บแอพ** `dist/web/index.html` — ไว้ขึ้น Firebase Hosting มี Google sign-in + บันทึกลง
-   Google Drive (เฟส 6-7) ยังใช้ตัววาดคำสั่ง/แผนที่ชุดเดียวกันกับไฟล์ออฟไลน์ทุกอย่าง
+2. **เว็บแอพ** `dist/web/index.html` — ไว้ขึ้น Firebase Hosting มี Google sign-in ที่ต้องรอ
+   แอดมินอนุมัติสิทธิ์ก่อนใช้งานได้ (Firebase Auth + Firestore) และบันทึก/เปิดโปรเจกต์บน
+   Google Drive ของผู้ใช้เอง (scope `drive.file`) ยังใช้ตัววาดคำสั่ง/แผนที่ชุดเดียวกันกับ
+   ไฟล์ออฟไลน์ทุกอย่าง
 
 **หลักการ "ตัดออก ไม่ใช่ใส่ flag":** โมดูล JS ที่ใช้เฉพาะเว็บใช้นามสกุล `.web.js` แล้ว
 `build.mjs` กรองออกตอนสร้างไฟล์ออฟไลน์จริงๆ — ไม่ใช่ซ่อนด้วย `if`
@@ -80,10 +82,16 @@ src/
     61-collapse.js   ย่อ/ขยายแผง
     62-sfx.js        เสียงประกอบ (สร้างจาก WebAudio ไม่มีไฟล์เสียง)
     63-wizard.js     โหมดแนะนำทีละขั้น 8 ขั้น
+    70-auth.web.js   ★ เฉพาะเว็บ: Firebase Auth (Google) + ระบบขอสิทธิ์ผ่าน Firestore
+    71-drive.web.js  เฉพาะเว็บ: REST wrapper ของ Google Drive (scope drive.file)
+    72-project.web.js เฉพาะเว็บ: แปลงสถานะแอป <-> project.json (DV_FIELD_IDS เดียวกันทั้งบันทึก/โหลด)
+    73-drive-ui.web.js เฉพาะเว็บ: กล่องรายการโปรเจกต์ + บันทึก/เปิด/เปลี่ยนชื่อ/ทิ้ง
+    79-web-boot.web.js เฉพาะเว็บ: จุดเริ่ม auInit() ท้ายสุด
 test/
   run.mjs            ตัวรันเทสต์ (ไม่พึ่ง framework)
-  0*.test.js         6 ชุด ครอบคลุม wizard, เปลี่ยนโฆษณา, negative prompt,
-                     การโหลดแผนที่ 3 ช่วง, ซูม/เลื่อน/เต็มจอ, และการกู้คืนเมื่อเน็ตล่ม
+  0*.test.js/1*.test.js  10 ชุด ครอบคลุม wizard, เปลี่ยนโฆษณา, negative prompt, การโหลดแผนที่
+                     3 ช่วง, ซูม/เลื่อน/เต็มจอ, การกู้คืนเมื่อเน็ตล่ม, ยามป้องกันข้อมูลรั่วไหล,
+                     อัตราส่วนภาพ, เส้นทางเดินรถจริง, และ save/load โปรเจกต์บน Drive
 docs/                เอกสารประกอบ (ที่มาข้อมูล บทเรียนเรื่องแผนที่ สเปก)
 ```
 
@@ -169,3 +177,5 @@ node build.mjs --check     # เทียบทีละไบต์กับ di
 แก้ที่ `src/index.html` (ค้นหา `v40`) และ `package.json`
 
 ช่องมองสถานะสำหรับไล่บั๊ก: เปิด DevTools Console แล้วพิมพ์ `__as3d.map()` หรือ `__as3d.routes()`
+(เฉพาะเว็บมีเพิ่ม `__as3dProject.serialize()`/`__as3dProject.apply(p)`/`__as3dProject.S()`
+สำหรับตรวจ save/load โปรเจกต์บน Drive โดยไม่ต้องยิง Drive จริง — ใช้ใน `test/10-drive-roundtrip.test.js`)
