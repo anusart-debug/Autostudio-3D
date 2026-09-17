@@ -77,12 +77,15 @@ $("sheetPng").addEventListener("click",async()=>{
   cv.width=W*K; cv.height=H;
   const c=cv.getContext("2d");
   c.fillStyle="#ffffff"; c.fillRect(0,0,cv.width,cv.height);
-  /* หัวกระดาษ */
-  c.fillStyle="#0C1016"; c.fillRect(0,0,cv.width,84*K);
-  c.fillStyle="#FF6B2C"; c.font="600 "+(19*K)+"px "+THAI;
+  /* หัวกระดาษ — น้ำเงิน Plan B + ตัวหนังสือขาว (คู่กับ #sheet .sh-top ใน styles.css
+     แก้สีที่นี่แล้วต้องแก้ที่นั่นด้วย ไม่งั้นตัวอย่างบนจอกับไฟล์ PNG ที่ส่งออกจะสีไม่ตรงกัน) */
+  const hdrGrad=c.createLinearGradient(0,0,cv.width,84*K);
+  hdrGrad.addColorStop(0,"#002563"); hdrGrad.addColorStop(1,"#0E4FB5");
+  c.fillStyle=hdrGrad; c.fillRect(0,0,cv.width,84*K);
+  c.fillStyle="#ffffff"; c.font="600 "+(19*K)+"px "+THAI;
   c.textAlign="left"; c.textBaseline="alphabetic";
   c.fillText("PLAN B MEDIA",PADX*K,36*K);
-  c.fillStyle="#9aa5b4"; c.font=(11.5*K)+"px "+MONO;
+  c.fillStyle="#cfe0f5"; c.font=(11.5*K)+"px "+MONO;
   c.fillText("OUT-OF-HOME · BANGKOK BUS & BILLBOARD NETWORK",PADX*K,60*K);
   /* ชื่อโลเคชั่น */
   let y=84*K+52*K;

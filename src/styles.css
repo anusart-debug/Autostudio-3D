@@ -65,13 +65,14 @@ header.top{
   position:sticky;top:0;z-index:40;
 }
 .brand{display:flex;align-items:center;gap:11px;min-width:0}
-.brand .mark{
-  width:34px;height:34px;flex:0 0 34px;border-radius:var(--r);
-  background:linear-gradient(145deg,var(--brand),var(--brand-2));
-  display:grid;place-items:center;
-  box-shadow:0 0 0 1px var(--brand-glow),0 6px 18px -8px var(--brand);
+/* โลโก้ Plan B ทางการ — สีของตัวโลโก้เองคงที่เสมอ (navy/cyan/white) ไม่ตามธีม เหมือนโลโก้บริษัท
+   จริงทั่วไปที่ไม่เปลี่ยนสีตามหน้าเว็บ ส่วน box-shadow รอบนอกยังตามธีมได้เพราะเป็นแค่กรอบ */
+.planblogo{
+  height:34px;flex:0 0 auto;border-radius:var(--r);overflow:hidden;
+  display:flex;box-shadow:0 0 0 1px var(--brand-glow),0 6px 18px -8px var(--brand);
 }
-.brand .mark svg,.wzbar .mark svg{stroke:var(--brand-on)}
+.planblogo svg{height:100%;width:auto;display:block}
+.wzbar .planblogo{height:32px}
 .brand h1{
   font-family:var(--head);font-weight:700;font-size:17px;letter-spacing:.10em;
   margin:0;line-height:1.1;text-transform:uppercase;white-space:nowrap;
@@ -611,11 +612,6 @@ pre.final{
   background:linear-gradient(180deg,var(--scrim-1),transparent);
 }
 .wzbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.wzbar .mark{
-  width:32px;height:32px;flex:0 0 32px;border-radius:var(--r);
-  background:linear-gradient(145deg,var(--brand),var(--brand-2));display:grid;place-items:center;
-  box-shadow:0 0 0 1px var(--brand-glow),0 0 26px -6px var(--brand);
-}
 .wzbar h1{
   margin:0;font-family:var(--head);font-size:15px;letter-spacing:.14em;text-transform:uppercase;
 }
