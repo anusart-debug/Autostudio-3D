@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://www.gstatic.com; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch https://fonts.googleapis.com https://fonts.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com; form-action 'none'; base-uri 'none'; frame-src https://*.firebaseapp.com; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-0nKmP1fk2oNvtQsPlTd3SkhjdmuGmmoE3uTEm8iI/J8='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -109,9 +109,6 @@ header.top{
 }
 .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal)}
 .themebtn{margin-left:2px}
-/* v41 เฟส 6 (เว็บเท่านั้น) — แถบล็อกอิน Google */
-.drivebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.dvwho{font-family:var(--mono);font-size:10.5px;color:var(--txt-dim);white-space:nowrap}
 
 /* ---------- layout ---------- */
 .workspace{
@@ -763,12 +760,9 @@ footer.foot .sp{flex:1}
   <div class="engine-badge"><span class="dot" id="liveDot"></span><span id="badgeEngine">PROMPT ENGINE</span></div>
   <div class="engine-badge" id="badgeMode">TEXT ONLY</div>
   
-  <div class="drivebar" id="dvBar">
-    <button class="btn" id="auSignInBtn" type="button">เข้าสู่ระบบด้วย Google</button>
-    <span class="dvwho" id="auWho" hidden></span>
-    <button class="btn" id="auAdminBtn" type="button" hidden>อนุมัติผู้ใช้</button>
-    <button class="btn" id="auSignOutBtn" type="button" hidden>ออกจากระบบ</button>
-  </div>
+  <!-- เนื้อหาจริง (ปุ่มล็อกอิน/บันทึกลง Drive) มาในเฟส 6-7 — ตอนนี้แค่พิสูจน์ว่ากลไกตัดบล็อก
+       ของ build.mjs ทำงานถูก: ไฟล์ออฟไลน์ต้องไม่มีคำว่า dvBar อยู่เลยแม้แต่ตัวอักษรเดียว -->
+  <div class="drivebar" id="dvBar" hidden></div>
   
   <button class="iconbtn themebtn" type="button" aria-pressed="false" title="สลับธีมสว่าง/มืด">
     <svg viewBox="0 0 24 24" width="15" height="15"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
@@ -1430,46 +1424,6 @@ footer.foot .sp{flex:1}
 </div>
 
 <div class="toast" id="toast"></div>
-
-
-<!-- หน้ากันเข้า (gate) — โผล่ทับทั้งจอเมื่อล็อกอินแล้วแต่ยังไม่ได้รับอนุมัติ
-     70-auth.web.js สั่งเปิด/ปิดผ่าน dvRenderAll() -->
-<div class="veil" id="auGateVeil" hidden role="dialog" aria-modal="true" aria-labelledby="auGateTitle">
-  <div class="modal">
-    <div class="mh"><h2 id="auGateTitle">รอการอนุมัติสิทธิ์การใช้งาน</h2></div>
-    <div class="mb">
-      <p id="auGateMsg" style="margin:0 0 14px"></p>
-      <button class="btn primary" id="auRequestBtn" type="button" hidden>ขอสิทธิ์การใช้งาน</button>
-    </div>
-  </div>
-</div>
-
-<!-- หน้าผู้ดูแล — อนุมัติ/ปฏิเสธคำขอที่รอดำเนินการ เห็นได้เฉพาะ ADMIN_EMAIL -->
-<div class="veil" id="auAdminVeil" hidden role="dialog" aria-modal="true" aria-labelledby="auAdminTitle">
-  <div class="modal">
-    <div class="mh">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>
-      <h2 id="auAdminTitle">อนุมัติสิทธิ์การใช้งาน</h2>
-      <span class="sp"></span>
-      <button class="iconbtn" id="auAdminClose" type="button" aria-label="ปิด">
-        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
-      </button>
-    </div>
-    <div class="mb"><div id="auAdminList" class="mylist"></div></div>
-  </div>
-</div>
-
-<!-- Firebase compat SDK — โหลดแบบ script src ธรรมดา ไม่ใช่ ES module ให้เข้ากับสถาปัตยกรรม
-     global scope เดียวของแอปนี้ (ไม่มี import/export ที่ไหนเลย) ต้องมาก่อนสคริปต์หลักด้านล่าง
-     เพราะ 79-web-boot.web.js เรียก auInit() ซึ่งต้องมี window.firebase อยู่แล้ว
-     ห้ามพิมพ์ชื่อ marker ของสคริปต์หลัก (สองแอต ตามด้วย JS ตามด้วยสองแอต) ซ้ำไว้ในคอมเมนต์
-     ไหนอีก — build.mjs เช็กว่า marker นี้ต้องเจอพอดี 1 ครั้งเท่านั้น เคยพลาดเขียนซ้ำไว้ในคอมเมนต์
-     บรรทัดนี้เองมาก่อนแล้วสองรอบ (String.replace แบบสตริงเปล่าแทนแค่ตัวที่เจอก่อนตัวเดียว) -->
-
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-
 
 <script>
 (function(){
@@ -4054,210 +4008,7 @@ renderBus();
 mapInit(); mapNote(); renderRouteLegend();
 /* ย้ายแผงเข้า/ออกหน้าต่างแนะนำแล้วขนาดกล่องเปลี่ยน ต้องบอก Leaflet ให้วัดใหม่ */
 /* ค่าเริ่มต้นของโปรแกรม = โหมดแนะนำทีละขั้น (ปิดได้ที่สวิตช์ท้ายหน้าต่าง) */
-if(startInWizard()) wzOpen(true);/* ================= ล็อกอิน Google + ระบบขอสิทธิ์การใช้งาน (เฉพาะเว็บ) =========================
-   ใช้ Firebase Authentication (ไม่ใช่ Google Identity Services ดิบๆ) เพราะ Firestore
-   Security Rules ต้องมี request.auth ซึ่งมาจาก Firebase Auth เท่านั้น — ขอ scope drive.file
-   (สำหรับเฟส 7) ในการล็อกอินครั้งเดียวกันผ่าน GoogleAuthProvider.addScope() ไม่ต้องขอ token
-   สองรอบสองที่
-
-   ทำไมต้องมีระบบขอสิทธิ์: ผู้ใช้ขอให้ล็อกอินได้แค่อีเมลที่ได้รับอนุมัติแล้ว คนใหม่ต้อง
-   กดขอสิทธิ์แล้วรอผู้ดูแลอนุมัติก่อนถึงจะเห็น/ใช้เครื่องมือได้ — เก็บสถานะที่ Firestore
-   collection "users" เอกสารละ 1 อีเมล (ดู firestore.rules คู่กัน)
-
-   ค่า config ของ Firebase (apiKey ฯลฯ) ไม่ใช่ความลับ — เหมือน OAuth Client ID เปิดเผยได้
-   (ความปลอดภัยจริงมาจาก Firestore Security Rules + OAuth consent screen "Internal"
-   ไม่ได้มาจากการซ่อนค่าพวกนี้) แต่ *ยังไม่ใช่ค่าจริง* จนกว่าจะเอาไปแทนตอนตั้งโปรเจกต์ Firebase */
-const FB_CONFIG = {
-  apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
-  authDomain: "REPLACE_WITH_PROJECT_ID.firebaseapp.com",
-  projectId: "REPLACE_WITH_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_PROJECT_ID.appspot.com",
-  messagingSenderId: "REPLACE_WITH_SENDER_ID",
-  appId: "REPLACE_WITH_APP_ID",
-};
-/* ผู้ดูแลระบบ — คนเดียวที่อนุมัติ/ปฏิเสธคำขอได้ ต้องตรงกับ firestore.rules เสมอ */
-const ADMIN_EMAIL = "anusart@planbmedia.co.th";
-const AU_SCOPE = "https://www.googleapis.com/auth/drive.file";
-
-let AU_APP = null, AU_AUTH = null, AU_DB = null;
-let AU_USER = null;   /* {email,name} หลังล็อกอินสำเร็จ — null เมื่อยังไม่ล็อกอิน */
-let AU_TOK = "";      /* Google OAuth access token (ใช้เรียก Drive เฟส 7) — หน่วยความจำเท่านั้น
-                          ห้ามเขียนลง localStorage/Firestore/URL เด็ดขาด */
-let AU_TOK_EXP = 0;
-let AU_STATUS = "";   /* ""|"pending"|"approved"|"rejected" */
-
-function auInit() {
-  if (AU_APP) return;
-  /* กันไว้ก่อน FB_CONFIG จะถูกแทนด้วยค่าจริง — ไม่ให้ error ตอน initializeApp() พังทั้งหน้า
-     ทั้งที่ยังใช้ระบบเขียนคำสั่ง/แผนที่ในโหมดออฟไลน์-ทำงานต่อได้ตามปกติ */
-  try {
-    AU_APP = firebase.initializeApp(FB_CONFIG);
-    AU_AUTH = firebase.auth();
-    AU_DB = firebase.firestore();
-    AU_AUTH.onAuthStateChanged(onAuthChange, (e) => toast("ระบบล็อกอินขัดข้อง: " + e.message, true));
-  } catch (e) {
-    toast("ตั้งค่า Firebase ไม่สำเร็จ (ยังไม่ได้ใส่ค่าจริง?) — ใช้งานส่วนเขียนคำสั่งได้ตามปกติ", true);
-  }
-}
-
-async function onAuthChange(user) {
-  if (!user) { AU_USER = null; AU_TOK = ""; AU_TOK_EXP = 0; AU_STATUS = ""; dvRenderAll(); return; }
-  AU_USER = { email: user.email || "", name: user.displayName || user.email || "" };
-  await auCheckStatus();
-  dvRenderAll();
-}
-
-/* hosted_domain เป็นแค่คำใบ้ให้ตัวเลือกบัญชีของ Google กรองให้ดูง่ายขึ้น — ไม่ใช่ระบบความ
-   ปลอดภัยจริง (แก้ในเบราว์เซอร์ตัวเองได้) กำแพงจริงคือ OAuth consent screen ตั้งเป็น Internal
-   ที่ตั้งค่าไว้ใน Google Cloud Console ซึ่ง Google เป็นคนบังคับฝั่งเซิร์ฟเวอร์เอง */
-function auSignIn() {
-  auInit();
-  if (!AU_AUTH) { toast("ระบบล็อกอินยังไม่พร้อม — ยังไม่ได้ตั้งค่า Firebase จริง", true); return; }
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope(AU_SCOPE);
-  provider.setCustomParameters({ hd: "planbmedia.co.th" });
-  AU_AUTH.signInWithPopup(provider).then((result) => {
-    const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-    AU_TOK = (cred && cred.accessToken) || "";
-    AU_TOK_EXP = Date.now() + 3500 * 1000;
-  }).catch((e) => toast("เข้าสู่ระบบไม่สำเร็จ: " + e.message, true));
-}
-
-function auSignOut() {
-  AU_TOK = ""; AU_TOK_EXP = 0;
-  /* เครื่องที่ใช้ร่วมกัน — ออกจากระบบแล้วต้องไม่เหลือภาพของคนก่อนหน้าให้คนถัดไปเห็น */
-  if (typeof S !== "undefined") {
-    S.refData = null; S.refB64 = ""; S.refFileName = ""; S.refW = 0; S.refH = 0;
-    S.adData = null; S.adB64 = ""; S.adFileName = "";
-    if (typeof sync === "function") sync();
-  }
-  AU_AUTH.signOut();
-}
-
-/* ต่ออายุ token เงียบๆ เมื่อใกล้หมดอายุ — ใช้ตอนเรียก Drive (เฟส 7)
-   signInWithPopup ซ้ำมักไม่ต้องกดยืนยันอีกถ้าเซสชัน Google เดิมยังไม่ถูก revoke */
-async function auToken() {
-  if (AU_TOK && Date.now() < AU_TOK_EXP) return AU_TOK;
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope(AU_SCOPE);
-  const result = await AU_AUTH.signInWithPopup(provider);
-  const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-  AU_TOK = (cred && cred.accessToken) || "";
-  AU_TOK_EXP = Date.now() + 3500 * 1000;
-  return AU_TOK;
-}
-
-function auIsAdmin() { return !!(AU_USER && AU_USER.email === ADMIN_EMAIL); }
-function auIsApproved() { return AU_STATUS === "approved" || auIsAdmin(); }
-
-/* ---- ระบบขอสิทธิ์การใช้งาน ---- */
-async function auCheckStatus() {
-  if (!AU_USER) return;
-  try {
-    const doc = await AU_DB.collection("users").doc(AU_USER.email).get();
-    AU_STATUS = doc.exists ? (doc.data().status || "pending") : "";
-  } catch (e) {
-    AU_STATUS = "";
-    toast("ตรวจสอบสิทธิ์การใช้งานไม่สำเร็จ: " + e.message, true);
-  }
-}
-async function auRequestAccess() {
-  if (!AU_USER) return;
-  try {
-    await AU_DB.collection("users").doc(AU_USER.email).set({
-      email: AU_USER.email,
-      name: AU_USER.name,
-      status: "pending",
-      requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    AU_STATUS = "pending";
-    toast("ส่งคำขอสิทธิ์การใช้งานแล้ว — รอผู้ดูแลระบบอนุมัติ");
-    dvRenderAll();
-  } catch (e) {
-    toast("ส่งคำขอไม่สำเร็จ: " + e.message, true);
-  }
-}
-
-/* ---- หน้าอนุมัติของผู้ดูแล ---- */
-async function auAdminRefresh() {
-  if (!auIsAdmin()) return;
-  $("auAdminList").innerHTML = "กำลังโหลด…";
-  try {
-    const snap = await AU_DB.collection("users").where("status", "==", "pending").get();
-    if (snap.empty) { $("auAdminList").innerHTML = '<div class="empty">ไม่มีคำขอที่รอดำเนินการ</div>'; return; }
-    $("auAdminList").innerHTML = snap.docs.map((d) => {
-      const u = d.data();
-      return '<div class="myrow"><div class="t"><b>' + esc(u.name || "") + "</b><em>" + esc(u.email || d.id) + "</em></div>" +
-        '<button class="btn" data-approve="' + esc(d.id) + '" type="button">อนุมัติ</button>' +
-        '<button class="btn" data-reject="' + esc(d.id) + '" type="button">ปฏิเสธ</button></div>';
-    }).join("");
-  } catch (e) {
-    $("auAdminList").innerHTML = '<div class="empty">โหลดรายการไม่สำเร็จ: ' + esc(e.message) + "</div>";
-  }
-}
-$("auAdminList").addEventListener("click", async (e) => {
-  const ab = e.target.closest("[data-approve]"), rb = e.target.closest("[data-reject]");
-  if (!ab && !rb) return;
-  const id = ab ? ab.dataset.approve : rb.dataset.reject;
-  const status = ab ? "approved" : "rejected";
-  try {
-    await AU_DB.collection("users").doc(id).update({
-      status: status,
-      reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      reviewedBy: AU_USER.email,
-    });
-    toast(id + (ab ? " ได้รับสิทธิ์แล้ว" : " ถูกปฏิเสธแล้ว"));
-    auAdminRefresh();
-  } catch (e2) {
-    toast("บันทึกไม่สำเร็จ: " + e2.message, true);
-  }
-});
-
-/* ---- วาดสถานะทั้งหมด: แถบล็อกอิน + หน้ากันเข้า (gate) จนกว่าจะได้รับอนุมัติ ---- */
-function dvRenderAll() {
-  const signedIn = !!AU_USER;
-  $("auSignInBtn").hidden = signedIn;
-  $("auWho").hidden = !signedIn;
-  if (signedIn) $("auWho").textContent = AU_USER.name + " (" + AU_USER.email + ")";
-  $("auSignOutBtn").hidden = !signedIn;
-  $("auAdminBtn").hidden = !(signedIn && auIsAdmin());
-
-  const approved = signedIn && auIsApproved();
-  $("auGateVeil").hidden = !signedIn || approved;
-  if (signedIn && !approved) {
-    if (AU_STATUS === "pending") {
-      $("auGateTitle").textContent = "รอการอนุมัติสิทธิ์การใช้งาน";
-      $("auGateMsg").textContent = "ส่งคำขอแล้วด้วยบัญชี " + AU_USER.email + " — กรุณารอผู้ดูแลระบบอนุมัติ";
-      $("auRequestBtn").hidden = true;
-    } else if (AU_STATUS === "rejected") {
-      $("auGateTitle").textContent = "คำขอถูกปฏิเสธ";
-      $("auGateMsg").textContent = "บัญชี " + AU_USER.email + " ไม่ได้รับสิทธิ์ใช้งานเครื่องมือนี้ — ติดต่อผู้ดูแลระบบ";
-      $("auRequestBtn").hidden = true;
-    } else {
-      $("auGateTitle").textContent = "ยังไม่มีสิทธิ์การใช้งาน";
-      $("auGateMsg").textContent = "บัญชี " + AU_USER.email + " ยังไม่เคยขอสิทธิ์ใช้งานเครื่องมือนี้";
-      $("auRequestBtn").hidden = false;
-    }
-  }
-  /* ล็อกส่วนแอปหลักไว้จนกว่าจะอนุมัติ — กันไม่ให้เห็นหรือใช้เครื่องมือก่อนได้รับอนุญาต */
-  const ws = document.querySelector(".workspace");
-  if (ws) ws.style.display = (!signedIn || approved) ? "" : "none";
-}
-
-$("auSignInBtn").addEventListener("click", auSignIn);
-$("auSignOutBtn").addEventListener("click", auSignOut);
-$("auRequestBtn").addEventListener("click", auRequestAccess);
-$("auAdminBtn").addEventListener("click", () => { $("auAdminVeil").hidden = false; auAdminRefresh(); });
-$("auAdminClose").addEventListener("click", () => { $("auAdminVeil").hidden = true; });
-
-/* ---------------- จุดเริ่มของโค้ดเว็บ (เฉพาะเว็บ) ----------------
-   อยู่ท้ายสุดของ _order.json โดยตั้งใจ — ทุกอย่างของแอปโหลดและ sync() ไปแล้ว
-   (63-wizard.js เปิดโหมดแนะนำอัตโนมัติไปแล้วถ้าตั้งไว้) ไฟล์นี้แค่เริ่ม Firebase Auth
-   ห้ามเรียกล็อกอินอัตโนมัติตรงนี้ — เป็นการกดของผู้ใช้เองเท่านั้น (ทั้งเพื่อไม่ให้ popup OAuth
-   ไปซ้อนทับโหมดแนะนำที่เพิ่งเปิด และเพื่อไม่ให้ขอ token แบบเงียบๆ ทุกครั้งที่เปิดหน้า) */
-auInit();
-
-
+if(startInWizard()) wzOpen(true);
 })();
 </script>
 </body>

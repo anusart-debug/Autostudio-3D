@@ -2,32 +2,6 @@
 
 เก็บเฉพาะการตัดสินใจที่เปลี่ยนสถาปัตยกรรม ไม่ใช่ทุกการแก้
 
-## v41 (กำลังทำ) — เฟส 6: ล็อกอิน Google + ระบบขอสิทธิ์การใช้งาน
-เปลี่ยนจากแผนเดิม (Google Identity Services ตรงๆ อนุญาตทุกคนใน `@planbmedia.co.th`) เป็น
-**Firebase Authentication + Firestore** เพราะต้องมีระบบขอสิทธิ์เป็นรายบุคคล (คนใหม่กดขอ
-แล้วรอแอดมินอนุมัติ) ซึ่งต้องมีที่เก็บสถานะที่ตรวจสอบได้ปลอดภัย — Firestore Security Rules
-ต้องมี `request.auth` จาก Firebase Auth เท่านั้น token ดิบจาก GIS ใช้ไม่ได้
-- `src/js/70-auth.web.js` (ใหม่): sign-in ผ่าน `firebase.auth.GoogleAuthProvider`
-  (ขอ scope `drive.file` พร้อมกันสำหรับเฟส 7) · เช็ก/ขอสิทธิ์การใช้งานผ่าน Firestore
-  collection `users/<email>` · หน้าอนุมัติสำหรับแอดมิน (`ADMIN_EMAIL`) อนุมัติ/ปฏิเสธคำขอ
-  ที่รอดำเนินการ · ล็อกส่วนแอปหลักไว้จนกว่าจะได้รับอนุมัติ (`dvRenderAll()`)
-- `src/js/79-web-boot.web.js` (ใหม่): เรียก `auInit()` — ไม่ล็อกอินอัตโนมัติ ต้องกดเอง
-- `firestore.rules`, `firestore.indexes.json` (ใหม่): ผู้ใช้อ่าน/สร้างคำขอของตัวเองได้
-  (บังคับ `status=pending` กันตั้งอนุมัติเอง) แก้สถานะได้เฉพาะแอดมิน ห้ามลบ (เก็บร่องรอย)
-- `build.mjs`: เว็บ (target=web) เปลี่ยน `script-src` จาก hash เป็น `'unsafe-inline'` —
-  ตรวจแล้วว่า `firebase-auth-compat.js` สร้าง iframe ภายในที่รันอินไลน์สคริปต์ของมันเองตอน
-  `firebase.auth()` ทำงาน (ไม่ใช่ตอนล็อกอิน) hash ของสคริปต์นั้นไม่แน่นอน/ไม่มีเอกสารทางการ
-  ให้ pin ได้ และตาม CSP spec ถ้ามี hash-source ปนอยู่ `'unsafe-inline'` จะถูกเบราว์เซอร์
-  เมินทันที จึงต้องไม่มี hash ปนเลยถ้าจะให้ `'unsafe-inline'` มีผลจริง — **ไฟล์ออฟไลน์ยังคง
-  เป็น hash-only เข้มสุดเหมือนเดิม** เว็บชดเชยชั้นป้องกันนี้ด้วย Firestore Rules + OAuth
-  consent screen Internal + scope `drive.file` แคบแทน · เพิ่ม `frame-src *.firebaseapp.com`
-  (iframe auth ของ Firebase) + `connect-src` ให้ endpoint Firebase Auth/Firestore
-- `build.mjs`: เพิ่มการเช็กว่า marker แต่ละตัว (`@@CSS@@`/`@@JS@@`/`@@CSP@@`) ต้องเจอ**พอดี
-  1 ครั้ง** ไม่ใช่แค่ "เจอบ้าง" — เจอบั๊กจริงตอนพัฒนา: คอมเมนต์อธิบายพิมพ์ชื่อ marker ซ้ำไว้
-  เป็นตัวอย่าง ทำให้ `.replace()` (แทนแค่ตัวแรกที่เจอ) ไปแทนที่คอมเมนต์แทนตัวจริง เหลือ
-  `<script>@@JS@@</script>` ดิบๆ ในเว็บ พังทั้งหน้าแบบไม่มี error ตอน build เลย
-- `docs/drive-setup.md` (ใหม่): ขั้นตอน Firebase Console ที่ต้องทำเอง (ภาษาไทย)
-
 ## v41 (กำลังทำ) — เฟส 5: build สองเป้าหมาย + CSP
 - `build.mjs` สร้างได้สองไฟล์จากซอร์สเดียวกัน: `dist/autostudio3d.html` (ออฟไลน์ เหมือนเดิม
   ทุกประการ) และ `dist/web/index.html` (สำหรับ Firebase Hosting เฟส 6-7) — โมดูลเฉพาะเว็บใช้

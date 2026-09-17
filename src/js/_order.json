@@ -27,7 +27,5 @@
   "60-export.js",
   "61-collapse.js",
   "62-sfx.js",
-  "63-wizard.js",
-  "70-auth.web.js",
-  "79-web-boot.web.js"
+  "63-wizard.js"
 ]

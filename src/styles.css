@@ -87,9 +87,6 @@ header.top{
 }
 .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal)}
 .themebtn{margin-left:2px}
-/* v41 เฟส 6 (เว็บเท่านั้น) — แถบล็อกอิน Google */
-.drivebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.dvwho{font-family:var(--mono);font-size:10.5px;color:var(--txt-dim);white-space:nowrap}
 
 /* ---------- layout ---------- */
 .workspace{
