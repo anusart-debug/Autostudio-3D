@@ -9,8 +9,10 @@
    collection "users" เอกสารละ 1 อีเมล (ดู firestore.rules คู่กัน)
 
    ค่า config ของ Firebase (apiKey ฯลฯ) ไม่ใช่ความลับ — เหมือน OAuth Client ID เปิดเผยได้
-   (ความปลอดภัยจริงมาจาก Firestore Security Rules + OAuth consent screen "Internal"
-   ไม่ได้มาจากการซ่อนค่าพวกนี้) แต่ *ยังไม่ใช่ค่าจริง* จนกว่าจะเอาไปแทนตอนตั้งโปรเจกต์ Firebase */
+   (ความปลอดภัยจริงมาจาก Firestore Security Rules เท่านั้น — บัญชี Google อะไรก็ล็อกอินผ่าน
+   ขั้นตอน OAuth ได้ทั้งนั้น ไม่ได้ล็อกด้วยองค์กรหรือโดเมน แต่ตัวแอปจะกันไว้ที่หน้า "รอการอนุมัติ"
+   จนกว่าอีเมลนั้นจะมีเอกสาร users/<email> สถานะ approved — ดู firestore.rules คู่กัน)
+   แต่ *ยังไม่ใช่ค่าจริง* จนกว่าจะเอาไปแทนตอนตั้งโปรเจกต์ Firebase */
 const FB_CONFIG = {
   apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
   authDomain: "REPLACE_WITH_PROJECT_ID.firebaseapp.com",
@@ -51,15 +53,15 @@ async function onAuthChange(user) {
   dvRenderAll();
 }
 
-/* hosted_domain เป็นแค่คำใบ้ให้ตัวเลือกบัญชีของ Google กรองให้ดูง่ายขึ้น — ไม่ใช่ระบบความ
-   ปลอดภัยจริง (แก้ในเบราว์เซอร์ตัวเองได้) กำแพงจริงคือ OAuth consent screen ตั้งเป็น Internal
-   ที่ตั้งค่าไว้ใน Google Cloud Console ซึ่ง Google เป็นคนบังคับฝั่งเซิร์ฟเวอร์เอง */
+/* ตั้งใจไม่ใส่ hd (hosted domain hint) — ใครก็ล็อกอินได้ด้วยบัญชี Google อะไรก็ตาม
+   ผู้ดูแลระบบเป็นคนเลือกเองทีหลังว่าจะอนุมัติอีเมลไหนผ่านหน้า "อนุมัติผู้ใช้" (Firestore)
+   ไม่ผูกกับโดเมนบริษัทหรือองค์กรใน Google Cloud เลย — ตั้งค่าฝั่ง Google Cloud ให้น้อยที่สุด
+   เท่าที่จำเป็น (ดู docs/drive-setup.md) แล้วปล่อยให้การอนุมัติทั้งหมดอยู่ในแอปนี้ที่เดียว */
 function auSignIn() {
   auInit();
   if (!AU_AUTH) { toast("ระบบล็อกอินยังไม่พร้อม — ยังไม่ได้ตั้งค่า Firebase จริง", true); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope(AU_SCOPE);
-  provider.setCustomParameters({ hd: "planbmedia.co.th" });
   AU_AUTH.signInWithPopup(provider).then((result) => {
     const cred = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
     AU_TOK = (cred && cred.accessToken) || "";

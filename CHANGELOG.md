@@ -2,6 +2,25 @@
 
 เก็บเฉพาะการตัดสินใจที่เปลี่ยนสถาปัตยกรรม ไม่ใช่ทุกการแก้
 
+## v41 (กำลังทำ) — ตัดข้อกำหนดองค์กร/Internal ออกจากขั้นตอนล็อกอิน
+ผู้ใช้ขอให้การตั้งค่าล็อกอินง่ายที่สุด: "ใช้แค่ email ที่ได้รับสิทธิ์ก็พอ ไม่ต้องตั้งค่าให้
+ยุ่งยาก มีขอสิทธิ์ใช้งานแล้วแอดมินกดอนุมัติก็พอ" — โค้ดฝั่ง Firestore (`firestore.rules`,
+`auCheckStatus`/`auRequestAccess`/หน้าอนุมัติ) ทำแบบนี้อยู่แล้วตั้งแต่เฟส 6 ไม่ผูกกับโดเมนเลย
+แต่คอมเมนต์ในโค้ดกับ `docs/drive-setup.md` ยังพูดถึง "ต้องตั้ง OAuth consent screen เป็น
+Internal" (ต้องมีองค์กร Google Workspace) ค้างมาจากแผนแรกก่อนเปลี่ยนมาใช้ Firebase Auth —
+เป็นความเข้าใจผิดที่ทำให้การตั้งค่าดูซับซ้อนเกินจริง ทั้งที่ Internal ไม่จำเป็นเลยเมื่อความ
+ปลอดภัยจริงมาจาก Firestore Security Rules อยู่แล้ว
+- `src/js/70-auth.web.js`: เอา `provider.setCustomParameters({hd:"planbmedia.co.th"})` ออก
+  จาก `auSignIn()` — ไม่ผูกกับโดเมนบริษัทแม้แต่ในระดับคำใบ้ UI · แก้คอมเมนต์ที่เข้าใจผิดว่า
+  "Internal" คือกำแพงความปลอดภัยจริง ให้ตรงกับพฤติกรรมจริง (Firestore เท่านั้นที่เป็นกำแพง)
+- `docs/drive-setup.md`: เขียนใหม่ทั้งไฟล์ — ตัดขั้นตอนที่บังคับให้ใช้โปรเจกต์ GCP เดิมที่มี
+  องค์กร/Internal ออก เหลือแค่สร้างโปรเจกต์ Firebase ใหม่ด้วยบัญชี Google อะไรก็ได้ เปิด
+  Firestore + Google sign-in (User type: External, Publishing status: In production) แจ้ง
+  ตรงๆ ว่าผู้ใช้ใหม่จะเจอหน้าเตือน "Google hasn't verified this app" ครั้งแรก (กด Advanced →
+  Go to app เพื่อผ่าน) เพราะไม่ได้ส่งตรวจสอบ — ยอมรับ trade-off นี้แทนความยุ่งยากขององค์กร
+  หลังตั้งครั้งแรกจบ **ไม่ต้องกลับไปที่ Google Cloud/Firebase Console อีกเลย** อนุมัติผู้ใช้ใหม่
+  ทุกคนทำในแอปนี้ที่เดียว (หน้า "อนุมัติผู้ใช้")
+
 ## v41 (กำลังทำ) — เฟส 7: Google Drive อ่าน/เขียนโปรเจกต์
 - `src/js/71-drive.web.js` (ใหม่): wrapper REST v3 ของ Drive ด้วย scope `drive.file` เท่านั้น
   (เห็นแค่ไฟล์ที่แอปนี้สร้างเอง ไม่ใช่ทั้ง Drive) — สร้าง/หา root folder "AUTOSTUDIO 3D",
