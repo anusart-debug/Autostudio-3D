@@ -18,6 +18,13 @@ function sheetMapCanvas(W,H,K){
 const MONO='"JetBrains Mono",ui-monospace,monospace';
 const THAI='"IBM Plex Sans Thai","Chakra Petch",system-ui,sans-serif';
 
+/* v41: จุดสีในใบนำเสนอต้องมีเฉพาะสายที่ "วาดจริง" บนแผนที่เท่านั้น — เดิมให้จุดสีตาม MAPD.groups
+   ทุกตัวเสมอ แม้ตอนที่ stage C (ระบายสี) พังหรือถูกข้ามเพราะมีเกิน 40 สาย ทำให้กุญแจสีในใบนำเสนอ
+   อ้างสีที่ไม่มีอยู่จริงบนแผนที่เลย — painted() คือความจริงเดียวกับที่ drawMap() ใช้ตัดสิน */
+function painted(g){
+  return !!((g.ways&&g.ways.size>0) || (typeof GEO!=="undefined"&&GEO.has(geoKeyOf(g.ids))));
+}
+
 /* ---- ใบนำเสนอฝ่ายขาย ---- */
 let sheetPngUrl="";
 async function openSheet(){
@@ -28,7 +35,10 @@ async function openSheet(){
   if(G.length){
     $("shCount").textContent=G.length+" สาย (ตรวจสดจาก OpenStreetMap ในรัศมี "+MAPD.near+" ม.)";
     $("shLines").innerHTML=G.map(g=>
-      '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+"</span>").join("");
+      painted(g)
+        ? '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+"</span>"
+        : '<span class="shline">'+esc(g.ref)+"</span>"
+    ).join("");
   }else{
     $("shCount").textContent=b.length?(b.length+" สาย"):"ไม่พบสายรถเมล์ประจำทาง";
     $("shLines").innerHTML = b.length
@@ -60,7 +70,7 @@ $("sheetPng").addEventListener("click",async()=>{
   const l=curLoc(), p=locPos(l), v=find(list("vehicle"),S.vehicle);
   const G=MAPD.groups;
   const b = G.length ? G.map(g=>g.ref) : busOf(l);
-  const colOf = i => G.length ? G[i].colL : null;
+  const colOf = i => (G.length&&painted(G[i])) ? G[i].colL : null;
   const K=2, W=900, PADX=46;
   toast("กำลังสร้างไฟล์ภาพ…");
   const m=sheetMapCanvas(W-PADX*2,330,K);

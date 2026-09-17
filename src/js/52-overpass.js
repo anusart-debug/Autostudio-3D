@@ -219,7 +219,7 @@ async function loadMap(){
       /* จุดเปลี่ยนถ่ายใหญ่ๆ อย่างอนุสาวรีย์ชัยฯ มีสายเป็นร้อย การระบายสีทุกสายจะช้าและอ่านไม่ออก
          จึงให้เลือกดูทีละสายจากรายการแทน เร็วกว่าและชัดกว่า */
       notes.push("มี "+MAPD.groups.length+" สาย มากเกินกว่าจะระบายสีพร้อมกันให้อ่านรู้เรื่อง — "+
-                 "<b>คลิกที่สายในรายการด้านล่างเพื่อดูเส้นทางทีละสาย</b>");
+                 "<b>คลิกเลือกสายในรายการด้านล่าง แล้วกด \"ดูทั้งสาย\" เพื่อดึงเส้นทางเต็มสายมาดู</b>");
     }else if(MAPD.groups.length&&MAPD.data){
       t0=Date.now(); live(notes.join("<br>")+"<br>③ กำลังระบายสีเส้นทางรายสาย…");
       try{
@@ -238,7 +238,7 @@ async function loadMap(){
         MAPD.groups.forEach((g,gi)=>g.ways.forEach(id=>{
           let a=MAPD.wayRoutes.get(id);
           if(!a){a=[];MAPD.wayRoutes.set(id,a)}
-          if(a.length<14) a.push(gi);
+          if(a.length<8) a.push(gi);
         }));
         paintMap();
         notes.push("ระบายสีเส้นทางแล้ว "+hits.toLocaleString("th-TH")+" ช่วงถนน");

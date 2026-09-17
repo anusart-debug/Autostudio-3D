@@ -1032,6 +1032,7 @@ footer.foot .sp{flex:1}
         <div style="display:flex;gap:7px;flex-wrap:wrap">
           <input type="text" id="busAdd" placeholder="เพิ่มสายเอง เช่น 511 หรือ 3-22E แล้วกด Enter" style="flex:1;min-width:190px">
           <button class="btn" id="busReset" type="button" style="padding:8px 12px;font-size:11.5px">คืนค่าเดิม</button>
+          <button class="btn" id="geoClear" type="button" style="padding:8px 12px;font-size:11.5px" title="ล้าง geometry เต็มสายที่เก็บไว้ในเครื่อง">ล้างข้อมูลเส้นทางที่เก็บไว้</button>
         </div>
         <div class="dnaline" style="margin-top:7px">
           แก้ไขได้ทุกสาย — ที่เพิ่มหรือลบจะถูกบันทึกไว้ในเครื่องและใช้ครั้งต่อไป
@@ -2561,7 +2562,9 @@ const CONFTH={high:"ตรวจสอบแล้ว",medium:"ควรตร�
    บันทึก PNG ได้เสมอเพราะทุกพิกเซลเราวาดเอง ไม่มีภาพจากโดเมนอื่นมาทำ canvas เสีย */
 
 const MAPD={data:null,nodes:[],at:null,radius:600,near:250,busy:false,
-            groups:[],wayRoutes:null,solo:null,err:""};
+            groups:[],wayRoutes:null,solo:null,err:"",
+            /* v41: โหมดดูทั้งสาย — ดู 57-route-view.js */
+            mode:"local",localView:null,routeFitR:0,geomBusy:""};
 
 /* ---- โปรเจกชัน: ระยะสั้นระดับเมือง ใช้ละติจูด/ลองจิจูดตรงๆ พร้อมแก้ cos(lat) ก็แม่นพอ ---- */
 const MPD=111320;                                   /* เมตรต่อ 1 องศาละติจูด */
@@ -2572,8 +2575,9 @@ function resetView(){ MAPD.view={c:(MAPD.at||BKK).slice(),r:MAPD.radius} }
 function zoomBy(f){
   if(!MAPD.at) return;
   if(!MAPD.view) resetView();
-  /* ซูมออกได้ไม่เกินข้อมูลที่มี ซูมเข้าได้ถึง 40 ม. */
-  MAPD.view.r=Math.max(40,Math.min(MAPD.radius*1.25,MAPD.view.r*f));
+  /* ซูมออกได้ไม่เกินข้อมูลที่มี (routeViewMax() จาก 57-route-view.js — ในโหมด route
+     ยกเพดานให้ซูมออกได้ถึงขนาดของสายทั้งสาย ไม่ใช่แค่รัศมีที่ดึงมา) ซูมเข้าได้ถึง 40 ม. */
+  MAPD.view.r=Math.max(40,Math.min(routeViewMax(),MAPD.view.r*f));
   paintAll();
 }
 function makeProj(c,W,H,radius){
@@ -2672,24 +2676,36 @@ function drawMap(cx,W,H,T,K){
     if(/^(subway|light_rail|monorail|rail)$/.test(e.tags.railway||"")) stroke(pts(e.geometry),1.4,T.rail,true);
   });
 
-  /* 4) เส้นทางเดินรถ — สีแยกตามสาย วางขนานกันเมื่อใช้ถนนเส้นเดียวกัน */
+  /* 4) เส้นทางเดินรถ — สีแยกตามสาย วางขนานกันเมื่อใช้ถนนเส้นเดียวกัน
+     v41: สายที่เลือก (solo) ถ้ามี geometry เต็มสายแล้ว (ดึงมาตอนกด "ดูทั้งสาย") วาดจากตรงนั้น
+     แทน — เห็นทั้งสาย ไม่จำกัดแค่ช่วงที่อยู่ในแผนที่ฐาน ยังไม่ดึงก็ถอยไปย้อมสีถนนฐานแบบเดิม
+     (ใช้ได้เฉพาะช่วงที่บังเอิญอยู่ในแผนที่ฐาน — นี่คือพฤติกรรมเดิมก่อน v41) */
   const G=MAPD.groups, WR=MAPD.wayRoutes;
-  if(G.length&&WR){
-    const solo=MAPD.solo;
+  if(MAPD.solo!=null&&G[MAPD.solo]){
+    const g=G[MAPD.solo];
+    const geo=(typeof GEO!=="undefined")?GEO.get(geoKeyOf(g.ids)):null;
+    if(geo&&typeof drawRouteLayer==="function"){
+      drawRouteLayer(cx,W,H,T,K,g,geo);
+    }else if(G.length&&WR){
+      roads.forEach(e=>{
+        const idx=WR.get(e.id);
+        if(idx&&idx.indexOf(MAPD.solo)>=0)
+          stroke(pts(e.geometry),(ROADW[e.tags.highway]||1.2)+2.6,dark?g.col:g.colL);
+      });
+    }
+  }else if(G.length&&WR){
+    /* เพดานซ้อนต่อถนน 8 สาย (เดิม 14) — ส่วนเกินวาดเป็น casing เทากลางๆ สื่อว่า
+       "ยังมีสายซ่อนอยู่ คลิกเลือกดูทีละสาย" แทนการซ้อนจนอ่านไม่ออก */
     roads.forEach(e=>{
       let idx=WR.get(e.id); if(!idx||!idx.length) return;
-      if(solo!=null){
-        if(idx.indexOf(solo)<0) return;
-        stroke(pts(e.geometry),(ROADW[e.tags.highway]||1.2)+2.6,dark?G[solo].col:G[solo].colL);
-        return;
-      }
-      const n=idx.length;
-      const sp=Math.max(0.95,Math.min(2.3,11/Math.max(1,n)));
+      const shown=idx.slice(0,8), n=shown.length;
+      const sp=Math.max(1.1,Math.min(2.3,11/Math.max(1,n)));
       const base=pts(e.geometry);
-      idx.forEach((gi,k)=>{
+      shown.forEach((gi,k)=>{
         const off=(k-(n-1)/2)*sp*K;
         stroke(offsetPts(base,off),Math.max(1.3,sp*0.86),dark?G[gi].col:G[gi].colL);
       });
+      if(idx.length>8) stroke(base,(ROADW[e.tags.highway]||1.2)+1.4,dark?"#4A5568":"#B9C3D1");
     });
   }
 
@@ -2877,6 +2893,8 @@ function mapInit(){
 function mapGo(){          /* เปลี่ยนโลเคชั่น = ล้างแผนที่เดิม รอผู้ใช้กดดึงใหม่ */
   MAPD.data=null; MAPD.at=null; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null;
   MAPD.solo=null; MAPD.err=""; MAPD.view=null; MAPD.stops=[];
+  /* เก็บ GEO cache ไว้ — สายรถเมล์เป็นของทั้งเมือง ใช้ซ้ำข้ามโลเคชั่นได้ ไม่ต้องดึงใหม่ */
+  MAPD.mode="local"; MAPD.localView=null; MAPD.routeFitR=0; MAPD.geomBusy="";
   OVP.hits=null; syncLL(); paintMap(); mapNote(); renderRouteLegend();
 }
 function syncLL(){
@@ -2922,23 +2940,49 @@ function renderRouteLegend(){
   if(!G.length){ $("routeLegend").innerHTML=""; $("routeLegend").hidden=true; return; }
   $("routeLegend").hidden=false;
   const solo=MAPD.solo;
+  const soloG=solo!=null?G[solo]:null;
+  const key=soloG?geoKeyOf(soloG.ids):null;
+  const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key));
+  const busy=!!(key&&MAPD.geomBusy===key);
+  let head="<b>"+G.length+" สาย</b> ที่จอดป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. · แต่ละสีคือหนึ่งสาย";
+  if(solo!=null){
+    head+=' <button type="button" class="lgd-all" data-all="1">แสดงทุกสาย</button>';
+    head+= MAPD.mode==="route"
+      ? ' <button type="button" class="lgd-all" data-exitroute="1">กลับมุมมองใกล้</button>'
+      : ' <button type="button" class="lgd-all" data-fullroute="1"'+(busy?" disabled":"")+'>'+
+        (busy?"กำลังดึงเส้นทาง…":"ดูทั้งสาย"+(hasGeo?"":" (ดึงข้อมูล)"))+"</button>";
+  }else{
+    head+=' <span class="lgd-tip">คลิกที่สายเพื่อดูเส้นทางเฉพาะสายนั้น</span>';
+  }
   $("routeLegend").innerHTML =
-    '<div class="lgd-head">'+
-      "<b>"+G.length+" สาย</b> ที่จอดป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. · แต่ละสีคือหนึ่งสาย"+
-      (solo!=null?' <button type="button" class="lgd-all" data-all="1">แสดงทุกสาย</button>'
-                 :' <span class="lgd-tip">คลิกที่สายเพื่อดูเส้นทางเฉพาะสายนั้น</span>')+
-    "</div>"+
-    '<div class="lgd-list">'+G.map((g,i)=>
-      '<button type="button" class="lgd-i'+(solo===i?" on":"")+'" data-g="'+i+'">'+
+    '<div class="lgd-head">'+head+"</div>"+
+    '<div class="lgd-list">'+G.map((g,i)=>{
+      const verified=curatedLabel(g.ref,curLoc()).verified;
+      return '<button type="button" class="lgd-i'+(solo===i?" on":"")+'" data-g="'+i+'">'+
         '<span class="dot" style="background:'+g.col+'"></span>'+
         "<b>"+esc(g.ref)+"</b>"+
+        (verified?"":'<span title="สายนี้มาจาก OSM ยังไม่ตรวจกับรายการที่ยืนยันแล้ว"> ?</span>')+
         (g.pair?'<em>'+esc(g.pair)+"</em>":"")+
-      "</button>").join("")+"</div>";
+      "</button>";
+    }).join("")+"</div>";
 }
-$("routeLegend").addEventListener("click",e=>{
-  if(e.target.closest("[data-all]")){ MAPD.solo=null; SFX.play("tick"); paintMap(); renderRouteLegend(); return; }
+$("routeLegend").addEventListener("click",async e=>{
+  if(e.target.closest("[data-all]")){
+    MAPD.solo=null;
+    if(MAPD.mode==="route") exitRouteMode(); else{ SFX.play("tick"); paintMap(); }
+    renderRouteLegend(); return;
+  }
+  if(e.target.closest("[data-exitroute]")){ exitRouteMode(); renderRouteLegend(); return; }
+  if(e.target.closest("[data-fullroute]")){
+    if(MAPD.solo==null) return;
+    const geo=await loadRouteGeom(MAPD.solo);
+    if(geo) enterRouteMode(MAPD.solo);
+    renderRouteLegend();
+    return;
+  }
   const b=e.target.closest("[data-g]"); if(!b)return;
   const i=+b.dataset.g;
+  if(MAPD.mode==="route") exitRouteMode();
   MAPD.solo=(MAPD.solo===i)?null:i;
   SFX.play("tick"); paintMap(); renderRouteLegend();
   if(MAPD.solo!=null){
@@ -3184,7 +3228,7 @@ async function loadMap(){
       /* จุดเปลี่ยนถ่ายใหญ่ๆ อย่างอนุสาวรีย์ชัยฯ มีสายเป็นร้อย การระบายสีทุกสายจะช้าและอ่านไม่ออก
          จึงให้เลือกดูทีละสายจากรายการแทน เร็วกว่าและชัดกว่า */
       notes.push("มี "+MAPD.groups.length+" สาย มากเกินกว่าจะระบายสีพร้อมกันให้อ่านรู้เรื่อง — "+
-                 "<b>คลิกที่สายในรายการด้านล่างเพื่อดูเส้นทางทีละสาย</b>");
+                 "<b>คลิกเลือกสายในรายการด้านล่าง แล้วกด \"ดูทั้งสาย\" เพื่อดึงเส้นทางเต็มสายมาดู</b>");
     }else if(MAPD.groups.length&&MAPD.data){
       t0=Date.now(); live(notes.join("<br>")+"<br>③ กำลังระบายสีเส้นทางรายสาย…");
       try{
@@ -3203,7 +3247,7 @@ async function loadMap(){
         MAPD.groups.forEach((g,gi)=>g.ways.forEach(id=>{
           let a=MAPD.wayRoutes.get(id);
           if(!a){a=[];MAPD.wayRoutes.set(id,a)}
-          if(a.length<14) a.push(gi);
+          if(a.length<8) a.push(gi);
         }));
         paintMap();
         notes.push("ระบายสีเส้นทางแล้ว "+hits.toLocaleString("th-TH")+" ช่วงถนน");
@@ -3274,7 +3318,8 @@ $("fullPng").addEventListener("click",()=>{
 
 /* ช่องมองสถานะสำหรับตรวจปัญหา (อ่านอย่างเดียว) — พิมพ์ __as3d.map() ใน Console ได้
    มีไว้ให้ไล่บั๊กเวลาผู้ใช้เจอปัญหาแล้วอธิบายทางแชทไม่ได้ */
-window.__as3d={ver:"v40",map:()=>MAPD,routes:()=>MAPD.groups.map(g=>g.ref)};
+window.__as3d={ver:"v41",map:()=>MAPD,routes:()=>MAPD.groups.map(g=>g.ref),
+  geom:()=>GEO,mode:()=>MAPD.mode};
 
 $("ovpBtn").addEventListener("click",loadMap);
 
@@ -3331,6 +3376,13 @@ function sheetMapCanvas(W,H,K){
 const MONO='"JetBrains Mono",ui-monospace,monospace';
 const THAI='"IBM Plex Sans Thai","Chakra Petch",system-ui,sans-serif';
 
+/* v41: จุดสีในใบนำเสนอต้องมีเฉพาะสายที่ "วาดจริง" บนแผนที่เท่านั้น — เดิมให้จุดสีตาม MAPD.groups
+   ทุกตัวเสมอ แม้ตอนที่ stage C (ระบายสี) พังหรือถูกข้ามเพราะมีเกิน 40 สาย ทำให้กุญแจสีในใบนำเสนอ
+   อ้างสีที่ไม่มีอยู่จริงบนแผนที่เลย — painted() คือความจริงเดียวกับที่ drawMap() ใช้ตัดสิน */
+function painted(g){
+  return !!((g.ways&&g.ways.size>0) || (typeof GEO!=="undefined"&&GEO.has(geoKeyOf(g.ids))));
+}
+
 /* ---- ใบนำเสนอฝ่ายขาย ---- */
 let sheetPngUrl="";
 async function openSheet(){
@@ -3341,7 +3393,10 @@ async function openSheet(){
   if(G.length){
     $("shCount").textContent=G.length+" สาย (ตรวจสดจาก OpenStreetMap ในรัศมี "+MAPD.near+" ม.)";
     $("shLines").innerHTML=G.map(g=>
-      '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+"</span>").join("");
+      painted(g)
+        ? '<span class="shline"><i style="background:'+g.colL+'"></i>'+esc(g.ref)+"</span>"
+        : '<span class="shline">'+esc(g.ref)+"</span>"
+    ).join("");
   }else{
     $("shCount").textContent=b.length?(b.length+" สาย"):"ไม่พบสายรถเมล์ประจำทาง";
     $("shLines").innerHTML = b.length
@@ -3373,7 +3428,7 @@ $("sheetPng").addEventListener("click",async()=>{
   const l=curLoc(), p=locPos(l), v=find(list("vehicle"),S.vehicle);
   const G=MAPD.groups;
   const b = G.length ? G.map(g=>g.ref) : busOf(l);
-  const colOf = i => G.length ? G[i].colL : null;
+  const colOf = i => (G.length&&painted(G[i])) ? G[i].colL : null;
   const K=2, W=900, PADX=46;
   toast("กำลังสร้างไฟล์ภาพ…");
   const m=sheetMapCanvas(W-PADX*2,330,K);
@@ -3472,6 +3527,233 @@ $("sheetPng").addEventListener("click",async()=>{
   document.body.appendChild(a); a.click(); a.remove();
   toast("บันทึกใบนำเสนอเป็นภาพแล้ว — แปะลงสไลด์หรือส่ง LINE ได้เลย");
 });
+
+/* ================= เส้นทางเดินรถแบบเต็มสาย (v41) =========================
+   ปัญหาเดิม: stage C (52-overpass.js qLines) ขอแค่ out ids แล้วเอาไปย้อมสีถนนของแผนที่ฐาน
+   ที่มีอยู่แล้ว — เห็นได้เฉพาะช่วงที่อยู่ในรัศมีที่ดึงมา (สูงสุด 900 ม.) และรอดจาก blacklist
+   ของ qBase เท่านั้น ที่จุดเปลี่ยนถ่ายใหญ่ (>40 สาย) stage C ถูกข้ามทั้งดุ้น ทำให้คลิกสายในรายการ
+   ไม่มีอะไรเกิดขึ้นเลย ทั้งที่ข้อความบอกว่าคลิกได้
+
+   ทางแก้: ดึง geometry ของสายที่เลือกตอนคลิก "ดูทั้งสาย" — rel(id:...) แบบ out geom คืน
+   สมาชิกแต่ละ way มา geometry อินไลน์ในตัว member เอง วาดแยกทีละ way ห้ามต่อรวม (กฎข้อ 8
+   ใน docs/map-howto.md) และข้าม member ที่ role เป็น stop/platform เพราะนั่นคือป้าย ไม่ใช่เส้นทาง
+   (กฎข้อ 9) — ป้ายที่ข้ามเหล่านั้นถูกเก็บไว้ต่างหากเป็น "สายนี้จอดป้ายไหนบ้าง" ให้ฟรีในตัว
+
+   เลขสายที่แสดงยังมาจากรายการที่ตรวจสอบด้วยมือ (10-data.js LOCATIONS[].bus) เสมอ
+   ไม่ใช่จาก OSM ตรงๆ ตาม docs/busmap-data.md — geometry มาจาก OSM แต่ป้ายชื่อมาจากรายการ curated */
+
+const GEO=new Map();                 /* cache ในหน่วยความจำ: geoKey -> {ways,stops,bbox,from,to,op} */
+const GEO_KEY="as3d_geo";            /* cache ถาวรใน localStorage ผ่าน store wrapper เดิม */
+const GEO_MAX_ROUTES=30;             /* LRU แบบนับจำนวนสาย ไม่ใช่ไบต์ — เรียบง่ายพอสำหรับเคสนี้ */
+
+function geoKeyOf(ids){ return ids.slice().sort((a,b)=>a-b).join(","); }
+
+/* C) เส้นทางเต็มสายของสายที่เลือก — ดึงตอนคลิก "ดูทั้งสาย" เท่านั้น ไม่ใช่ตอนโหลดแผนที่ */
+function qRouteGeom(ids){
+  return "/*as3d:geom*/[out:json][timeout:45];rel(id:"+ids.join(",")+");out geom;";
+}
+
+/* ตัด point ที่อยู่ใกล้กันเกินไปออก ลดขนาดข้อมูลที่ต้องเก็บ/วาด โดยรูปร่างเปลี่ยนน้อยมาก
+   ทำครั้งเดียวตอนรับข้อมูล ไม่ใช่ตอนวาด — งบ localStorage และการ repaint ตอน pan จะไม่เป็นปัญหา */
+function simplifyWay(pts,tolM){
+  if(pts.length<=2) return pts;
+  const out=[pts[0]]; let last=pts[0];
+  for(let i=1;i<pts.length-1;i++){
+    if(metres(last[0],last[1],pts[i][0],pts[i][1])>=tolM){ out.push(pts[i]); last=pts[i]; }
+  }
+  out.push(pts[pts.length-1]);
+  return out;
+}
+
+/* แปลงผล rel(id:..);out geom; เป็น {ways, stops, bbox, from, to, op}
+   member role stop/platform (รวม *_entry_only/_exit_only) คือป้าย ไม่ใช่เส้นทาง — ข้ามจากเส้น
+   แล้วเก็บไว้เป็นป้ายที่สายนี้จอด (แก้ปัญหา "ป้ายไหนมีสายอะไรจอด" ให้ฟรีโดยไม่ต้องยิงเพิ่ม) */
+function parseRouteGeom(elements){
+  const ways=[], stops=[];
+  let minLat=90,maxLat=-90,minLon=180,maxLon=-180, from="", to="", op="";
+  let any=false;
+  (elements||[]).forEach(rel=>{
+    if(rel.type!=="relation") return;
+    const t=rel.tags||{};
+    if(!from&&t.from) from=t.from;
+    if(!to&&t.to) to=t.to;
+    if(!op) op=t.operator||t.network||"";
+    (rel.members||[]).forEach(m=>{
+      const role=m.role||"";
+      if(/^(stop|platform)/.test(role)){
+        if(m.lat!=null&&m.lon!=null) stops.push({lat:m.lat,lon:m.lon});
+        return;
+      }
+      if(m.type==="way"&&m.geometry&&m.geometry.length){
+        any=true;
+        const pts=m.geometry.map(g=>[g.lat,g.lon]);
+        pts.forEach(([la,lo])=>{
+          if(la<minLat)minLat=la; if(la>maxLat)maxLat=la;
+          if(lo<minLon)minLon=lo; if(lo>maxLon)maxLon=lo;
+        });
+        ways.push(pts);
+      }
+    });
+  });
+  if(!any) return null;
+  return {ways,stops,bbox:[minLat,minLon,maxLat,maxLon],from,to,op};
+}
+
+/* ---- cache ถาวร — อย่าไว้ใจ store.set() เฉยๆ (00-store.js กลืน QuotaExceededError เงียบๆ)
+   ตัดสายที่เก่าที่สุดออกแล้วลองใหม่เองจนกว่าจะเขียนได้หรือไม่เหลือให้ตัด ---- */
+function geoLoadStore(){
+  try{
+    const raw=store.get(GEO_KEY); if(!raw) return {v:1,order:[],r:{}};
+    const j=JSON.parse(raw);
+    if(!j||typeof j!=="object"||!j.r) return {v:1,order:[],r:{}};
+    if(!Array.isArray(j.order)) j.order=Object.keys(j.r);
+    return j;
+  }catch(e){ return {v:1,order:[],r:{}}; }
+}
+function geoSaveStore(db){
+  for(let tries=0;tries<8;tries++){
+    try{ store.set(GEO_KEY,JSON.stringify(db)); return true; }
+    catch(e){
+      if(!db.order.length) return false;
+      const oldest=db.order.shift(); delete db.r[oldest];
+    }
+  }
+  return false;
+}
+function geoRemember(key,rec){
+  GEO.set(key,rec);
+  const db=geoLoadStore();
+  db.order=db.order.filter(k=>k!==key); db.order.push(key);
+  db.r[key]={ways:rec.ways.map(w=>w.map(([la,lo])=>[+la.toFixed(5),+lo.toFixed(5)])),
+              stops:rec.stops,bbox:rec.bbox,from:rec.from,to:rec.to,op:rec.op};
+  while(db.order.length>GEO_MAX_ROUTES){ const k=db.order.shift(); delete db.r[k]; }
+  geoSaveStore(db);
+}
+function geoRecall(key){
+  if(GEO.has(key)) return GEO.get(key);
+  const rec=geoLoadStore().r[key];
+  if(!rec) return null;
+  GEO.set(key,rec);
+  return rec;
+}
+function geoClearAll(){
+  GEO.clear();
+  store.del(GEO_KEY);
+  toast("ล้างข้อมูลเส้นทางที่เก็บไว้แล้ว");
+  renderRouteLegend();
+}
+$("geoClear").addEventListener("click",geoClearAll);
+
+/* จุดเดียวที่ legend / bus chips / ใบนำเสนอ เรียกใช้ชื่อสาย — เลขสายมาจากรายการที่ตรวจสอบแล้ว
+   (LOCATIONS[].bus / BUSX) เสมอ ไม่ใช่จาก ref ของ OSM ตรงๆ ตาม docs/busmap-data.md
+   คืน verified:false เมื่อ ref ที่ OSM ให้มาไม่อยู่ในรายการที่ตรวจแล้วของจุดนี้ */
+function normRef(s){ return String(s||"").replace(/\s+/g,"").toUpperCase(); }
+function curatedLabel(ref,loc){
+  const cur=busOf(loc||curLoc());
+  const target=normRef(ref);
+  for(const c of cur){
+    if(normRef(c)===target) return {label:c,verified:true};
+    const parts=String(c).replace(/[()]/g,"").split(/\s+/).map(normRef);
+    if(parts.indexOf(target)>=0) return {label:c,verified:true};
+  }
+  return {label:ref,verified:false};
+}
+
+/* ดึง geometry เต็มสาย — cache ก่อน (ไม่ยิงเน็ตซ้ำ) ไม่เจอค่อยถาม Overpass
+   คืน null เมื่อพัง (toast บอกเหตุผลแล้ว) — เรียกจาก UI ตอนกด "ดูทั้งสาย" เท่านั้น */
+async function loadRouteGeom(gi){
+  const g=MAPD.groups[gi]; if(!g||!g.ids||!g.ids.length) return null;
+  const key=geoKeyOf(g.ids);
+  const cached=geoRecall(key);
+  if(cached) return cached;
+  if(MAPD.geomBusy===key) return null;
+  MAPD.geomBusy=key; renderRouteLegend();
+  try{
+    const r=await ovpFetch(qRouteGeom(g.ids),null,30000);
+    const parsed=parseRouteGeom(r.data.elements);
+    if(!parsed) throw new Error("ไม่พบ geometry ของสายนี้ใน OSM");
+    parsed.ways=parsed.ways.map(w=>simplifyWay(w,8));
+    geoRemember(key,parsed);
+    return parsed;
+  }catch(e){
+    toast("ดึงเส้นทางเต็มสายไม่สำเร็จ: "+e.message,true);
+    return null;
+  }finally{
+    if(MAPD.geomBusy===key) MAPD.geomBusy="";
+    renderRouteLegend();
+  }
+}
+
+/* ================= โหมดดูทั้งสาย (v41) =========================
+   โหมด local (ค่าเริ่มต้น) = พฤติกรรมเดิมทั้งหมด ไม่เปลี่ยน
+   โหมด route = ซูมออกให้เห็นทั้งสายที่เลือก ใช้ตอนกด "ดูทั้งสาย" ในแผงเส้นทาง (10 · Route Map) */
+
+/* เพดานมุมมอง — ปลดล็อกให้ซูมออกได้ถึงขนาดของสายทั้งสาย ไม่ใช่แค่ 1.25 เท่าของรัศมีที่ดึงมา
+   (จุดนี้คือบรรทัดที่ทำให้ "ดูทั้งสาย" เป็นไปได้จริง ของเดิมล็อกไว้ที่ MAPD.radius*1.25 เสมอ
+   ซึ่งสายรถเมล์จริงยาว 20-40 กม. ไม่มีทางซูมออกไปเห็นได้ทั้งสายถ้าไม่แก้จุดนี้) */
+function routeViewMax(){
+  return (MAPD.mode==="route"&&MAPD.routeFitR) ? MAPD.routeFitR*1.4 : MAPD.radius*1.25;
+}
+/* จุดกลาง + รัศมีที่ครอบ bbox ของเส้นทางทั้งสาย ใช้ metres() เดิมจาก 52-overpass.js */
+function bboxCenterRadius(bbox){
+  const [minLat,minLon,maxLat,maxLon]=bbox;
+  const c=[(minLat+maxLat)/2,(minLon+maxLon)/2];
+  const dLat=metres(minLat,minLon,maxLat,minLon);
+  const dLon=metres(minLat,minLon,minLat,maxLon);
+  return {c, r:Math.max(dLat,dLon)/2||500};
+}
+function enterRouteMode(gi){
+  const g=MAPD.groups[gi]; if(!g) return;
+  const geo=geoRecall(geoKeyOf(g.ids)); if(!geo) return;
+  if(!MAPD.localView) MAPD.localView={c:viewC().slice(),r:viewR()};
+  const fit=bboxCenterRadius(geo.bbox);
+  MAPD.mode="route"; MAPD.routeFitR=fit.r;
+  MAPD.view={c:fit.c,r:Math.max(fit.r*1.15,60)};
+  paintAll();
+}
+function exitRouteMode(){
+  if(MAPD.mode!=="route") return;
+  MAPD.mode="local"; MAPD.routeFitR=0;
+  if(MAPD.localView){ MAPD.view=MAPD.localView; MAPD.localView=null; }
+  else resetView();
+  paintAll();
+}
+
+/* วาดเส้นทางเต็มสาย — ทีละ way ห้ามต่อรวม (กฎข้อ 8 map-howto.md) casing สีพื้นแผนที่ก่อน
+   ทับด้วยสีสาย ป้ายที่สายนี้จอด แล้วชื่อต้นทาง/ปลายทางที่มุม bbox */
+function drawRouteLayer(cx,W,H,T,K,g,geo){
+  const P=makeProj(viewC(),W,H,viewR());
+  const col=(T===THEME_LIGHT)?g.colL:g.col;
+  geo.ways.forEach(w=>{
+    if(w.length<2) return;
+    const pp=w.map(([la,lo])=>P(la,lo));
+    cx.beginPath(); pp.forEach((q,i)=>i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1]));
+    cx.lineCap="round"; cx.lineJoin="round";
+    cx.lineWidth=6*K; cx.strokeStyle=T.bg; cx.stroke();
+    cx.beginPath(); pp.forEach((q,i)=>i?cx.lineTo(q[0],q[1]):cx.moveTo(q[0],q[1]));
+    cx.lineWidth=3*K; cx.strokeStyle=col; cx.stroke();
+  });
+  geo.stops.forEach(s=>{
+    const q=P(s.lat,s.lon);
+    cx.beginPath(); cx.arc(q[0],q[1],2.6*K,0,Math.PI*2);
+    cx.fillStyle=T.bg; cx.fill(); cx.strokeStyle=col; cx.lineWidth=1.3*K; cx.stroke();
+  });
+  cx.font="600 "+(11*K)+"px "+THAI; cx.textAlign="center"; cx.textBaseline="middle";
+  cx.fillStyle=T.label;
+  const edge=(a,b)=>{
+    const q=P(a,b);
+    cx.fillStyle=T.labelBg; const w=60*K;
+    cx.fillRect(q[0]-w/2,q[1]-9*K,w,18*K);
+    cx.fillStyle=T.label;
+  };
+  if(geo.from){ const q=P(geo.bbox[0],geo.bbox[1]); edge(geo.bbox[0],geo.bbox[1]); cx.fillText(geo.from,q[0],q[1]); }
+  if(geo.to){ const q=P(geo.bbox[2],geo.bbox[3]); edge(geo.bbox[2],geo.bbox[3]); cx.fillText(geo.to,q[0],q[1]); }
+  /* คำบรรยายกันเข้าใจผิดว่านี่คือแผนที่ถนนจริง — ฐานแผนที่ที่มีอยู่ครอบแค่รัศมีรอบหมุดเดิม
+     ส่วนที่เหลือของเฟรมนี้ไม่มีถนนให้ดู ไม่ใช่ข้อมูลหาย */
+  cx.textAlign="left"; cx.textBaseline="top"; cx.font=(10*K)+"px "+THAI;
+  cx.fillStyle=T.labelBg; cx.fillRect(6*K,6*K,cx.measureText("ภาพรวมทั้งสาย — ไม่ใช่แผนที่ถนน").width+16*K,18*K);
+  cx.fillStyle=T.text; cx.fillText("ภาพรวมทั้งสาย — ไม่ใช่แผนที่ถนน",10*K,9*K);
+}
 
 /* ---------------- 09 · Export ---------------- */
 $("exCopy").addEventListener("click",()=>$("copyBtn").click());

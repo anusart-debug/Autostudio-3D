@@ -43,7 +43,8 @@ $("fullPng").addEventListener("click",()=>{
 
 /* ช่องมองสถานะสำหรับตรวจปัญหา (อ่านอย่างเดียว) — พิมพ์ __as3d.map() ใน Console ได้
    มีไว้ให้ไล่บั๊กเวลาผู้ใช้เจอปัญหาแล้วอธิบายทางแชทไม่ได้ */
-window.__as3d={ver:"v40",map:()=>MAPD,routes:()=>MAPD.groups.map(g=>g.ref)};
+window.__as3d={ver:"v41",map:()=>MAPD,routes:()=>MAPD.groups.map(g=>g.ref),
+  geom:()=>GEO,mode:()=>MAPD.mode};
 
 $("ovpBtn").addEventListener("click",loadMap);
 

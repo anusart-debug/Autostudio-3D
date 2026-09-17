@@ -22,6 +22,8 @@
   "53-map-ui.js",
   "54-bus-chips.js",
   "55-sheet.js",
+  "56-route-geom.js",
+  "57-route-view.js",
   "60-export.js",
   "61-collapse.js",
   "62-sfx.js",
