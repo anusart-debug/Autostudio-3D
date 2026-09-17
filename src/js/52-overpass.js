@@ -77,7 +77,17 @@ async function ovpFetch(q,onTry,ms){
     }catch(e){
       clearTimeout(timer);
       if(OVP_CANCEL&&OVP_CANCEL.stopped){errs.push("ยกเลิกโดยผู้ใช้");break}
-      errs.push(name+" → "+(e&&e.name==="AbortError"?"หมดเวลารอ "+((ms||OVP_TIMEOUT)/1000)+" วิ":(e&&e.message)||"เชื่อมต่อไม่ได้"));
+      /* เปิดไฟล์ตรงจาก file:// (หรือดูผ่านพรีวิวที่ห่อเป็น data: URL) แล้วเชื่อมเซิร์ฟเวอร์ไม่ได้เลย
+         (ไม่ใช่หมดเวลา) มักไม่ใช่ปัญหาเน็ต แต่เป็นเพราะเซิร์ฟเวอร์ Overpass สาธารณะปฏิเสธ CORS
+         สำหรับ origin "null" — เช็กด้วย window.origin ไม่ใช่ location.protocol เพราะทั้ง file://
+         และ data: URL (เช่นตอนพรีวิวในเครื่องมือบางตัว) ต่างก็ได้ opaque origin "null" เหมือนกัน
+         ข้อจำกัดฝั่งเซิร์ฟเวอร์ ไม่ใช่บั๊กแอปหรือเน็ตผู้ใช้ ให้ข้อความที่ตรงประเด็นแทน "เชื่อมต่อไม่ได้" เฉยๆ */
+      const isFileOrigin=window.origin==="null";
+      errs.push(name+" → "+(e&&e.name==="AbortError"
+        ?"หมดเวลารอ "+((ms||OVP_TIMEOUT)/1000)+" วิ"
+        :isFileOrigin
+          ?"เซิร์ฟเวอร์ปฏิเสธการเชื่อมต่อจากไฟล์ที่เปิดตรง (file://) — เป็นข้อจำกัดของเซิร์ฟเวอร์ Overpass สาธารณะ ไม่ใช่บั๊กของแอปนี้ ลองเปิดผ่านเว็บแอพที่ deploy ไว้แทน (ดู docs/drive-setup.md)"
+          :(e&&e.message)||"เชื่อมต่อไม่ได้"));
     }
   }
   throw new Error(errs.join(" · "));

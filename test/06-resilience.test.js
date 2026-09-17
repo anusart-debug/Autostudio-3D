@@ -32,13 +32,12 @@ function fixture(lat,lng){
 (async()=>{
  const b=await chromium.launch();
  const results={};
- // ---- A) happy path: first host 504, second OK (failover) ----
+ // ---- A) happy path: the single host answers OK ----
  {
   const pg=await b.newPage({viewport:{width:1500,height:1000}});
   const errs=[];pg.on('pageerror',e=>errs.push(e.message));
   let order=[];
-  await pg.route('**overpass-api.de/api/interpreter',r=>{order.push('de');r.fulfill({status:504,body:'x'})});
-  await pg.route('**overpass.private.coffee/api/interpreter',async r=>{order.push('coffee');
+  await pg.route('**overpass-api.de/api/interpreter',async r=>{order.push('api.de');
     const body=JSON.stringify(fixture(13.765,100.5378));
     r.fulfill({status:200,contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body})});
   await pg.goto(PAGE_URL);
@@ -71,14 +70,12 @@ function fixture(lat,lng){
   if(d) await d.saveAs('./test/out/onepager.png');
   await pg.close();
  }
- // ---- B) every host hangs -> must time out, button must recover ----
+ // ---- B) the host hangs -> must time out, button must recover ----
  {
   const pg=await b.newPage();
   const errs=[];pg.on('pageerror',e=>errs.push(e.message));
   pg.setDefaultTimeout(200000);
-  await pg.route('**overpass-api.de/api/interpreter',r=>r.fulfill({status:500,body:'x'}));
-  await pg.route('**overpass.private.coffee/api/interpreter',r=>r.fulfill({status:500,body:'x'}));
-  await pg.route('**overpass.osm.ch/api/interpreter',r=>{/* hang */});
+  await pg.route('**overpass-api.de/api/interpreter',r=>{/* hang */});
   await pg.goto(PAGE_URL);
   await pg.waitForTimeout(700);
   await pg.evaluate(()=>document.getElementById('wzExit').click());
@@ -113,8 +110,8 @@ function fixture(lat,lng){
   await pg.close();
  }
  console.log(JSON.stringify(results,null,1));
- // A) happy path — เซิร์ฟเวอร์แรกล่ม สำรองต้องทำงานต่อได้เอง
- expect('happy: ล้มเหลวเซิร์ฟเวอร์แรกแล้วลองเซิร์ฟเวอร์สำรอง', results.happy.order[0]==='de'&&results.happy.order.includes('coffee'), results.happy.order);
+ // A) happy path — เรียกเซิร์ฟเวอร์สำเร็จตั้งแต่ครั้งแรก
+ expect('happy: เรียก overpass-api.de สำเร็จ', results.happy.order.includes('api.de'), results.happy.order);
  expect('happy: มีสายรถเมล์ขึ้นในตำนาน', results.happy.legend>0, results.happy.legend);
  expect('happy: แผนที่ถูกวาดจริง (สีหลากหลาย)', results.happy.canvasPainted>3, results.happy.canvasPainted);
  expect('happy: แผนที่ไม่ค้างสถานะ placeholder', results.happy.offHidden===true, results.happy.offHidden);

@@ -61,8 +61,6 @@ const ALLOW = [
   /^https:\/\/fonts\.googleapis\.com\//,
   /^https:\/\/fonts\.gstatic\.com\//,
   /^https:\/\/overpass-api\.de\//,
-  /^https:\/\/overpass\.private\.coffee\//,
-  /^https:\/\/overpass\.osm\.ch\//,
   /^https:\/\/(www\.)?chatgpt\.com\//, // #hoDest เปิดด้วย window.open ตามคำสั่งผู้ใช้ ไม่ใช่การรั่ว
 ];
 

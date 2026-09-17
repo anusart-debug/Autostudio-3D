@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-0MIHnWsUiZhDS92sw8HXDlKAz99Wfy/CNeSYQAjFs9k='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-32N8KRzE7glu8q9EweDv444KI7xaTfPao0lkdSKpYG4='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -3010,12 +3010,28 @@ $("routeLegend").addEventListener("click",async e=>{
    (บั๊ก v36: เซิร์ฟเวอร์ค้าง → ปุ่มค้างที่ "กำลังถาม…" ตลอดไป) */
 /* v41: ถอด maps.mail.ru ออกจากรายการสำรอง — ทุกครั้งที่ดึงแผนที่คือการส่งพิกัดจุดสื่อ Plan B
    จริงไปเซิร์ฟเวอร์ที่ตอบ mail.ru ดูแลโดย VK (รัสเซีย) ไม่ควรเป็นปลายทางของพิกัดสื่อโฆษณาบริษัท
-   เหลือ 3 ชั้นก็ยังพอสำหรับ failover — ดู README.md หัวข้อ "ข้อมูลภายนอกที่แอปเรียก" */
+   ดู README.md หัวข้อ "ข้อมูลภายนอกที่แอปเรียก" */
+/* v41: แก้ปัญหาผู้ใช้รายงานว่าดึงแผนที่ไม่ได้/ช้ามาก — วัดจริงด้วยการยิง fetch ตรงไปแต่ละ
+   เซิร์ฟเวอร์ในรายการเดิมทั้งหมด (ทั้งจาก origin ปกติและจาก origin null ที่ไฟล์ file:// ใช้จริง
+   เวลาฝ่ายขายเปิดไฟล์ตรงๆ ตามที่ README บอกให้ทำ) ผลตรวจแล้วทีละตัว:
+   - overpass.private.coffee: ค้างไม่ตอบเกิน 45 วิ ไม่ว่า origin ไหน — พังจริง ไม่ใช่แค่ช้า
+   - overpass.kumi.systems: ค้างไม่ตอบเช่นกัน แม้จาก origin ปกติ — พังจริงเหมือนกัน
+   - overpass.osm.ch: ตอบเร็วและรับ origin null ได้ปกติ **แต่ฐานข้อมูลว่างเปล่า/พัง**
+     (`timestamp_osm_base` ที่ตอบกลับมาไม่ใช่วันที่จริงเลย เป็นแค่เลข "117081") ขอโหนดที่รู้อยู่
+     แล้วว่ามีจริงบน OSM (เช่นป้ายรถเมล์ที่อนุสาวรีย์ชัยฯ) กลับได้ elements ว่างเปล่าทุกครั้ง —
+     อันตรายกว่าการค้างเสียอีก เพราะมันตอบ "สำเร็จ" (HTTP 200) พร้อมผลลัพธ์เท็จว่า "ไม่มีสายรถเมล์"
+     ทั้งที่จริงมีเป็นสิบสาย ผู้ใช้จะเข้าใจผิดว่าจุดนั้นไม่มีรถเมล์จริงๆ — เอาออกจากรายการทั้งหมด
+   - overpass-api.de: เป็นอินสแตนซ์หลักที่ให้ข้อมูลถูกต้องและไวที่สุด (ยืนยันด้วยคำสั่งเดียวกัน
+     เจอ 106 รายการสายรถเมล์จริงที่อนุสาวรีย์ชัยฯ) แต่ปฏิเสธ CORS ทันทีเมื่อ origin เป็น null
+     กล่าวคือ **เปิดตรงจาก `file://` จะเชื่อมต่อเซิร์ฟเวอร์นี้ไม่ได้เลย** — เป็นข้อจำกัดของเซิร์ฟเวอร์
+     สาธารณะเอง ไม่ใช่บั๊กของแอป และไม่พบเซิร์ฟเวอร์ Overpass สาธารณะเจ้าไหนที่ยอม origin null
+     ทั้งที่ข้อมูลยังถูกต้องพร้อมกัน (ยอม null แต่ข้อมูลพังก็มี ข้อมูลถูกแต่ปฏิเสธ null ก็มี)
+     เก็บไว้เป็นเซิร์ฟเวอร์เดียวในรายการเพราะเป็นแหล่งข้อมูลจริงที่เชื่อถือได้ที่สุด — ใช้งานได้ปกติ
+     ทันทีที่เปิดผ่านเว็บที่ deploy จริง (Firebase Hosting ตาม docs/drive-setup.md) เพราะตอนนั้น
+     origin จะไม่ใช่ null อีกต่อไป · ovpFetch ด้านล่างจะแจ้งข้อความเฉพาะเจาะจงเมื่อเจอเคสนี้ */
 const OVP={hits:null};
 const OVP_HOSTS=[
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.osm.ch/api/interpreter"
+  "https://overpass-api.de/api/interpreter"
 ];
 const OVP_TIMEOUT=20000;
 let OVP_CANCEL=null;          /* ให้ผู้ใช้กดยกเลิกได้ ไม่ต้องนั่งรอจนครบทุกเซิร์ฟเวอร์ */
@@ -3099,7 +3115,17 @@ async function ovpFetch(q,onTry,ms){
     }catch(e){
       clearTimeout(timer);
       if(OVP_CANCEL&&OVP_CANCEL.stopped){errs.push("ยกเลิกโดยผู้ใช้");break}
-      errs.push(name+" → "+(e&&e.name==="AbortError"?"หมดเวลารอ "+((ms||OVP_TIMEOUT)/1000)+" วิ":(e&&e.message)||"เชื่อมต่อไม่ได้"));
+      /* เปิดไฟล์ตรงจาก file:// (หรือดูผ่านพรีวิวที่ห่อเป็น data: URL) แล้วเชื่อมเซิร์ฟเวอร์ไม่ได้เลย
+         (ไม่ใช่หมดเวลา) มักไม่ใช่ปัญหาเน็ต แต่เป็นเพราะเซิร์ฟเวอร์ Overpass สาธารณะปฏิเสธ CORS
+         สำหรับ origin "null" — เช็กด้วย window.origin ไม่ใช่ location.protocol เพราะทั้ง file://
+         และ data: URL (เช่นตอนพรีวิวในเครื่องมือบางตัว) ต่างก็ได้ opaque origin "null" เหมือนกัน
+         ข้อจำกัดฝั่งเซิร์ฟเวอร์ ไม่ใช่บั๊กแอปหรือเน็ตผู้ใช้ ให้ข้อความที่ตรงประเด็นแทน "เชื่อมต่อไม่ได้" เฉยๆ */
+      const isFileOrigin=window.origin==="null";
+      errs.push(name+" → "+(e&&e.name==="AbortError"
+        ?"หมดเวลารอ "+((ms||OVP_TIMEOUT)/1000)+" วิ"
+        :isFileOrigin
+          ?"เซิร์ฟเวอร์ปฏิเสธการเชื่อมต่อจากไฟล์ที่เปิดตรง (file://) — เป็นข้อจำกัดของเซิร์ฟเวอร์ Overpass สาธารณะ ไม่ใช่บั๊กของแอปนี้ ลองเปิดผ่านเว็บแอพที่ deploy ไว้แทน (ดู docs/drive-setup.md)"
+          :(e&&e.message)||"เชื่อมต่อไม่ได้"));
     }
   }
   throw new Error(errs.join(" · "));

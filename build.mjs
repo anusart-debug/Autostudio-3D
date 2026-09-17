@@ -50,7 +50,7 @@ function cspTemplate(scriptHashes, target, forHeader) {
   const scriptSrc = target === "web"
     ? "'unsafe-inline' https://www.gstatic.com"
     : scriptHashes.map((h) => "'" + h + "'").join(" ");
-  const connectSrc = "https://overpass-api.de https://overpass.private.coffee https://overpass.osm.ch " +
+  const connectSrc = "https://overpass-api.de " +
     "https://fonts.googleapis.com https://fonts.gstatic.com" +
     (target === "web"
       /* เฟส 7: www.googleapis.com คือ Google Drive REST API (71-drive.web.js) —
