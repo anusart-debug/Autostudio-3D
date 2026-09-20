@@ -228,6 +228,19 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .loccard .tick{top:-1px;right:0}
 .chip.add.card{min-height:58px;padding:10px}
 
+/* ---- การ์ดเลือกอัตราส่วนภาพ (v41) ---- */
+.ratiogrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+.ratiocard{align-items:stretch;text-align:center}
+.ratiocard .shape{
+  display:flex;align-items:center;justify-content:center;height:52px;
+  background:var(--ink-300);border-bottom:1px solid var(--line-soft);
+}
+.ratiocard .shape i{display:block;border-radius:4px;border:2px solid var(--brand-txt);background:var(--brand-glow)}
+.ratiocard .cardbody{text-align:center}
+.ratiocard .cardbody b{font-size:13px}
+.ratiocard .meta{justify-content:center;text-align:center}
+.ratiocard .px{display:block;margin-top:4px;font-family:var(--mono);font-size:9.5px;color:var(--brand-txt);letter-spacing:.03em}
+
 /* custom entries */
 .chip.add{border-style:dashed;color:var(--txt-mute);display:flex;align-items:center;gap:6px;justify-content:center}
 .chip.add:hover{border-color:var(--brand-txt);color:var(--brand-txt)}
@@ -1150,8 +1163,8 @@ footer.foot .sp{flex:1}
         <h2>07 · Output</h2><span class="th">สเกลภาพและคุณภาพ</span>
       </div>
       <div class="field">
-        <label class="lbl" for="ratio">อัตราส่วน <b>ASPECT</b></label>
-        <select id="ratio"></select>
+        <label class="lbl">อัตราส่วนภาพ <b>ASPECT RATIO</b></label>
+        <div class="chips ratiogrid" id="ratioChips"></div>
       </div>
       <div class="field">
         <label class="lbl" for="scale">ตัวคูณสเกล <b id="scaleVal">1.0×</b></label>
@@ -1691,13 +1704,21 @@ const WEATHERS=[
 
 /* v41: เพิ่ม ar/en/th ให้แต่ละอัตราส่วน — ใช้เขียนลงในคำสั่งจริง (30-prompt.js ratioClause())
    ก่อนหน้านี้มีแค่ w/h/t ที่ใช้แสดงผลอย่างเดียว ตัวเลขไม่เคยถูกส่งเข้าคำสั่งเลย */
+/* v41: เพิ่ม use (ใช้กับงานอะไร) ไว้โชว์บนการ์ดเลือกอัตราส่วน — ผู้ใช้เลือกจากปลายทางที่จะเอา
+   ภาพไปใช้ ไม่ใช่จากตัวเลข · ไม่มีฟิลด์ --ar ของ Midjourney โดยตั้งใจ ดูเหตุผลใน README */
 const RATIOS=[
- {id:"16x9",w:1920,h:1080,t:"16:9 — Cinematic / คีย์วิชวล (1920×1080)",ar:"16:9",en:"widescreen",th:"จอกว้าง"},
- {id:"21x9",w:2016,h:864,t:"21:9 — Ultrawide / บิลบอร์ด (2016×864)",ar:"21:9",en:"ultra-widescreen",th:"จอกว้างพิเศษ"},
- {id:"3x2",w:1620,h:1080,t:"3:2 — Print / งานพิมพ์ (1620×1080)",ar:"3:2",en:"landscape",th:"แนวนอน"},
- {id:"1x1",w:1440,h:1440,t:"1:1 — Square / โซเชียล (1440×1440)",ar:"1:1",en:"square",th:"สี่เหลี่ยมจัตุรัส"},
- {id:"4x5",w:1152,h:1440,t:"4:5 — Feed / ฟีดแนวตั้ง (1152×1440)",ar:"4:5",en:"portrait",th:"แนวตั้ง"},
- {id:"9x16",w:1080,h:1920,t:"9:16 — Story / สตอรี่ (1080×1920)",ar:"9:16",en:"vertical story",th:"แนวตั้งสตอรี่"}
+ {id:"16x9",w:1920,h:1080,t:"16:9 — Cinematic / คีย์วิชวล (1920×1080)",ar:"16:9",en:"widescreen",th:"จอกว้าง",
+  use:"จอคอมพิวเตอร์, YouTube, คีย์วิชวลนำเสนอ"},
+ {id:"21x9",w:2016,h:864,t:"21:9 — Ultrawide / บิลบอร์ด (2016×864)",ar:"21:9",en:"ultra-widescreen",th:"จอกว้างพิเศษ",
+  use:"ภาพยนตร์จอกว้าง, ป้ายบิลบอร์ดแนวยาว"},
+ {id:"3x2",w:1620,h:1080,t:"3:2 — Print / งานพิมพ์ (1620×1080)",ar:"3:2",en:"landscape",th:"แนวนอน",
+  use:"ภาพถ่ายกล้องฟูลเฟรม, สิ่งพิมพ์ โบรชัวร์"},
+ {id:"1x1",w:1440,h:1440,t:"1:1 — Square / โซเชียล (1440×1440)",ar:"1:1",en:"square",th:"สี่เหลี่ยมจัตุรัส",
+  use:"Instagram Feed, รูปโปรไฟล์, แคตตาล็อก"},
+ {id:"4x5",w:1152,h:1440,t:"4:5 — Feed / ฟีดแนวตั้ง (1152×1440)",ar:"4:5",en:"portrait",th:"แนวตั้ง",
+  use:"Instagram Feed เต็มตาบนมือถือ"},
+ {id:"9x16",w:1080,h:1920,t:"9:16 — Story / สตอรี่ (1080×1920)",ar:"9:16",en:"vertical story",th:"แนวตั้งสตอรี่",
+  use:"TikTok, IG Reels, YouTube Shorts"}
 ];
 
 /* v41: คำคีย์เวิร์ดยอดนิยมสำหรับช่อง "โจทย์เพิ่มเติม" (#detail) — คลิกแล้วแทรกเข้าไปในช่องข้อความ
@@ -1897,7 +1918,31 @@ function fillSelect(id,arr,sel){
 function refreshLens(){fillSelect("lens",lensList(),S.lens)}
 function refreshWeather(){fillSelect("weather",weatherList(),S.weather)}
 refreshLens();refreshWeather();
-$("ratio").innerHTML=RATIOS.map((r,i)=>'<option value="'+i+'">'+r.t+'</option>').join("");
+
+/* ---- การ์ดเลือกอัตราส่วนภาพ (v41) — เดิมเป็น <select> ที่อ่านยากว่าอันไหนเหมาะกับงานไหน ----
+   การ์ดโชว์รูปทรงจริงตามสัดส่วน + ปลายทางที่เอาไปใช้ + ขนาดพิกเซลที่จะเขียนลงในคำสั่งจริง
+   (ไม่โชว์ --ar ของ Midjourney เพราะปลายทาง AI ทั้ง 13 เจ้าในแอปนี้ไม่มี Midjourney เลย
+   ใส่ไปจะถูกพิมพ์ออกมาเป็นตัวอักษรเฉยๆ — ดู README หัวข้ออัตราส่วน)
+   ใช้ class .chip เหมือนหมวดอื่น เสียงคลิก/อัปเดตสรุปสดในโหมดแนะนำจึงทำงานเองอัตโนมัติ */
+function renderRatioCards(){
+  $("ratioChips").innerHTML=RATIOS.map((r,i)=>{
+    /* กล่องพรีวิวสูงคงที่ 34px กว้างตามสัดส่วนจริง แต่ไม่เกิน 58px กันจอกว้างพิเศษล้นการ์ด */
+    const h=34, w=Math.min(58,Math.round(h*r.w/r.h));
+    return '<button type="button" class="chip card ratiocard" data-i="'+i+'" aria-pressed="'+
+      (S.ratio===i?"true":"false")+'">'+
+      '<span class="shape"><i style="width:'+w+'px;height:'+h+'px"></i></span>'+
+      '<span class="cardbody"><b>'+esc(r.ar)+"</b>"+
+        (r.use?'<span class="meta">'+esc(r.use)+"</span>":"")+
+        '<span class="px">'+r.w+" × "+r.h+"</span></span></button>";
+  }).join("");
+}
+$("ratioChips").addEventListener("click",e=>{
+  const b=e.target.closest("[data-i]"); if(!b)return;
+  S.ratio=+b.dataset.i;
+  [...$("ratioChips").querySelectorAll(".chip")].forEach(c=>c.setAttribute("aria-pressed",String(c===b)));
+  sync();
+});
+renderRatioCards();
 
 /* ---------------- หน้าต่างเพิ่มรายการ ---------------- */
 let addKey="loc";
@@ -2285,7 +2330,7 @@ function sync(){
 /* ---------------- inputs ---------------- */
 $("lens").addEventListener("change",e=>{if(e.target.value==="__add__"){refreshLens();openAdd("lens");return}S.lens=+e.target.value;sync()});
 $("weather").addEventListener("change",e=>{if(e.target.value==="__add__"){refreshWeather();openAdd("weather");return}S.weather=+e.target.value;sync()});
-$("ratio").addEventListener("change",e=>{S.ratio=+e.target.value;sync()});
+/* v41: #ratio เปลี่ยนจาก <select> เป็นการ์ด (#ratioChips) — ตัวรับคลิกอยู่ที่ 20-chips.js แล้ว */
 $("scale").addEventListener("input",e=>{S.scale=+e.target.value/100;sync()});
 $("hdr").addEventListener("input",e=>{S.hdr=+e.target.value;sync()});
 ["artwork","detail","negative"].forEach(id=>$(id).addEventListener("input",sync));
@@ -4424,7 +4469,9 @@ document.addEventListener("click",e=>{
   if(e.target.closest(".chip")&&!e.target.closest(".chip.add")) SFX.play("tick");
   if(!$("wz").hidden) setTimeout(wzLive,0);
 },true);
-["ratio","lens","weather","adFit"].forEach(id=>{
+/* v41: ตัด "ratio" ออกจากรายการนี้ — เป็นการ์ด .chip แล้ว ตัวดักคลิกด้านบนจัดการให้ครบทั้ง
+   เสียงคลิกและ wzLive() ไม่ต้องดัก change ซ้ำ */
+["lens","weather","adFit"].forEach(id=>{
   const el=$(id); if(el) el.addEventListener("change",()=>{SFX.play("tick");if(!$("wz").hidden)wzLive()});
 });
 
@@ -4880,7 +4927,7 @@ async function dvApplyProject(p, refDataUrl, adDataUrl) {
     if (k !== "loc") renderChips(k);
   });
   refreshLens(); refreshWeather();
-  $("ratio").value = String(S.ratio);
+  renderRatioCards(); /* v41: #ratio เป็นการ์ดแล้ว ไม่ใช่ <select> ที่ตั้ง .value ได้ */
   $("scale").value = String(Math.round(S.scale * 100)); $("scaleVal").textContent = S.scale.toFixed(1) + "×";
   $("hdr").value = String(S.hdr); $("hdrVal").textContent = S.hdr + "%";
 

@@ -135,5 +135,29 @@ function fillSelect(id,arr,sel){
 function refreshLens(){fillSelect("lens",lensList(),S.lens)}
 function refreshWeather(){fillSelect("weather",weatherList(),S.weather)}
 refreshLens();refreshWeather();
-$("ratio").innerHTML=RATIOS.map((r,i)=>'<option value="'+i+'">'+r.t+'</option>').join("");
+
+/* ---- การ์ดเลือกอัตราส่วนภาพ (v41) — เดิมเป็น <select> ที่อ่านยากว่าอันไหนเหมาะกับงานไหน ----
+   การ์ดโชว์รูปทรงจริงตามสัดส่วน + ปลายทางที่เอาไปใช้ + ขนาดพิกเซลที่จะเขียนลงในคำสั่งจริง
+   (ไม่โชว์ --ar ของ Midjourney เพราะปลายทาง AI ทั้ง 13 เจ้าในแอปนี้ไม่มี Midjourney เลย
+   ใส่ไปจะถูกพิมพ์ออกมาเป็นตัวอักษรเฉยๆ — ดู README หัวข้ออัตราส่วน)
+   ใช้ class .chip เหมือนหมวดอื่น เสียงคลิก/อัปเดตสรุปสดในโหมดแนะนำจึงทำงานเองอัตโนมัติ */
+function renderRatioCards(){
+  $("ratioChips").innerHTML=RATIOS.map((r,i)=>{
+    /* กล่องพรีวิวสูงคงที่ 34px กว้างตามสัดส่วนจริง แต่ไม่เกิน 58px กันจอกว้างพิเศษล้นการ์ด */
+    const h=34, w=Math.min(58,Math.round(h*r.w/r.h));
+    return '<button type="button" class="chip card ratiocard" data-i="'+i+'" aria-pressed="'+
+      (S.ratio===i?"true":"false")+'">'+
+      '<span class="shape"><i style="width:'+w+'px;height:'+h+'px"></i></span>'+
+      '<span class="cardbody"><b>'+esc(r.ar)+"</b>"+
+        (r.use?'<span class="meta">'+esc(r.use)+"</span>":"")+
+        '<span class="px">'+r.w+" × "+r.h+"</span></span></button>";
+  }).join("");
+}
+$("ratioChips").addEventListener("click",e=>{
+  const b=e.target.closest("[data-i]"); if(!b)return;
+  S.ratio=+b.dataset.i;
+  [...$("ratioChips").querySelectorAll(".chip")].forEach(c=>c.setAttribute("aria-pressed",String(c===b)));
+  sync();
+});
+renderRatioCards();
 

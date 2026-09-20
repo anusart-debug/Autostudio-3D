@@ -206,6 +206,19 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .loccard .tick{top:-1px;right:0}
 .chip.add.card{min-height:58px;padding:10px}
 
+/* ---- การ์ดเลือกอัตราส่วนภาพ (v41) ---- */
+.ratiogrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+.ratiocard{align-items:stretch;text-align:center}
+.ratiocard .shape{
+  display:flex;align-items:center;justify-content:center;height:52px;
+  background:var(--ink-300);border-bottom:1px solid var(--line-soft);
+}
+.ratiocard .shape i{display:block;border-radius:4px;border:2px solid var(--brand-txt);background:var(--brand-glow)}
+.ratiocard .cardbody{text-align:center}
+.ratiocard .cardbody b{font-size:13px}
+.ratiocard .meta{justify-content:center;text-align:center}
+.ratiocard .px{display:block;margin-top:4px;font-family:var(--mono);font-size:9.5px;color:var(--brand-txt);letter-spacing:.03em}
+
 /* custom entries */
 .chip.add{border-style:dashed;color:var(--txt-mute);display:flex;align-items:center;gap:6px;justify-content:center}
 .chip.add:hover{border-color:var(--brand-txt);color:var(--brand-txt)}

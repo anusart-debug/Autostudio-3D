@@ -129,7 +129,9 @@ document.addEventListener("click",e=>{
   if(e.target.closest(".chip")&&!e.target.closest(".chip.add")) SFX.play("tick");
   if(!$("wz").hidden) setTimeout(wzLive,0);
 },true);
-["ratio","lens","weather","adFit"].forEach(id=>{
+/* v41: ตัด "ratio" ออกจากรายการนี้ — เป็นการ์ด .chip แล้ว ตัวดักคลิกด้านบนจัดการให้ครบทั้ง
+   เสียงคลิกและ wzLive() ไม่ต้องดัก change ซ้ำ */
+["lens","weather","adFit"].forEach(id=>{
   const el=$(id); if(el) el.addEventListener("change",()=>{SFX.play("tick");if(!$("wz").hidden)wzLive()});
 });
 

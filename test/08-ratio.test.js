@@ -23,7 +23,7 @@ const {expect,done}=require('./_expect');
  expect('ค่าเริ่มต้นเป็น landscape', p0.includes('landscape'), p0.slice(-160));
 
  /* ---- 2) เปลี่ยนเป็น 9:16 (index 5) ---- */
- await pg.selectOption('#ratio','5');
+ await pg.click('#ratioChips [data-i="5"]');
  await pg.waitForTimeout(150);
  const p1=await get();
  expect('เปลี่ยนเมนูแล้วได้ 9:16', p1.includes('9:16'), p1.slice(-160));
@@ -31,7 +31,7 @@ const {expect,done}=require('./_expect');
  expect('เปลี่ยนเมนูแล้วเป็น portrait', p1.includes('portrait'), p1.slice(-160));
 
  /* ---- 3) ขยับสเกล ต้องเปลี่ยนพิกเซลจริงและไม่เกินเพดาน 2048 ---- */
- await pg.selectOption('#ratio','0'); // กลับไป 16:9
+ await pg.click('#ratioChips [data-i="0"]'); // กลับไป 16:9
  await pg.evaluate(()=>{const r=document.getElementById('scale');r.value='200';r.dispatchEvent(new Event('input',{bubbles:true}))});
  await pg.waitForTimeout(150);
  const p2=await get();

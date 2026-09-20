@@ -107,7 +107,7 @@ async function dvApplyProject(p, refDataUrl, adDataUrl) {
     if (k !== "loc") renderChips(k);
   });
   refreshLens(); refreshWeather();
-  $("ratio").value = String(S.ratio);
+  renderRatioCards(); /* v41: #ratio เป็นการ์ดแล้ว ไม่ใช่ <select> ที่ตั้ง .value ได้ */
   $("scale").value = String(Math.round(S.scale * 100)); $("scaleVal").textContent = S.scale.toFixed(1) + "×";
   $("hdr").value = String(S.hdr); $("hdrVal").textContent = S.hdr + "%";
 
