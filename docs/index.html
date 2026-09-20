@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-JWQohGGFLGKluIU82HCiVKNhWUXweUgvTYSZyeprctE='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-Ujbzi1DK0dQqaa0TY1OvHMX17fZo1lXtJcAOfPrgby4='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -1715,9 +1715,10 @@ const LOCATIONS=[
  {id:"motorway",th:"มอเตอร์เวย์",en:"Motorway",p:"a wide intercity motorway outside Bangkok, six open lanes of smooth asphalt with painted lane markings running straight to the horizon, a landscaped central median, green verges and utility poles along the shoulder, tall billboards standing back from the carriageway, big blue overhead sign gantries, wide open sky above and low hills in the distance",lat:13.71,lng:100.75,conf:"low",src:"ไม่พบสายรถเมล์ประจำทาง",bus:[]}
 ];
 
-/* v41: เพิ่ม ic (ตำแหน่งกล้อง/แนวมองในภาพร่างมุมกล้อง) ให้แต่ละมุม — ข้อมูลแสดงผลล้วน
-   ใช้วาดไดอะแกรมเล็กๆ บนการ์ด (angleIconSVG() ใน 20-chips.js) ไม่แตะ p ที่ส่งให้ AI เลย
-   cam=ตำแหน่งกล้อง [x,y], look=จุดที่กล้องมองไป [x,y] ในระบบพิกัดภาพร่าง 64×44
+/* v41.3: ฟิลด์ ic (ตำแหน่งกล้อง/แนวมอง) เดิมใช้คำนวณไดอะแกรมสดใน 20-chips.js — ตอนนี้เปลี่ยนไป
+   ใช้ไอคอนคงที่ต่อรายการแทน (ANGLE_ICONS ใน 20-chips.js ตามภาพตัวอย่างที่ผู้ใช้ส่งมา) จึงไม่มี
+   ใครอ่านฟิลด์นี้แล้ว แต่เก็บไว้เผื่อใช้ในอนาคต ไม่ได้แตะ p ที่ส่งให้ AI ทั้งสองแบบ
+   cam=ตำแหน่งกล้อง [x,y], look=จุดที่กล้องมองไป [x,y] ในระบบพิกัดภาพร่าง 64×44 (ไม่ใช้แล้ว)
    k=รูปแบบไอคอนพิเศษ ("low"/"drone"/"eye"/"track"/"detail") ไม่ใส่ = จุดกล้องธรรมดา */
 const ANGLES=[
  {id:"hero34",th:"3/4 หน้า ฮีโร่ช็อต",en:"3/4 Front Hero",p:"three-quarter front hero angle, camera at hood height, vehicle filling two thirds of frame",
@@ -1989,83 +1990,50 @@ const IC_PALETTE='<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1
 const IC_PIN='<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>';
 const IC_TICK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
 
-/* v41: ไอคอนภาพร่างสำหรับ "ประเภทสื่อ" (02) และ "สไตล์การเรนเดอร์" (08) — คีย์ตรงกับ id จริง
-   ใน VEHICLES/STYLES (10-data.js) ทุกตัวอักษร รายการที่ผู้ใช้เพิ่มเอง (ไม่มี id เหล่านี้) จะได้
-   ไอคอนสำรอง (*_ICON_DEFAULT) แทนแทนที่จะพัง — เป็นข้อมูลแสดงผลล้วน ไม่แตะ p ที่ส่งให้ AI เลย */
+/* v41.3: ไอคอนตามภาพตัวอย่างที่ผู้ใช้ส่งมา (สกรีนช็อตแอปจริงพร้อม icon ที่ต้องการเป๊ะๆ) —
+   คีย์ตรงกับ id จริงใน VEHICLES/ANGLES/STYLES (10-data.js) ทุกตัวอักษร รายการที่ผู้ใช้เพิ่มเอง
+   (ไม่มี id เหล่านี้) จะได้ไอคอนสำรอง (*_ICON_DEFAULT) แทนแทนที่จะพัง — เป็นข้อมูลแสดงผลล้วน
+   ไม่แตะ p ที่ส่งให้ AI เลย มุมกล้อง (05) เปลี่ยนจากไดอะแกรมคำนวณสดจาก ic เป็นไอคอนคงที่ต่อรายการ
+   แบบเดียวกับอีก 2 หมวด เพราะภาพตัวอย่างใหม่ใช้ภาพนิ่งเฉพาะต่อมุมจริงๆ ไม่ใช่ระบบคำนวณตำแหน่ง
+   (ฟิลด์ ic ใน ANGLES ยังอยู่เผื่อใช้ในอนาคต แต่ไม่มีใครอ่านแล้วตอนนี้) */
 const VEHICLE_ICONS={
-  wrap:'<svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="9" rx="2"/><path d="M2 12.5h20"/><circle cx="7" cy="19" r="1.7" fill="currentColor" stroke="none"/><circle cx="17" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>',
-  dd:'<svg viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="7" rx="1.4"/><rect x="3" y="11" width="18" height="7" rx="1.4"/><circle cx="7" cy="20.3" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="20.3" r="1.5" fill="currentColor" stroke="none"/></svg>',
-  bus3d:'<svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="9" rx="2"/><path d="M6.5 8v9M17.5 8v9"/><circle cx="7" cy="19" r="1.7" fill="currentColor" stroke="none"/><circle cx="17" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>',
-  shelter:'<svg viewBox="0 0 24 24"><path d="M3 20V10l9-5 9 5v10"/><path d="M3 10.5h18"/><rect x="7.5" y="12.5" width="9" height="7.5"/></svg>',
-  muvmi:'<svg viewBox="0 0 24 24"><path d="M3.5 17V12a2 2 0 0 1 2-2h6l4 2h4a2 2 0 0 1 2 2v3Z"/><circle cx="7.5" cy="19" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>',
-  billboard:'<svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="10.5" rx="1"/><path d="M8 14.5v5.5M16 14.5v5.5"/></svg>',
-  ledscreen:'<svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="12.5" rx="1.5"/><path d="M8 20h8M12 16.5v3.5"/></svg>'
+  wrap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="20" height="9" rx="2"/><rect x="3" y="8.2" width="4" height="6.6" fill="#EF4444" stroke="none"/><rect x="7.3" y="8.2" width="4" height="6.6" fill="#F5C542" stroke="none"/><rect x="11.6" y="8.2" width="4" height="6.6" fill="#22C55E" stroke="none"/><rect x="15.9" y="8.2" width="4.1" height="6.6" fill="#2E86F5" stroke="none"/><circle cx="7" cy="19" r="1.7" fill="currentColor" stroke="none"/><circle cx="17" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>',
+  dd:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3.5" width="18" height="7" rx="1.3"/><rect x="3" y="10.7" width="18" height="7" rx="1.3"/><path d="M6.5 3.5v7M11 3.5v7M15.5 3.5v7M6.5 10.7v7M11 10.7v7M15.5 10.7v7" opacity=".5" stroke-width="1"/><circle cx="7" cy="20.3" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="20.3" r="1.5" fill="currentColor" stroke="none"/></svg>',
+  bus3d:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="8" width="20" height="9" rx="2"/><path d="M6.5 8v9M17.5 8v9"/><circle cx="7" cy="19" r="1.7" fill="currentColor" stroke="none"/><circle cx="17" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>',
+  shelter:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-5 9 5" stroke-linecap="round" stroke-linejoin="round"/><rect x="4.5" y="9" width="15" height="10.5" rx=".6"/><path d="M7 9v10.5M17 9v10.5" opacity=".5"/><rect x="9" y="11.5" width="6" height="5.5" rx=".4" opacity=".7"/></svg>',
+  muvmi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 17v-4.5a2 2 0 0 1 2-2h5.5l3.5 2h4a2 2 0 0 1 2 2V17" stroke-linejoin="round"/><path d="M6 10.5c0-2 1.5-3.3 3.5-3.3h2" opacity=".7"/><circle cx="7.5" cy="19" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>',
+  billboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6.5" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="5.5" r=".9" fill="currentColor" stroke="none"/><circle cx="18" cy="6.5" r=".9" fill="currentColor" stroke="none"/><rect x="3" y="8" width="18" height="12" rx="1.2"/><circle cx="15.5" cy="12" r="1.6"/><path d="M4.5 18.5l4-5 3 3.3 3.5-4.3 5 6" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  ledscreen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="4.5" r=".8" fill="currentColor" stroke="none"/><circle cx="12" cy="3.5" r=".8" fill="currentColor" stroke="none"/><circle cx="16" cy="4.5" r=".8" fill="currentColor" stroke="none"/><rect x="3" y="6.5" width="18" height="12" rx="1.2"/><path d="M6 13c1.5-3 2.5 3 4-2 1.2-4 2 5 3.2 0 1-3.5 2 1 4.8-1" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"/><path d="M10 21.5h4" stroke-linecap="round"/></svg>'
 };
-const VEHICLE_ICON_DEFAULT='<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="9" rx="2"/><circle cx="8" cy="19" r="1.6" fill="currentColor" stroke="none"/><circle cx="16" cy="19" r="1.6" fill="currentColor" stroke="none"/></svg>';
-const STYLE_ICONS={
-  ue5:'<svg viewBox="0 0 24 24"><path d="M12 2.5l2.3 6.4L21 11l-6.7 2.1L12 21.5l-2.3-6.4L3 11l6.7-2.1Z"/></svg>',
-  octane:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(28 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(-28 12 12)"/></svg>',
-  hdr:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>',
-  hyper:'<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="2.6"/></svg>',
-  auto:'<svg viewBox="0 0 24 24"><path d="M4 16V8.5a2 2 0 0 1 2-2h9l5 5v4.5"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="17.5" cy="17" r="1.8"/></svg>',
-  clean:'<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="2.3"/><path d="M4.2 20c0-3.3 2.1-6 4.8-6s4.8 2.7 4.8 6"/><path d="M4 4l16 16"/></svg>',
-  cine:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7.5 5v14M16.5 5v14"/><path d="M3 9.3h4.5M3 15.3h4.5M16.5 9.3H21M16.5 15.3H21"/></svg>',
-  ray:'<svg viewBox="0 0 24 24"><rect x="9.5" y="3" width="5" height="18" rx="1.6"/><path d="M4 8l5.5 4-5.5 4M20 8l-5.5 4 5.5 4"/></svg>',
-  trails:'<svg viewBox="0 0 24 24"><path d="M2.5 8h11M2.5 12h15M2.5 16h9"/></svg>'
-};
-const STYLE_ICON_DEFAULT='<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z"/></svg>';
+const VEHICLE_ICON_DEFAULT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="8" width="18" height="9" rx="2"/><circle cx="8" cy="19" r="1.6" fill="currentColor" stroke="none"/><circle cx="16" cy="19" r="1.6" fill="currentColor" stroke="none"/></svg>';
 
-/* v41.1: ภาพร่างมุมกล้อง (05) — ปรับให้ใกล้เคียงภาพตัวอย่างที่ผู้ใช้ส่งมา (เส้นสมุดวาด รถเมล์
-   มีรายละเอียดพอดูออกว่าเป็นรถ + กล้องเป็นรูปกล้องจริงไม่ใช่จุดกลม + เส้นลากมุมมองเป็นกรวย 2 เส้น
-   แทนเส้นประเส้นเดียว) ยังวาดสดจาก ic ที่ตั้งไว้ในแต่ละรายการของ ANGLES (10-data.js) เหมือนเดิม
-   ทุกตัวอักษร แค่เปลี่ยนวิธีวาดกล้อง/กรวยมุมมอง/รถ — ตำแหน่งกล้องเทียบกับรถ (จุดที่บอกความหมาย
-   ของมุมนั้นจริงๆ) ไม่ได้แก้ รายการที่ผู้ใช้เพิ่มเอง (ไม่มี ic) ยังได้ตำแหน่งกล้องเริ่มต้นแทนที่จะพัง */
-function angleIconSVG(ic){
-  ic=ic||{};
-  const cam=ic.cam||[10,24], look=ic.look||[22,24], k=ic.k||"cam";
-  /* กรวยมุมมอง: หมุนเวกเตอร์กล้อง→จุดเล็ง ±มุมเล็กๆ ได้เส้นคู่ลู่เข้าที่กล้อง แทนเส้นประเส้นเดียว
-     ตรงกับภาพตัวอย่างที่ใช้เส้นคู่เป็นกรวยมองเห็นเสมอ ไม่ต้องเพิ่มพารามิเตอร์ต่อรายการเลย */
-  const rot=(cx,cy,x,y,deg)=>{
-    const r=deg*Math.PI/180, dx=x-cx, dy=y-cy;
-    return [cx+dx*Math.cos(r)-dy*Math.sin(r), cy+dx*Math.sin(r)+dy*Math.cos(r)];
-  };
-  const p1=rot(cam[0],cam[1],look[0],look[1],11), p2=rot(cam[0],cam[1],look[0],look[1],-11);
-  const cone='<path d="M'+cam[0]+' '+cam[1]+'L'+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+
-    'M'+cam[0]+' '+cam[1]+'L'+p2[0].toFixed(1)+' '+p2[1].toFixed(1)+'" stroke-width=".9" opacity=".8"/>';
-  /* กล้องจริง (ตัวกล้อง+ช่องมองภาพ+เลนส์) แทนจุดกลมเดิม วาดรอบจุด cam เสมอ */
-  const camIcon='<g transform="translate('+(cam[0]-5)+' '+(cam[1]-4)+')">'+
-    '<rect x="0" y="1.2" width="10" height="6.4" rx="1.4" stroke-width="1.3"/>'+
-    '<rect x="3" y="-0.8" width="4" height="2.4" rx=".6" stroke-width="1.1"/>'+
-    '<circle cx="5" cy="4.4" r="2.1" stroke-width="1.2"/><circle cx="5" cy="4.4" r=".55" fill="currentColor" stroke="none"/>'+
-  '</g>';
-  let extra=k==="detail"
-    ? '<circle cx="'+cam[0]+'" cy="'+cam[1]+'" r="4" stroke-width="1.5"/>'+
-      '<path d="M'+(cam[0]+2.8)+' '+(cam[1]+2.8)+'L'+(cam[0]+6.2)+' '+(cam[1]+6.2)+'" stroke-width="1.7" stroke-linecap="round"/>'+
-      '<rect x="'+(look[0]-3)+'" y="'+(look[1]-3)+'" width="6" height="6" stroke-width="1" stroke-dasharray="1.4 1.4"/>'
-    : cone+camIcon;
-  if(k==="drone"){
-    extra+='<path d="M'+(cam[0]-4)+' '+(cam[1]-7)+'q4 -3 8 0" stroke-width="1.2"/>'+
-      '<path d="M'+(cam[0]-3)+' '+(cam[1]-10)+'q3 -2 6 0" stroke-width="1.2"/>';
-  }else if(k==="eye"){
-    extra+='<path d="M'+(cam[0]-3)+' '+(cam[1]+5)+'h6" stroke-width="1"/>';
-  }else if(k==="track"){
-    extra+='<path d="M'+(cam[0]-9)+' '+(cam[1]-3)+'h4M'+(cam[0]-9)+' '+cam[1]+'h4M'+(cam[0]-9)+' '+(cam[1]+3)+'h4" stroke-width="1.1" stroke-linecap="round"/>';
-  }
-  /* รถเมล์ด้านข้าง (ตัวถัง+หลังคา+หน้าต่าง 3 บาน+ประตู+ล้อ) เหมือนกันทุกใบ พอให้ดูออกว่าเป็นรถ
-     โดยยังเล็กพอไม่แย่งพื้นที่จากกล้อง/กรวยมุมมองที่เป็นตัวบอกความหมายของมุมกล้องจริงๆ */
-  return '<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+
-    '<path d="M4 36h56" stroke-width="1" opacity=".35"/>'+
-    '<rect x="16" y="17" width="36" height="19" rx="4" stroke-width="1.6"/>'+
-    '<rect x="30" y="13.5" width="8" height="4" rx="1" stroke-width="1.3"/>'+
-    '<rect x="20" y="21" width="7" height="6.5" rx="1" stroke-width="1.2"/>'+
-    '<rect x="29" y="21" width="7" height="6.5" rx="1" stroke-width="1.2"/>'+
-    '<rect x="38" y="21" width="7" height="6.5" rx="1" stroke-width="1.2"/>'+
-    '<path d="M47 21v15" stroke-width="1.1"/>'+
-    '<circle cx="24" cy="36" r="3.2" fill="currentColor" stroke="none"/>'+
-    '<circle cx="44" cy="36" r="3.2" fill="currentColor" stroke="none"/>'+
-    extra+
-  '</svg>';
-}
+const STYLE_ICONS={
+  ue5:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 8v6a3.5 3.5 0 0 0 7 0V8" stroke-width="1.8"/></svg>',
+  octane:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 15l4-10 3 6 3-4-3 10-3-6-4 4Z"/></svg>',
+  hdr:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="19" height="13" rx="2"/><rect x="8" y="3.5" width="5" height="3.5" rx=".8"/><circle cx="12" cy="13" r="4.2"/><path d="M12 8.8v1.4M12 16v1.4M8.4 10.6l1.2.7M14.4 15.7l1.2.7M8.4 15.4l1.2-.7M14.4 10.3l1.2-.7" stroke-width="1.1"/></svg>',
+  hyper:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M12 3c4.5 0 7.5 3.4 7.5 8 0 3.6-1.7 6.6-4 9-1 1-2.3 1-3-.2-.5-.9-.2-1.8.5-2.6 1.4-1.6 2.2-3.6 2.2-6.2 0-3-2-5-5.2-5S6.8 8 6.8 11c0 1.7.6 3 1.6 4.2"/><path d="M9 15.5c-1.3-1.3-2.2-3-2.2-5 0-3.8 2.6-6.5 6.2-6.5"/><path d="M12 9.5c1.7 0 2.8 1.1 2.8 2.8 0 1.6-.7 2.8-1.7 4"/></svg>',
+  auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5v-1.3c0-.5.3-1 .8-1.2l3-1.4c.5-.5 1.2-.8 1.9-.8h6.6c.7 0 1.4.2 1.9.7l2.3 1.9c.3.2.5.6.5 1v1.1"/><path d="M3 15.5h18v1.5H3Z"/><circle cx="7.5" cy="17.3" r="1.9" fill="currentColor" stroke="none"/><circle cx="16.5" cy="17.3" r="1.9" fill="currentColor" stroke="none"/></svg>',
+  clean:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="5.5" r="2.2" fill="currentColor" stroke="none"/><path d="M7 8v7M7 10l-3 2M7 10l3.5 1.5M7 15l-2.5 5M7 15l3 5"/><path d="M13 6h8l-3 3 3 3h-8Z"/></svg>',
+  cine:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><circle cx="11" cy="6.5" r="1.6"/><circle cx="15.5" cy="11" r="1.6"/><circle cx="11" cy="15.5" r="1.6"/><circle cx="6.5" cy="11" r="1.6"/><circle cx="11" cy="11" r="1.4" fill="currentColor" stroke="none"/><path d="M17 16c2 1 3.5 2.8 4.5 5"/></svg>',
+  ray:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4l6 3v6l-6 3-6-3V7Z"/><path d="M9 4v9M3 7l6 3 6-3"/><path d="M17 6l3.5-1.5M18.5 10l3.5 1M17 15l3 2" stroke-width="1.2"/></svg>',
+  trails:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 8c3-3 5 3 8 0s5 3 8 0 4-1 4-1"/><path d="M2 12c3-3 5 3 8 0s5 3 8 0 4-1 4-1" opacity=".7"/><path d="M2 16c3-3 5 3 8 0s5 3 8 0 4-1 4-1" opacity=".45"/></svg>'
+};
+const STYLE_ICON_DEFAULT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z"/></svg>';
+
+/* v41.3: ภาพร่างมุมกล้อง (05) — ไอคอนคงที่ต่อมุมกล้อง 1 รูปต่อรายการ (ตามภาพตัวอย่างที่ผู้ใช้
+   ส่งมา ไม่ใช่ไดอะแกรมคำนวณสดแบบเดิม) กล้อง/รถ/คนเดินถนนวาดเป็น <g> ย่อยแยกส่วน ประกอบใน
+   viewBox 0 0 64 44 เดียวกันทุกใบให้ขนาด/ตำแหน่งสัมพัทธ์ในการ์ดเท่ากัน */
+const ANGLE_ICONS={
+  hero34:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6l1.8 4.3L28 12l-4.2 1.7L22 18l-1.8-4.3L16 12l4.2-1.7Z" fill="currentColor" stroke="none"/><path d="M14 32v-3c0-1 .6-1.9 1.5-2.3l6-2.7c1-.5 2.1-.7 3.2-.7h12.6c1.2 0 2.4.3 3.4.9l5 3c.7.4 1.3 1 1.6 1.8l.7 2v3Z"/><circle cx="23" cy="35" r="3.2" fill="currentColor" stroke="none"/><circle cx="39" cy="35" r="3.2" fill="currentColor" stroke="none"/></svg>',
+  low:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(4,28)"><rect x="0" y="3" width="11" height="7.5" rx="1.6" stroke-width="1.5"/><rect x="3" y=".5" width="5" height="3" rx=".6" stroke-width="1.3"/><circle cx="5.5" cy="6.7" r="2.3" stroke-width="1.4"/></g><path d="M15 33L38 12M15 33L44 16" stroke-width="1" opacity=".7"/><g transform="translate(36,4)"><rect x="0" y="4" width="24" height="16" rx="3" stroke-width="1.6"/><rect x="4" y="0" width="16" height="5" rx="1.5" stroke-width="1.4"/><circle cx="4.5" cy="20" r="2" fill="currentColor" stroke="none"/><circle cx="19.5" cy="20" r="2" fill="currentColor" stroke="none"/></g></svg>',
+  profile:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="14" width="44" height="18" rx="3"/><path d="M20 14v18M30 14v18M40 14v18" opacity=".5" stroke-width="1.2"/><circle cx="20" cy="35" r="3.2" fill="currentColor" stroke="none"/><circle cx="44" cy="35" r="3.2" fill="currentColor" stroke="none"/></svg>',
+  rear34:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="14" width="40" height="18" rx="3"/><path d="M15 14v18M24 14v18M33 14v18" opacity=".5" stroke-width="1.2"/><circle cx="16" cy="35" r="3.2" fill="currentColor" stroke="none"/><circle cx="38" cy="35" r="3.2" fill="currentColor" stroke="none"/><g transform="translate(46,17)"><rect x="0" y="2" width="11" height="7.5" rx="1.6" stroke-width="1.5"/><rect x="3" y="-.5" width="5" height="3" rx=".6" stroke-width="1.3"/><circle cx="5.5" cy="5.7" r="2.1" stroke-width="1.4"/></g></svg>',
+  drone:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(32,14)"><rect x="-4" y="-3" width="8" height="6" rx="1.6"/><path d="M-4 -1L-14 -9M4 -1L14 -9M-4 2L-14 10M4 2L14 10"/><circle cx="-14" cy="-9" r="3.2"/><circle cx="14" cy="-9" r="3.2"/><circle cx="-14" cy="10" r="3.2"/><circle cx="14" cy="10" r="3.2"/></g><path d="M18 38v-2.3c0-.8.5-1.5 1.2-1.8l4-1.8c.7-.3 1.4-.5 2.2-.5h8.2c.8 0 1.6.2 2.3.6l3.3 2c.5.3.8.7 1 1.2l.4 1.3v1.3Z" stroke-width="1.3"/><circle cx="23" cy="39" r="2" fill="currentColor" stroke="none"/><circle cx="34" cy="39" r="2" fill="currentColor" stroke="none"/></svg>',
+  street:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 36h60" stroke-width="1" opacity=".35"/><g transform="translate(4,20)"><rect x="0" y="3" width="11" height="7.5" rx="1.6" stroke-width="1.5"/><rect x="3" y=".5" width="5" height="3" rx=".6" stroke-width="1.3"/><circle cx="5.5" cy="6.7" r="2.3" stroke-width="1.4"/></g><g transform="translate(26,10)"><circle cx="4" cy="2.4" r="2.4" fill="currentColor" stroke="none"/><path d="M4 5v9M4 9l-4 3M4 9l4.5 2M4 14l-3 6M4 14l4 6" stroke-width="1.5"/></g><g transform="translate(38,18)"><rect x="0" y="0" width="22" height="12" rx="2.4" stroke-width="1.5"/><path d="M7 0v12M14 0v12" opacity=".5" stroke-width="1.1"/><circle cx="6" cy="14" r="2.2" fill="currentColor" stroke="none"/><circle cx="17" cy="14" r="2.2" fill="currentColor" stroke="none"/></g></svg>',
+  track:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16h10M2 22h14M2 28h9" stroke-width="1.4" opacity=".8"/><rect x="16" y="14" width="34" height="16" rx="3"/><path d="M25 14v16M34 14v16" opacity=".5" stroke-width="1.2"/><circle cx="25" cy="32" r="2.8" fill="currentColor" stroke="none"/><circle cx="43" cy="32" r="2.8" fill="currentColor" stroke="none"/><g transform="translate(50,15)"><rect x="0" y="2" width="10" height="7" rx="1.5" stroke-width="1.4"/><rect x="2.5" y="-.5" width="4.5" height="2.8" rx=".5" stroke-width="1.2"/><circle cx="5" cy="5.5" r="1.9" stroke-width="1.3"/></g></svg>',
+  detail:'<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="26" cy="19" r="12"/><path d="M35 28l11 11"/><path d="M18 19h16M26 11v16" stroke-width="1.4" opacity=".7"/><path d="M40 8l6 2-2 6z" fill="currentColor" stroke="none"/></svg>'
+};
+const ANGLE_ICON_DEFAULT='<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(4,17)"><rect x="0" y="1.2" width="10" height="6.4" rx="1.4" stroke-width="1.3"/><rect x="3" y="-.8" width="4" height="2.4" rx=".6" stroke-width="1.1"/><circle cx="5" cy="4.4" r="2.1" stroke-width="1.2"/></g><rect x="20" y="14" width="34" height="16" rx="3"/><circle cx="29" cy="32" r="2.8" fill="currentColor" stroke="none"/><circle cx="47" cy="32" r="2.8" fill="currentColor" stroke="none"/></svg>';
 
 /* v41: การ์ดแบบมีข้อมูลประกอบสำหรับ "แสงและเวลา" กับ "โลเคชั่น" — สองหมวดนี้ผู้ใช้ต้องตัดสินใจ
    จากบริบท (ช่วงเวลาจริง/โทนสี, มีกี่สายรถเมล์ผ่าน) ไม่ใช่แค่ชื่อ จึงแสดงข้อมูลนั้นบนการ์ดเลย
@@ -2095,7 +2063,7 @@ function locCardHTML(item,pressed,custom){
 /* v41.2: การ์ด "ไทล์สี" สำหรับประเภทสื่อ/มุมกล้อง/สไตล์ — ตามภาพตัวอย่างไอคอนสื่อ Plan B ที่ผู้ใช้
    ส่งมา (สี่เหลี่ยมมุมโค้งไล่สีสันสดใส ไอคอนสีขาวตรงกลาง ป้ายชื่อทึบด้านล่าง) แทนกล่องสีเทาเรียบ
    เดิม สีมาจาก tileGrad(idx) ไล่ตามลำดับที่แสดง ไม่ผูกกับ id จึงรายการที่เพิ่มเองต่อท้ายก็ได้สี
-   ต่อคิวเอง — ไอคอนเดิม (VEHICLE_ICONS/STYLE_ICONS/angleIconSVG) ไม่ต้องแก้แม้แต่บรรทัดเดียว
+   ต่อคิวเอง — ไอคอน (VEHICLE_ICONS/ANGLE_ICONS/STYLE_ICONS) ไม่ต้องแก้แม้แต่บรรทัดเดียว
    เพราะใช้ currentColor อยู่แล้ว แค่ตั้ง color:#fff ผ่าน .icotop ที่ styles.css
    ปุ่ม .tick (ถูกกำหนดไว้แล้วที่ .chip.card ทั่วไปสำหรับติ๊กถูกตอนเลือก) ใส่เพิ่มให้ทั้ง 3 หมวดนี้
    เพราะพื้นเป็นสีสันแล้ว จะบอกว่า "เลือกอยู่" ด้วยกรอบสีแบรนด์แบบชิปธรรมดาไม่ชัดพอ */
@@ -2112,7 +2080,7 @@ function vehicleCardHTML(item,pressed,custom,idx){
   return tileHTML(item,pressed,custom,idx,VEHICLE_ICONS[item.id]||VEHICLE_ICON_DEFAULT);
 }
 function angleCardHTML(item,pressed,custom,idx){
-  return tileHTML(item,pressed,custom,idx,angleIconSVG(item.ic),"anglecard");
+  return tileHTML(item,pressed,custom,idx,ANGLE_ICONS[item.id]||ANGLE_ICON_DEFAULT,"anglecard");
 }
 function styleCardHTML(item,pressed,custom,idx){
   return tileHTML(item,pressed,custom,idx,STYLE_ICONS[item.id]||STYLE_ICON_DEFAULT);

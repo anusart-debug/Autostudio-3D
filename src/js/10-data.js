@@ -34,9 +34,10 @@ const LOCATIONS=[
  {id:"motorway",th:"มอเตอร์เวย์",en:"Motorway",p:"a wide intercity motorway outside Bangkok, six open lanes of smooth asphalt with painted lane markings running straight to the horizon, a landscaped central median, green verges and utility poles along the shoulder, tall billboards standing back from the carriageway, big blue overhead sign gantries, wide open sky above and low hills in the distance",lat:13.71,lng:100.75,conf:"low",src:"ไม่พบสายรถเมล์ประจำทาง",bus:[]}
 ];
 
-/* v41: เพิ่ม ic (ตำแหน่งกล้อง/แนวมองในภาพร่างมุมกล้อง) ให้แต่ละมุม — ข้อมูลแสดงผลล้วน
-   ใช้วาดไดอะแกรมเล็กๆ บนการ์ด (angleIconSVG() ใน 20-chips.js) ไม่แตะ p ที่ส่งให้ AI เลย
-   cam=ตำแหน่งกล้อง [x,y], look=จุดที่กล้องมองไป [x,y] ในระบบพิกัดภาพร่าง 64×44
+/* v41.3: ฟิลด์ ic (ตำแหน่งกล้อง/แนวมอง) เดิมใช้คำนวณไดอะแกรมสดใน 20-chips.js — ตอนนี้เปลี่ยนไป
+   ใช้ไอคอนคงที่ต่อรายการแทน (ANGLE_ICONS ใน 20-chips.js ตามภาพตัวอย่างที่ผู้ใช้ส่งมา) จึงไม่มี
+   ใครอ่านฟิลด์นี้แล้ว แต่เก็บไว้เผื่อใช้ในอนาคต ไม่ได้แตะ p ที่ส่งให้ AI ทั้งสองแบบ
+   cam=ตำแหน่งกล้อง [x,y], look=จุดที่กล้องมองไป [x,y] ในระบบพิกัดภาพร่าง 64×44 (ไม่ใช้แล้ว)
    k=รูปแบบไอคอนพิเศษ ("low"/"drone"/"eye"/"track"/"detail") ไม่ใส่ = จุดกล้องธรรมดา */
 const ANGLES=[
  {id:"hero34",th:"3/4 หน้า ฮีโร่ช็อต",en:"3/4 Front Hero",p:"three-quarter front hero angle, camera at hood height, vehicle filling two thirds of frame",
