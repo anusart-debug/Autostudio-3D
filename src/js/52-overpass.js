@@ -137,6 +137,46 @@ function metres(a,b,c,d){
   return Math.round(Math.hypot(dx,dy));
 }
 
+/* ---- แคชผลลัพธ์ Overpass ถาวรต่อโลเคชั่น (v41) ----
+   เดิม loadMap() ต้องยิงเน็ตใหม่ทุกครั้งไม่มีข้อยกเว้น ไม่มีที่เก็บถาวรเลย (ดูคอมเมนต์เดิมที่
+   72-project.web.js) จุดที่เคยดึงสำเร็จแล้วก็ต้องรอเน็ตใหม่ทุกครั้งที่เปิดแอป — และเมื่อ
+   overpass-api.de ปฏิเสธ CORS จาก origin null ของ file:// เสมอ (ดู ovpFetch ด้านบน) การรอนั้น
+   ไม่มีทางสำเร็จเลยสำหรับผู้ใช้ที่เปิดไฟล์ตรงๆ เก็บผลลัพธ์ดิบ (stops+rels ก่อนจัดกลุ่ม — รูปร่าง
+   เดียวกับ ROUTE_SEED ใน 10b-route-seed.js) ไว้ใน localStorage ต่อโลเคชั่น แล้วป้อนเข้า
+   groupRoutes() ตัวเดียวกับที่ live fetch ใช้เสมอ เพื่อให้สี/การเรียงลำดับ/การรวมทิศทางตรงกันเป๊ะ */
+const OVP_CACHE_KEY="as3d_ovpcache";
+let OVP_CACHE={};
+try{ OVP_CACHE=JSON.parse(store.get(OVP_CACHE_KEY)||"{}")||{}; }catch(e){ OVP_CACHE={}; }
+function ovpCacheSave(locId,stops,rels){
+  OVP_CACHE[locId]={stops:stops,rels:rels,fetchedAt:new Date().toISOString()};
+  try{ store.set(OVP_CACHE_KEY,JSON.stringify(OVP_CACHE)); }catch(e){}
+}
+/* ใช้ข้อมูลที่เคยดึงสำเร็จไว้ (แคชถาวร) ก่อน ถ้าไม่มีค่อยถอยไปใช้สแนปช็อตที่ฝังมากับแอป (ROUTE_SEED)
+   คืน true ถ้ามีข้อมูลให้แสดง — เรียกจาก mapGo() ทันทีตอนเปลี่ยนโลเคชั่น ไม่ต้องรอเน็ตเลย
+   และเรียกซ้ำใน catch ของ loadMap() เพื่อกู้คืนมุมมองเดิมเมื่อการดึงสดล้มเหลว (ไม่ใช่ปล่อยว่างเปล่า) */
+function applySeedOrCache(l){
+  const cached=OVP_CACHE[l.id];
+  const seed=ROUTE_SEED[l.id];
+  const src=cached||seed;
+  if(!src) return false;
+  const p=locPos(l);
+  MAPD.stops=(src.stops||[]).map(s=>({name:s.name,lat:s.lat,lon:s.lon,d:metres(p[0],p[1],s.lat,s.lon)}))
+    .sort((a,b)=>a.d-b.d);
+  MAPD.groups=groupRoutes(src.rels||[]);
+  OVP.hits=MAPD.groups.length;
+  OVP.source=cached?"cache":"seed";
+  OVP.asOf=cached?new Date(cached.fetchedAt).toLocaleDateString("th-TH"):ROUTE_SEED_DATE;
+  if(MAPD.groups.length){
+    const refs=MAPD.groups.map(g=>g.ref);
+    const had=busOf(l), fresh=refs.filter(x=>had.indexOf(x)<0);
+    if(fresh.length){
+      BUSX[l.id]=had.concat(fresh).sort((a,b)=>a.localeCompare(b,"th",{numeric:true}));
+      saveBus();
+    }
+  }
+  return true;
+}
+
 function renderStops(){
   const S2=MAPD.stops||[];
   if(!S2.length){ $("stopBox").hidden=true; return; }
@@ -184,7 +224,9 @@ async function loadMap(){
     const relsA=ea.filter(e=>e.type==="relation");
     MAPD.groups=groupRoutes(relsA);
     MAPD.at=[p[0],p[1]]; MAPD.title=l.th; resetView();
-    OVP.hits=MAPD.groups.length;
+    OVP.hits=MAPD.groups.length; OVP.source="live"; OVP.asOf=new Date().toLocaleDateString("th-TH");
+    /* ดึงสำเร็จจริง — เก็บถาวรไว้ใช้ต่อโดยไม่ต้องรอเน็ตอีกครั้งข้ามเซสชัน (ดู applySeedOrCache) */
+    ovpCacheSave(l.id, MAPD.stops.map(s=>({name:s.name,lat:s.lat,lon:s.lon})), relsA);
     renderStops(); renderRouteLegend(); mapNote();
 
     if(MAPD.groups.length){
@@ -216,9 +258,13 @@ async function loadMap(){
     const cancelled=/ยกเลิกโดยผู้ใช้/.test(e.message);
     MAPD.err=cancelled?"":"ดึงข้อมูลไม่สำเร็จ";
     clearInterval(tick);
+    /* v41: ดึงสดล้มเหลว (มักเกิดเสมอบน file:// เพราะ CORS) ไม่ควรปล่อยให้รายชื่อสายว่างเปล่าถ้า
+       เรามีข้อมูลเก่าอยู่แล้ว — กู้คืนจากแคช/สแนปช็อตแทน ดีกว่าหน้าจอว่างเปล่าที่ดูเหมือนพัง */
+    const restored=!cancelled&&applySeedOrCache(l);
     say(cancelled ? "ยกเลิกแล้ว — กดปุ่มอีกครั้งเมื่อพร้อมลองใหม่"
       : '<span style="color:var(--bad)">ดึงข้อมูลไม่สำเร็จจากทุกเซิร์ฟเวอร์</span><br>'+esc(e.message)+
-        "<br>ตรวจอินเทอร์เน็ตแล้วกดใหม่ — ส่วนอื่นของโปรแกรมยังใช้งานได้ตามปกติ");
+        "<br>ตรวจอินเทอร์เน็ตแล้วกดใหม่ — ส่วนอื่นของโปรแกรมยังใช้งานได้ตามปกติ"+
+        (restored?"<br>แสดงรายชื่อสายจากข้อมูลล่าสุดที่มีอยู่แทน":""));
   }finally{
     clearInterval(tick);
     MAPD.busy=false; OVP_CANCEL=null; ovpBtnLabel(false);

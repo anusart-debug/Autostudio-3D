@@ -11,6 +11,7 @@ function openAdd(key){
   $("addTh").placeholder="เช่น "+h.ex;
   $("addEn").placeholder="เช่น "+h.en;
   $("addP").placeholder=h.p;
+  $("addLLField").hidden=key!=="loc";
   renderMyList();
   $("addVeil").hidden=false;
   $("addTh").focus();
@@ -60,7 +61,12 @@ function afterListChange(){
   saveCustom();renderMyList();
   if(addKey==="lens"){S.lens=Math.min(S.lens,lensList().length-1);refreshLens()}
   else if(addKey==="weather"){S.weather=Math.min(S.weather,weatherList().length-1);refreshWeather()}
-  else renderChips(addKey);
+  else{
+    renderChips(addKey);
+    /* v41: renderChips() แค่วาดชิปใหม่ ไม่เคยเรียก mapGo() เอง — เดิมทำให้แก้ไข/ลบ/จัดลำดับ
+       โลเคชั่นแล้วแผนที่ยังค้างของเดิม ไม่ตามพิกัดที่พึ่งแก้ */
+    if(addKey==="loc") mapGo();
+  }
   sync();
 }
 
@@ -85,6 +91,7 @@ $("myList").addEventListener("click",e=>{
     const it=arr.find(x=>x.id===d.ed); if(!it)return;
     editingId=it.id;
     $("addTh").value=it.th;$("addEn").value=it.en||"";$("addP").value=it.p||"";
+    $("addLL").value=(typeof it.lat==="number")?it.lat+", "+it.lng:"";
     $("addSave").innerHTML='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg> บันทึกการแก้ไข';
     renderMyList();$("addTh").focus();
     toast("กำลังแก้ไข \""+it.th+"\" — แก้แล้วกดบันทึก");
@@ -101,8 +108,17 @@ $("myList").addEventListener("click",e=>{
 
 function resetAddForm(){
   editingId="";
-  $("addTh").value="";$("addEn").value="";$("addP").value="";
+  $("addTh").value="";$("addEn").value="";$("addP").value="";$("addLL").value="";
   $("addSave").innerHTML='<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> เพิ่มเข้ารายการ';
+}
+/* พิกัดที่พิมพ์/วางไว้ในช่อง "ละติจูด, ลองจิจูด" — คืน [lat,lng] ถ้าถูกต้อง, null ถ้าเว้นว่าง
+   (ไม่ใส่ก็ได้ ลากปรับบนแผนที่ทีหลังได้เหมือนเดิม), false ถ้าใส่มาแต่รูปแบบผิด */
+function parseAddLL(){
+  const raw=$("addLL").value.trim();
+  if(!raw) return null;
+  const m=raw.split(/[,\s]+/).map(Number);
+  if(m.length!==2||!m.every(isFinite)||m[0]<-90||m[0]>90||m[1]<-180||m[1]>180) return false;
+  return m;
 }
 $("addExport").addEventListener("click",()=>{
   const blob=new Blob([JSON.stringify(CUSTOM,null,2)],{type:"application/json"});
@@ -141,15 +157,30 @@ $("addSave").addEventListener("click",()=>{
   const th=$("addTh").value.trim(), en=$("addEn").value.trim(), p=$("addP").value.trim();
   if(!th){toast("ใส่ชื่อที่จะแสดงบนปุ่มก่อน",true);$("addTh").focus();return}
 
+  /* v41: โลเคชั่นใหม่ใส่พิกัดตรงนี้ได้เลย (วางจาก Google Maps) แทนการต้องลากปรับบนแผนที่
+     ทีหลังเสมอ — ตั้งใจให้พิมพ์เพิ่มโลเคชั่นได้เร็วในครั้งเดียว */
+  let ll=null;
+  if(addKey==="loc"){
+    ll=parseAddLL();
+    if(ll===false){
+      toast("พิกัดไม่ถูกต้อง — ใส่เป็น ละติจูด, ลองจิจูด เช่น 13.7650, 100.5378",true);
+      $("addLL").focus();return;
+    }
+  }
+
   if(editingId){                                   /* โหมดแก้ไขรายการเดิม */
     const it=(CUSTOM[addKey]||[]).find(x=>x.id===editingId);
-    if(it){it.th=th;it.en=en||th;it.p=p||th}
+    if(it){
+      it.th=th;it.en=en||th;it.p=p||th;
+      if(addKey==="loc"){ if(ll){it.lat=ll[0];it.lng=ll[1]} else {delete it.lat;delete it.lng} }
+    }
     resetAddForm();afterListChange();
     toast("บันทึกการแก้ไขแล้ว");
     return;
   }
 
   const entry={id:"my_"+Date.now().toString(36),th:th,en:en||th,p:p||th,custom:true};
+  if(addKey==="loc"&&ll){entry.lat=ll[0];entry.lng=ll[1]}
   CUSTOM[addKey]=(CUSTOM[addKey]||[]).concat([entry]);
   saveCustom();
   if(addKey==="lens"){refreshLens();S.lens=lensList().length-1;refreshLens()}
@@ -157,6 +188,9 @@ $("addSave").addEventListener("click",()=>{
   else{
     if(addKey==="style") S.styles.add(entry.id); else S[addKey]=entry.id;
     renderChips(addKey);
+    /* v41: เลือกโลเคชั่นใหม่ที่พึ่งเพิ่มอัตโนมัติ แต่ renderChips() ไม่เรียก mapGo() เอง —
+       ถ้าไม่เรียกเอง แผนที่จะยังค้างโลเคชั่นก่อนหน้าทั้งที่ชิปเปลี่ยนไปแล้ว */
+    if(addKey==="loc") mapGo();
   }
   renderMyList();sync();resetAddForm();$("addTh").focus();
   toast("เพิ่ม \""+th+"\" แล้ว และเลือกให้อัตโนมัติ");

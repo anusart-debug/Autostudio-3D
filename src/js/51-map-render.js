@@ -370,7 +370,11 @@ function mapGo(){          /* เปลี่ยนโลเคชั่น = �
   MAPD.solo=null; MAPD.err=""; MAPD.stops=[];
   /* เก็บ GEO cache ไว้ — สายรถเมล์เป็นของทั้งเมือง ใช้ซ้ำข้ามโลเคชั่นได้ ไม่ต้องดึงใหม่ */
   MAPD.mode="local"; MAPD.localView=null; MAPD.routeFitR=0; MAPD.geomBusy="";
-  OVP.hits=null; resetView(); syncLL(); paintMap(); mapNote(); renderRouteLegend();
+  OVP.hits=null; OVP.source=null; OVP.asOf="";
+  /* v41: ก่อนรอเน็ตเลย ลองเอาข้อมูลที่เคยดึงสำเร็จไว้ก่อน (แคชถาวร) หรือสแนปช็อตที่ฝังมากับแอป
+     (ROUTE_SEED) มาแสดงก่อนทันที — ใช้งานได้แม้ offline ทั้งหมด ดูฟังก์ชันใน 52-overpass.js */
+  applySeedOrCache(l);
+  resetView(); syncLL(); paintMap(); mapNote(); renderRouteLegend(); renderStops(); renderBus();
 }
 function syncLL(){
   const p=locPos(curLoc());
@@ -384,13 +388,16 @@ function syncLL(){
   PINX[curLoc().id]=[la,ln]; savePin(); mapGo();
   toast("ตั้งพิกัดใหม่ของ "+curLoc().th+" แล้ว");
 }));
+/* v41: เดิมเช็ก MAPD.data (ถนนจากช่วง B) เพื่อตัดสินว่าต้องดึงใหม่ไหม — MAPD.data ไม่ถูกเติมค่า
+   อีกต่อไปแล้ว (ตัดช่วง B/C ออก) เช็กนั้นจึงเป็นเงื่อนไขที่ตายแล้ว (เท็จเสมอ) ทำให้เปลี่ยนความกว้าง
+   ภาพไม่มีผลอะไรเลย เปลี่ยนเป็น resetView()+paintAll() ตรงๆ ให้เห็นผลทันทีแทน */
 $("mapZoom").addEventListener("change",e=>{
   MAPD.radius=+e.target.value;
-  if(MAPD.data) loadMap(); else paintMap();
+  resetView(); paintAll();
 });
 $("mapNear").addEventListener("change",e=>{
   MAPD.near=+e.target.value;
-  if(MAPD.data) loadMap(); else paintMap();
+  paintAll();
 });
 
 function mapNote(){
@@ -398,8 +405,15 @@ function mapNote(){
   const conf=l.conf||"low";
   let t='<span class="confbadge '+conf+'">'+(CONFTH[conf]||conf)+"</span> ";
   if(OVP.hits!=null){
-    t='<span class="confbadge high">สดจาก OPENSTREETMAP</span> พบ '+OVP.hits+
-      ' สายที่จอดป้ายรถเมล์ในรัศมี '+MAPD.near+' ม.'+(moved?" · ใช้หมุดที่คุณปรับเอง":"");
+    /* v41: ต้องบอกที่มาให้ตรงความจริง — "สดจาก OpenStreetMap" ใช้ได้เฉพาะตอน source==="live"
+       เท่านั้น (เพิ่งดึงสำเร็จจริงตอนกดปุ่ม) ไม่งั้นเป็นการโกหกผู้ใช้ว่าข้อมูลเป็นปัจจุบัน
+       ทั้งที่จริงเป็นแคชเก่าหรือสแนปช็อตที่ฝังมากับแอป (ดู applySeedOrCache ใน 52-overpass.js) */
+    const badge = OVP.source==="live" ? "สดจาก OPENSTREETMAP"
+      : OVP.source==="cache" ? "เคยดึงไว้เมื่อ "+esc(OVP.asOf)
+      : "ข้อมูลตัวอย่างในตัวแอป ("+esc(OVP.asOf)+")";
+    const refreshHint = OVP.source==="live" ? "" : ' · กด "ดึงสายรถเมล์ที่จอดจุดนี้" เพื่อรีเฟรชเป็นข้อมูลสด';
+    t='<span class="confbadge high">'+badge+"</span> พบ "+OVP.hits+
+      ' สายที่จอดป้ายรถเมล์ในรัศมี '+MAPD.near+' ม.'+(moved?" · ใช้หมุดที่คุณปรับเอง":"")+refreshHint;
   }else if(isCustomLoc(l)&&!moved){
     t+="จุดนี้คุณเพิ่มเองจึงยังไม่มีพิกัด — ใส่ละติจูด/ลองจิจูดด้านล่าง หรือคลิกบนแผนที่";
   }else if(n===0){
@@ -491,7 +505,10 @@ $("routeLegend").addEventListener("click",async e=>{
      เก็บไว้เป็นเซิร์ฟเวอร์เดียวในรายการเพราะเป็นแหล่งข้อมูลจริงที่เชื่อถือได้ที่สุด — ใช้งานได้ปกติ
      ทันทีที่เปิดผ่านเว็บที่ deploy จริง (Firebase Hosting ตาม docs/drive-setup.md) เพราะตอนนั้น
      origin จะไม่ใช่ null อีกต่อไป · ovpFetch ด้านล่างจะแจ้งข้อความเฉพาะเจาะจงเมื่อเจอเคสนี้ */
-const OVP={hits:null};
+/* v41: source/asOf บอกที่มาของ OVP.hits ให้ mapNote() พูดความจริง — "live" คือเพิ่งดึงสำเร็จ
+   จริงๆ ตอนนี้, "cache" คือเคยดึงสำเร็จมาก่อน (เก็บถาวรใน localStorage), "seed" คือสแนปช็อต
+   ที่ฝังมากับแอปตั้งแต่ build (ดู 10b-route-seed.js) ห้ามพูดว่า "สดจาก OpenStreetMap" ถ้าไม่ใช่ live */
+const OVP={hits:null,source:null,asOf:""};
 const OVP_HOSTS=[
   "https://overpass-api.de/api/interpreter"
 ];

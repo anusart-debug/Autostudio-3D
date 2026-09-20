@@ -92,8 +92,12 @@ function route(pg,body){
  expect('[withStops] มีข้อความต้นทาง-ปลายทางต่อสาย', out.withStops.pairs>0, out.withStops.pairs);
  // noStops: ไม่มีป้ายในรัศมี ต้องไม่มีสายให้แสดง (นับสายจากป้ายที่จอด ไม่ใช่ถนนที่ผ่าน)
  expect('[noStops] ไม่มีป้าย = ไม่มีสาย', out.noStops.routes===0, out.noStops.routes);
- // serverFail: เซิร์ฟเวอร์พังหมด แต่จุดโลเคชั่นต้องยังอยู่ (แยกจากการดึงสายรถเมล์โดยสิ้นเชิง)
- expect('[serverFail] ไม่มีสายรถเมล์เมื่อเซิร์ฟเวอร์พัง', out.serverFail.routes===0, out.serverFail.routes);
+ // serverFail: centralworld มีสแนปช็อต ROUTE_SEED ติดมากับแอป — ดึงสดล้มเหลวแล้วต้องกู้คืน
+ // มาแสดงแทนที่จะปล่อยว่างเปล่า (applySeedOrCache ใน 52-overpass.js) และต้องบอกตรงๆ ว่าไม่ใช่
+ // ข้อมูลสด ไม่ใช่อ้างว่า "สดจาก OpenStreetMap" ทั้งที่จริงคือของเก่า
+ expect('[serverFail] กู้คืนรายชื่อสายจากสแนปช็อตแทนปล่อยว่างเปล่า', out.serverFail.routes>0, out.serverFail.routes);
+ expect('[serverFail] บอกตรงๆ ว่าเป็นข้อมูลตัวอย่าง ไม่ใช่ "สดจาก OpenStreetMap"',
+   /ข้อมูลตัวอย่าง/.test(out.serverFail.note)&&!/สดจาก OPENSTREETMAP/.test(out.serverFail.note), out.serverFail.note);
  done();
  await b.close();
 })();
