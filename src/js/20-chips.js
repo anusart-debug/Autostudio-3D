@@ -71,35 +71,54 @@ const STYLE_ICONS={
 };
 const STYLE_ICON_DEFAULT='<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z"/></svg>';
 
-/* v41: ภาพร่างมุมกล้อง (05) — วาดสดจาก ic ที่ตั้งไว้ในแต่ละรายการของ ANGLES (10-data.js)
-   แทนไอคอนคงที่ เพราะแต่ละมุมต่างกันที่ "ตำแหน่งกล้องเทียบกับตัวรถ" ไม่ใช่แค่รูปสัญลักษณ์เดียว
-   โครงร่างรถ+เส้นพื้น วาดเหมือนกันทุกใบ ต่างแค่จุดกล้อง/เส้นเล็ง/ไอคอนเสริมตาม k
-   รายการที่ผู้ใช้เพิ่มเอง (ไม่มี ic) จะได้ตำแหน่งกล้องเริ่มต้นแทนที่จะพัง */
+/* v41.1: ภาพร่างมุมกล้อง (05) — ปรับให้ใกล้เคียงภาพตัวอย่างที่ผู้ใช้ส่งมา (เส้นสมุดวาด รถเมล์
+   มีรายละเอียดพอดูออกว่าเป็นรถ + กล้องเป็นรูปกล้องจริงไม่ใช่จุดกลม + เส้นลากมุมมองเป็นกรวย 2 เส้น
+   แทนเส้นประเส้นเดียว) ยังวาดสดจาก ic ที่ตั้งไว้ในแต่ละรายการของ ANGLES (10-data.js) เหมือนเดิม
+   ทุกตัวอักษร แค่เปลี่ยนวิธีวาดกล้อง/กรวยมุมมอง/รถ — ตำแหน่งกล้องเทียบกับรถ (จุดที่บอกความหมาย
+   ของมุมนั้นจริงๆ) ไม่ได้แก้ รายการที่ผู้ใช้เพิ่มเอง (ไม่มี ic) ยังได้ตำแหน่งกล้องเริ่มต้นแทนที่จะพัง */
 function angleIconSVG(ic){
   ic=ic||{};
   const cam=ic.cam||[10,24], look=ic.look||[22,24], k=ic.k||"cam";
-  let extra="";
-  if(k==="detail"){
-    extra+='<circle cx="'+cam[0]+'" cy="'+cam[1]+'" r="4" fill="none" stroke-width="1.5"/>'+
+  /* กรวยมุมมอง: หมุนเวกเตอร์กล้อง→จุดเล็ง ±มุมเล็กๆ ได้เส้นคู่ลู่เข้าที่กล้อง แทนเส้นประเส้นเดียว
+     ตรงกับภาพตัวอย่างที่ใช้เส้นคู่เป็นกรวยมองเห็นเสมอ ไม่ต้องเพิ่มพารามิเตอร์ต่อรายการเลย */
+  const rot=(cx,cy,x,y,deg)=>{
+    const r=deg*Math.PI/180, dx=x-cx, dy=y-cy;
+    return [cx+dx*Math.cos(r)-dy*Math.sin(r), cy+dx*Math.sin(r)+dy*Math.cos(r)];
+  };
+  const p1=rot(cam[0],cam[1],look[0],look[1],11), p2=rot(cam[0],cam[1],look[0],look[1],-11);
+  const cone='<path d="M'+cam[0]+' '+cam[1]+'L'+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+
+    'M'+cam[0]+' '+cam[1]+'L'+p2[0].toFixed(1)+' '+p2[1].toFixed(1)+'" stroke-width=".9" opacity=".8"/>';
+  /* กล้องจริง (ตัวกล้อง+ช่องมองภาพ+เลนส์) แทนจุดกลมเดิม วาดรอบจุด cam เสมอ */
+  const camIcon='<g transform="translate('+(cam[0]-5)+' '+(cam[1]-4)+')">'+
+    '<rect x="0" y="1.2" width="10" height="6.4" rx="1.4" stroke-width="1.3"/>'+
+    '<rect x="3" y="-0.8" width="4" height="2.4" rx=".6" stroke-width="1.1"/>'+
+    '<circle cx="5" cy="4.4" r="2.1" stroke-width="1.2"/><circle cx="5" cy="4.4" r=".55" fill="currentColor" stroke="none"/>'+
+  '</g>';
+  let extra=k==="detail"
+    ? '<circle cx="'+cam[0]+'" cy="'+cam[1]+'" r="4" stroke-width="1.5"/>'+
       '<path d="M'+(cam[0]+2.8)+' '+(cam[1]+2.8)+'L'+(cam[0]+6.2)+' '+(cam[1]+6.2)+'" stroke-width="1.7" stroke-linecap="round"/>'+
-      '<rect x="'+(look[0]-3)+'" y="'+(look[1]-3)+'" width="6" height="6" fill="none" stroke-width="1" stroke-dasharray="1.4 1.4"/>';
-  }else{
-    extra+='<circle cx="'+cam[0]+'" cy="'+cam[1]+'" r="2.6" fill="currentColor" stroke="none"/>'+
-      '<path d="M'+cam[0]+' '+cam[1]+'L'+look[0]+' '+look[1]+'" stroke-width="1" stroke-dasharray="2 2"/>';
-    if(k==="drone"){
-      extra+='<path d="M'+(cam[0]-4)+' '+(cam[1]-3)+'q4 -3 8 0" fill="none" stroke-width="1.2"/>'+
-        '<path d="M'+(cam[0]-3)+' '+(cam[1]-6)+'q3 -2 6 0" fill="none" stroke-width="1.2"/>';
-    }else if(k==="eye"){
-      extra+='<path d="M'+(cam[0]-3)+' '+cam[1]+'h6" stroke-width="1"/>';
-    }else if(k==="track"){
-      extra+='<path d="M'+(cam[0]-8)+' '+(cam[1]-3)+'h4M'+(cam[0]-8)+' '+cam[1]+'h4M'+(cam[0]-8)+' '+(cam[1]+3)+'h4" stroke-width="1.1" stroke-linecap="round"/>';
-    }
+      '<rect x="'+(look[0]-3)+'" y="'+(look[1]-3)+'" width="6" height="6" stroke-width="1" stroke-dasharray="1.4 1.4"/>'
+    : cone+camIcon;
+  if(k==="drone"){
+    extra+='<path d="M'+(cam[0]-4)+' '+(cam[1]-7)+'q4 -3 8 0" stroke-width="1.2"/>'+
+      '<path d="M'+(cam[0]-3)+' '+(cam[1]-10)+'q3 -2 6 0" stroke-width="1.2"/>';
+  }else if(k==="eye"){
+    extra+='<path d="M'+(cam[0]-3)+' '+(cam[1]+5)+'h6" stroke-width="1"/>';
+  }else if(k==="track"){
+    extra+='<path d="M'+(cam[0]-9)+' '+(cam[1]-3)+'h4M'+(cam[0]-9)+' '+cam[1]+'h4M'+(cam[0]-9)+' '+(cam[1]+3)+'h4" stroke-width="1.1" stroke-linecap="round"/>';
   }
-  return '<svg viewBox="0 0 64 44" fill="none" stroke="currentColor">'+
+  /* รถเมล์ด้านข้าง (ตัวถัง+หลังคา+หน้าต่าง 3 บาน+ประตู+ล้อ) เหมือนกันทุกใบ พอให้ดูออกว่าเป็นรถ
+     โดยยังเล็กพอไม่แย่งพื้นที่จากกล้อง/กรวยมุมมองที่เป็นตัวบอกความหมายของมุมกล้องจริงๆ */
+  return '<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+
     '<path d="M4 36h56" stroke-width="1" opacity=".35"/>'+
-    '<rect x="20" y="18" width="28" height="16" rx="3" stroke-width="1.6"/>'+
-    '<path d="M24 18v6" stroke-width="1.6"/>'+
-    '<circle cx="26" cy="36" r="3" fill="currentColor" stroke="none"/><circle cx="44" cy="36" r="3" fill="currentColor" stroke="none"/>'+
+    '<rect x="16" y="17" width="36" height="19" rx="4" stroke-width="1.6"/>'+
+    '<rect x="30" y="13.5" width="8" height="4" rx="1" stroke-width="1.3"/>'+
+    '<rect x="20" y="21" width="7" height="6.5" rx="1" stroke-width="1.2"/>'+
+    '<rect x="29" y="21" width="7" height="6.5" rx="1" stroke-width="1.2"/>'+
+    '<rect x="38" y="21" width="7" height="6.5" rx="1" stroke-width="1.2"/>'+
+    '<path d="M47 21v15" stroke-width="1.1"/>'+
+    '<circle cx="24" cy="36" r="3.2" fill="currentColor" stroke="none"/>'+
+    '<circle cx="44" cy="36" r="3.2" fill="currentColor" stroke="none"/>'+
     extra+
   '</svg>';
 }

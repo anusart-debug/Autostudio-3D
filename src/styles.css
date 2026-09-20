@@ -249,7 +249,8 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 }
 .icocard[aria-pressed=true] .icotop{color:var(--brand-txt);background:var(--brand-glow)}
 .icocard .icotop svg{width:26px;height:26px}
-.icocard.anglecard .icotop svg{width:52px;height:36px}
+.icocard.anglecard .icotop{height:56px}
+.icocard.anglecard .icotop svg{width:74px;height:51px}
 .icocard .cardbody{text-align:center}
 .icocard .cardbody b{font-size:10.8px}
 
