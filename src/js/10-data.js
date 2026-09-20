@@ -34,15 +34,27 @@ const LOCATIONS=[
  {id:"motorway",th:"มอเตอร์เวย์",en:"Motorway",p:"a wide intercity motorway outside Bangkok, six open lanes of smooth asphalt with painted lane markings running straight to the horizon, a landscaped central median, green verges and utility poles along the shoulder, tall billboards standing back from the carriageway, big blue overhead sign gantries, wide open sky above and low hills in the distance",lat:13.71,lng:100.75,conf:"low",src:"ไม่พบสายรถเมล์ประจำทาง",bus:[]}
 ];
 
+/* v41: เพิ่ม ic (ตำแหน่งกล้อง/แนวมองในภาพร่างมุมกล้อง) ให้แต่ละมุม — ข้อมูลแสดงผลล้วน
+   ใช้วาดไดอะแกรมเล็กๆ บนการ์ด (angleIconSVG() ใน 20-chips.js) ไม่แตะ p ที่ส่งให้ AI เลย
+   cam=ตำแหน่งกล้อง [x,y], look=จุดที่กล้องมองไป [x,y] ในระบบพิกัดภาพร่าง 64×44
+   k=รูปแบบไอคอนพิเศษ ("low"/"drone"/"eye"/"track"/"detail") ไม่ใส่ = จุดกล้องธรรมดา */
 const ANGLES=[
- {id:"hero34",th:"3/4 หน้า ฮีโร่ช็อต",en:"3/4 Front Hero",p:"three-quarter front hero angle, camera at hood height, vehicle filling two thirds of frame"},
- {id:"low",th:"มุมต่ำ อลังการ",en:"Low Angle",p:"dramatic low camera angle close to the asphalt looking up, exaggerated presence and scale"},
- {id:"profile",th:"ด้านข้างเต็มคัน",en:"Side Profile",p:"perfectly perpendicular side elevation, entire flank flat to camera so the full wrap artwork reads"},
- {id:"rear34",th:"3/4 หลัง",en:"3/4 Rear",p:"three-quarter rear angle showing the tail panel and the receding flank"},
- {id:"drone",th:"มุมสูง โดรน",en:"Drone / Top",p:"elevated drone angle looking down at the street, roof and surrounding traffic visible"},
- {id:"street",th:"ระดับสายตาคนเดิน",en:"Street Level",p:"pedestrian eye level from the pavement, shallow depth of field, people out of focus in the foreground"},
- {id:"track",th:"แพนตามรถวิ่ง",en:"Tracking Pan",p:"tracking shot moving alongside the vehicle, motion-blurred background, wheels showing rotational blur"},
- {id:"detail",th:"โคลสอัพลายกราฟิก",en:"Wrap Detail",p:"tight macro detail of the printed wrap surface, vinyl texture and panel seam visible"}
+ {id:"hero34",th:"3/4 หน้า ฮีโร่ช็อต",en:"3/4 Front Hero",p:"three-quarter front hero angle, camera at hood height, vehicle filling two thirds of frame",
+  ic:{cam:[10,24],look:[22,24]}},
+ {id:"low",th:"มุมต่ำ อลังการ",en:"Low Angle",p:"dramatic low camera angle close to the asphalt looking up, exaggerated presence and scale",
+  ic:{cam:[16,35],look:[26,19],k:"low"}},
+ {id:"profile",th:"ด้านข้างเต็มคัน",en:"Side Profile",p:"perfectly perpendicular side elevation, entire flank flat to camera so the full wrap artwork reads",
+  ic:{cam:[3,26],look:[20,26]}},
+ {id:"rear34",th:"3/4 หลัง",en:"3/4 Rear",p:"three-quarter rear angle showing the tail panel and the receding flank",
+  ic:{cam:[58,29],look:[46,25]}},
+ {id:"drone",th:"มุมสูง โดรน",en:"Drone / Top",p:"elevated drone angle looking down at the street, roof and surrounding traffic visible",
+  ic:{cam:[34,5],look:[34,18],k:"drone"}},
+ {id:"street",th:"ระดับสายตาคนเดิน",en:"Street Level",p:"pedestrian eye level from the pavement, shallow depth of field, people out of focus in the foreground",
+  ic:{cam:[7,22],look:[20,24],k:"eye"}},
+ {id:"track",th:"แพนตามรถวิ่ง",en:"Tracking Pan",p:"tracking shot moving alongside the vehicle, motion-blurred background, wheels showing rotational blur",
+  ic:{cam:[9,24],look:[22,24],k:"track"}},
+ {id:"detail",th:"โคลสอัพลายกราฟิก",en:"Wrap Detail",p:"tight macro detail of the printed wrap surface, vinyl texture and panel seam visible",
+  ic:{cam:[38,26],look:[34,24],k:"detail"}}
 ];
 
 /* v41: เพิ่ม time (ช่วงเวลาที่แสงแบบนี้เกิดจริง) · mood (โทนสีที่จะได้) · g1/g2 (ไล่เฉดบนการ์ด)

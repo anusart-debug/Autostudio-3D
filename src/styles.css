@@ -238,6 +238,21 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .loccard .tick{top:-1px;right:0}
 .chip.add.card{min-height:58px;padding:10px}
 
+/* ---- v41: การ์ดไอคอนสำหรับประเภทสื่อ (02) / มุมกล้อง (05) / สไตล์การเรนเดอร์ (08) ----
+   ภาพร่างเล็กๆ ช่วยให้เข้าใจตัวเลือกเร็วขึ้นโดยไม่ต้องอ่านชื่อแล้วนึกภาพเอง — แนวทางเดียวกับ
+   การ์ดโลเคชั่น/แสง/อัตราส่วนก่อนหน้า ใช้ .chip.card เป็นฐาน (padding:0/cardbody) ไม่ต้องเขียนซ้ำ */
+#vehicleChips,#angleChips,#styleChips{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px}
+.icocard{align-items:stretch;text-align:center}
+.icocard .icotop{
+  display:flex;align-items:center;justify-content:center;height:42px;
+  background:var(--ink-300);border-bottom:1px solid var(--line-soft);color:var(--txt-dim);
+}
+.icocard[aria-pressed=true] .icotop{color:var(--brand-txt);background:var(--brand-glow)}
+.icocard .icotop svg{width:26px;height:26px}
+.icocard.anglecard .icotop svg{width:52px;height:36px}
+.icocard .cardbody{text-align:center}
+.icocard .cardbody b{font-size:10.8px}
+
 /* ---- การ์ดเลือกอัตราส่วนภาพ (v41) ---- */
 .ratiogrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
 .ratiocard{align-items:stretch;text-align:center}
