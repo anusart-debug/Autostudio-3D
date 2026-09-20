@@ -388,16 +388,15 @@ function syncLL(){
   PINX[curLoc().id]=[la,ln]; savePin(); mapGo();
   toast("ตั้งพิกัดใหม่ของ "+curLoc().th+" แล้ว");
 }));
-/* v41: เดิมเช็ก MAPD.data (ถนนจากช่วง B) เพื่อตัดสินว่าต้องดึงใหม่ไหม — MAPD.data ไม่ถูกเติมค่า
-   อีกต่อไปแล้ว (ตัดช่วง B/C ออก) เช็กนั้นจึงเป็นเงื่อนไขที่ตายแล้ว (เท็จเสมอ) ทำให้เปลี่ยนความกว้าง
-   ภาพไม่มีผลอะไรเลย เปลี่ยนเป็น resetView()+paintAll() ตรงๆ ให้เห็นผลทันทีแทน */
+/* v41: ถ้าเคยดึงฐานแผนที่ถนนสำเร็จแล้ว (MAPD.data มีค่า) เปลี่ยนความกว้าง/รัศมีค้นหาต้องดึงใหม่
+   เพื่อให้ถนน/เส้นทางตรงกับพารามิเตอร์ใหม่ ถ้ายังไม่เคยดึง (โหมดจุดอย่างเดียว) แค่ repaint พอ */
 $("mapZoom").addEventListener("change",e=>{
   MAPD.radius=+e.target.value;
-  resetView(); paintAll();
+  if(MAPD.data) loadMap(); else { resetView(); paintAll(); }
 });
 $("mapNear").addEventListener("change",e=>{
   MAPD.near=+e.target.value;
-  paintAll();
+  if(MAPD.data) loadMap(); else paintAll();
 });
 
 function mapNote(){
