@@ -152,14 +152,31 @@ function ovpCacheSave(locId,stops,rels){
   OVP_CACHE[locId]={stops:stops,rels:rels,fetchedAt:new Date().toISOString()};
   try{ store.set(OVP_CACHE_KEY,JSON.stringify(OVP_CACHE)); }catch(e){}
 }
-/* ใช้ข้อมูลที่เคยดึงสำเร็จไว้ (แคชถาวร) ก่อน ถ้าไม่มีค่อยถอยไปใช้สแนปช็อตที่ฝังมากับแอป (ROUTE_SEED)
-   คืน true ถ้ามีข้อมูลให้แสดง — เรียกจาก mapGo() ทันทีตอนเปลี่ยนโลเคชั่น ไม่ต้องรอเน็ตเลย
-   และเรียกซ้ำใน catch ของ loadMap() เพื่อกู้คืนมุมมองเดิมเมื่อการดึงสดล้มเหลว (ไม่ใช่ปล่อยว่างเปล่า) */
+/* v41: ฐานถนน/น้ำ/สวน/ราง สแนปช็อต — ดึงจาก Overpass ตรงจากเครื่องพัฒนา (ไม่ผ่านเบราว์เซอร์
+   จึงไม่ติด CORS) แล้วฝังเป็น MAP_SEED (10c-map-seed.js) คนละชุดกับ ROUTE_SEED (สายรถเมล์)
+   เพราะบางจุด (เช่น "มอเตอร์เวย์") ไม่มีสายรถเมล์เลยแต่ก็ยังอยากเห็นถนนจริง — ไม่ผูกกับการมี/ไม่มี
+   ROUTE_SEED ของจุดเดียวกัน คืน true ถ้ามีสแนปช็อตให้ใช้ */
+function applyMapSeed(l){
+  const mseed=MAP_SEED[l.id];
+  if(!mseed||!mseed.ways||!mseed.ways.length) return false;
+  /* geometry ใน MAP_SEED เก็บเป็น [lat,lon] (ดูเหตุผลเรื่องขนาดไฟล์ใน 10c-map-seed.js)
+     แปลงกลับเป็น {lat,lon} ตรงนี้ครั้งเดียวตอนเปลี่ยนโลเคชั่น ให้ตรงกับรูปร่างที่ drawMap()
+     ใช้จาก live fetch (qBase) เป๊ะ — โค้ดวาดแผนที่ทั้งหมดจึงไม่ต้องรู้เลยว่าข้อมูลมาจากไหน */
+  MAPD.data=mseed.ways.map(w=>({tags:w.tags,geometry:w.g.map(p=>({lat:p[0],lon:p[1]}))}));
+  MAPD.nodes=mseed.nodes||[];
+  MAPD.dataSource="seed";
+  return true;
+}
+/* ใช้ข้อมูลที่เคยดึงสำเร็จไว้ (แคชถาวร) ก่อน ถ้าไม่มีค่อยถอยไปใช้สแนปช็อตที่ฝังมากับแอป (ROUTE_SEED
+   สำหรับสายรถเมล์ + MAP_SEED สำหรับฐานถนน) คืน true ถ้ามีข้อมูลให้แสดงอย่างใดอย่างหนึ่ง
+   เรียกจาก mapGo() ทันทีตอนเปลี่ยนโลเคชั่น ไม่ต้องรอเน็ตเลย และเรียกซ้ำใน catch ของ loadMap()
+   เพื่อกู้คืนมุมมองเดิมเมื่อการดึงสดล้มเหลว (ไม่ใช่ปล่อยว่างเปล่า) */
 function applySeedOrCache(l){
   const cached=OVP_CACHE[l.id];
   const seed=ROUTE_SEED[l.id];
   const src=cached||seed;
-  if(!src) return false;
+  let any=applyMapSeed(l);
+  if(!src) return any;
   const p=locPos(l);
   MAPD.stops=(src.stops||[]).map(s=>({name:s.name,lat:s.lat,lon:s.lon,d:metres(p[0],p[1],s.lat,s.lon)}))
     .sort((a,b)=>a.d-b.d);
@@ -258,7 +275,7 @@ async function loadMap(){
       const eb=rb.data.elements||[];
       const ways=eb.filter(e=>e.type==="way"&&e.geometry);
       if(!ways.length) throw new Error("เซิร์ฟเวอร์ส่งแผนที่เปล่ากลับมา");
-      MAPD.data=ways;
+      MAPD.data=ways; MAPD.dataSource="live";
       const seen={};
       MAPD.nodes=eb.filter(e=>e.type==="node"&&e.tags&&e.tags.name)
         .map(e=>({lat:e.lat,lon:e.lon,name:e.tags["name:th"]||e.tags.name,
@@ -267,8 +284,14 @@ async function loadMap(){
       paintMap();
       notes.push("แผนที่: ถนน "+ways.length.toLocaleString("th-TH")+" เส้น · ป้ายชื่อ "+MAPD.nodes.length+" จุด");
     }catch(e){
-      notes.push('<span style="color:var(--warn)">วาดแผนที่ไม่สำเร็จ ('+esc(e.message)+
-                 ') — รายชื่อสายด้านบนยังใช้ได้ ลองลดความกว้างของภาพแล้วกดใหม่</span>');
+      /* v41: ดึงฐานถนนสดล้มเหลว (เช่น overpass-api.de บล็อก origin *.github.io) — ถอยไปใช้
+         MAP_SEED แทนปล่อยว่างเปล่า เหมือนแนวทางเดียวกับสายรถเมล์ใน applySeedOrCache() */
+      const gotSeed=applyMapSeed(l);
+      paintMap();
+      notes.push(gotSeed
+        ? "วาดแผนที่สดไม่สำเร็จ ("+esc(e.message)+") — แสดงฐานถนนจากสแนปช็อต "+MAP_SEED_DATE+" แทน"
+        : '<span style="color:var(--warn)">วาดแผนที่ไม่สำเร็จ ('+esc(e.message)+
+          ') — รายชื่อสายด้านบนยังใช้ได้ ลองลดความกว้างของภาพแล้วกดใหม่</span>');
     }
     say(notes.join("<br>"));
 

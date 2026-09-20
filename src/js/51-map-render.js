@@ -8,7 +8,11 @@
 const MAPD={data:null,nodes:[],at:null,radius:600,near:250,busy:false,
             groups:[],wayRoutes:null,solo:null,err:"",
             /* v41: โหมดดูทั้งสาย — ดู 57-route-view.js */
-            mode:"local",localView:null,routeFitR:0,geomBusy:""};
+            mode:"local",localView:null,routeFitR:0,geomBusy:"",
+            /* v41: ที่มาของ MAPD.data — "live" ดึงสดสำเร็จตอนนี้, "seed" มาจาก MAP_SEED
+               (สแนปช็อตถนน ดู 10c-map-seed.js/applyMapSeed()) ใช้บอกความจริงในเครดิตแผนที่
+               ไม่ให้อ้างว่า "สด" ทั้งที่จริงเป็นสแนปช็อตที่ฝังมากับแอป */
+            dataSource:null};
 
 /* ---- โปรเจกชัน: ระยะสั้นระดับเมือง ใช้ละติจูด/ลองจิจูดตรงๆ พร้อมแก้ cos(lat) ก็แม่นพอ ---- */
 const MPD=111320;                                   /* เมตรต่อ 1 องศาละติจูด */
@@ -278,7 +282,8 @@ function drawMap(cx,W,H,T,K){
   cx.textBaseline="bottom"; cx.font=(9.5*K)+"px "+MONO;
   cx.fillStyle=T.text;
   const credit="ข้อมูลแผนที่ © OpenStreetMap contributors";
-  const scope="สายที่จอดป้ายในรัศมี "+MAPD.near+" ม. · ภาพกว้าง "+Math.round(viewR())+" ม.";
+  const scope="สายที่จอดป้ายในรัศมี "+MAPD.near+" ม. · ภาพกว้าง "+Math.round(viewR())+" ม."+
+    (MAPD.dataSource==="seed"?" · ฐานถนนจากสแนปช็อต "+MAP_SEED_DATE:"");
   cx.textAlign="right"; cx.fillText(credit,W-6*K,H-6*K);
   cx.textAlign="left";
   /* แผงด้านข้างแคบ ถ้าเขียนสองมุมจะทับกัน — ขยับขึ้นอีกบรรทัดแทน */
@@ -367,12 +372,13 @@ function mapGo(){          /* เปลี่ยนโลเคชั่น = �
    (v41: MAPD.at ตั้งจาก locPos() ที่รู้อยู่แล้วเสมอ ไม่ต้องรอ loadMap() สำเร็จก่อนถึงจะเห็นจุด) */
   const l=curLoc(), p=locPos(l);
   MAPD.data=null; MAPD.at=p; MAPD.title=l.th; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null;
-  MAPD.solo=null; MAPD.err=""; MAPD.stops=[];
+  MAPD.solo=null; MAPD.err=""; MAPD.stops=[]; MAPD.dataSource=null;
   /* เก็บ GEO cache ไว้ — สายรถเมล์เป็นของทั้งเมือง ใช้ซ้ำข้ามโลเคชั่นได้ ไม่ต้องดึงใหม่ */
   MAPD.mode="local"; MAPD.localView=null; MAPD.routeFitR=0; MAPD.geomBusy="";
   OVP.hits=null; OVP.source=null; OVP.asOf="";
   /* v41: ก่อนรอเน็ตเลย ลองเอาข้อมูลที่เคยดึงสำเร็จไว้ก่อน (แคชถาวร) หรือสแนปช็อตที่ฝังมากับแอป
-     (ROUTE_SEED) มาแสดงก่อนทันที — ใช้งานได้แม้ offline ทั้งหมด ดูฟังก์ชันใน 52-overpass.js */
+     (ROUTE_SEED = สายรถเมล์, MAP_SEED = ฐานถนน) มาแสดงก่อนทันที — ใช้งานได้แม้ offline ทั้งหมด
+     ดูฟังก์ชันใน 52-overpass.js */
   applySeedOrCache(l);
   resetView(); syncLL(); paintMap(); mapNote(); renderRouteLegend(); renderStops(); renderBus();
 }
