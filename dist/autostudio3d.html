@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-ZGnSGWdX+xmoRlJTShsKtLIRuHAHFH31Rx/Ma5Z4gcc='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-eEt5DqReV2FM1bcdEAuoLTMNogQHPH98eNvKNj2dZ8E='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -902,6 +902,8 @@ footer.foot .sp{flex:1}
         <div class="dnaline" style="margin-top:7px">
           เขียนสั้นๆ ได้ทั้งไทยและอังกฤษ · ข้อความนี้จะต่อท้ายคำสั่งเสมอ ไม่ว่าจะโหมดไหน
         </div>
+        <label class="lbl" style="margin-top:10px">คลิกเลือกคีย์เวิร์ดยอดนิยม <b>QUICK TAGS</b></label>
+        <div class="chips" id="detailTags"></div>
       </div>
       <div class="field" id="artworkField">
         <label class="lbl" for="artwork">ลายกราฟิกที่อยากให้ AI วาดขึ้นเอง <b>ARTWORK</b></label>
@@ -1577,6 +1579,15 @@ const RATIOS=[
  {id:"9x16",w:1080,h:1920,t:"9:16 — Story / สตอรี่ (1080×1920)",ar:"9:16",en:"vertical story",th:"แนวตั้งสตอรี่"}
 ];
 
+/* v41: คำคีย์เวิร์ดยอดนิยมสำหรับช่อง "โจทย์เพิ่มเติม" (#detail) — คลิกแล้วแทรกเข้าไปในช่องข้อความ
+   ตรงๆ (ดู 31-inputs.js) เป็นแค่ข้อความไทยสั้นๆ ต่อท้ายกัน ไม่ใช่ state แยกใน S เหมือนชิปอื่น */
+const DETAIL_TAGS=[
+ "ผู้โดยสารเต็มคันยืนเกาะราว","ไฟหน้ารถเปิดสว่างส่องพื้นถนน","เงาสะท้อนกระจกเปียกน้ำ",
+ "ป้ายโฆษณาคมชัดอ่านออก","สกายวอล์ค BTS ด้านบนถนน","มีแผงลอยสตรีทฟู้ดริมฟุตบาทข้างทาง",
+ "คนรอรถเมล์ถือร่มหลากสี","ป้ายไฟบอกสายรถเมล์ดิจิทัล LED","มีผู้โดยสารก้าวขึ้นบันไดรถ",
+ "บรรยากาศเมืองกรุงเทพฯ สมจริง","ละอองฝนโปรยปรายรอบไฟหน้ารถ","ต้นไม้ร่มรื่นริมถนน"
+];
+
 /* ================= สแนปช็อตข้อมูลสายรถเมล์จริงจาก OpenStreetMap (v41) =========================
    ทำไมต้องมีไฟล์นี้: overpass-api.de ปฏิเสธ CORS ทันทีเมื่อเปิดจาก file:// (origin null)
    ดูคอมเมนต์ยาวใน 51-map-render.js/README.md — ทดสอบแล้วว่าไม่มีเซิร์ฟเวอร์ Overpass
@@ -2119,6 +2130,30 @@ $("ratio").addEventListener("change",e=>{S.ratio=+e.target.value;sync()});
 $("scale").addEventListener("input",e=>{S.scale=+e.target.value/100;sync()});
 $("hdr").addEventListener("input",e=>{S.hdr=+e.target.value;sync()});
 ["artwork","detail","negative"].forEach(id=>$(id).addEventListener("input",sync));
+
+/* ---- คีย์เวิร์ดยอดนิยมสำหรับ #detail (v41) — คลิกแทรกข้อความ คลิกซ้ำเพื่อลบ ----
+   ไม่มี state แยกเก็บว่าคำไหน "เลือกอยู่" — เช็กจากข้อความในกล่องตรงๆ ทุกครั้ง (indexOf)
+   ดังนั้นแก้ข้อความเองด้วยมือ (ลบคำออก) แล้วปุ่มจะไม่ติดค้างว่า "เลือกอยู่" ผิดๆ */
+$("detailTags").innerHTML=DETAIL_TAGS.map(t=>
+  '<button type="button" class="chip" data-tag="'+esc(t)+'">'+esc(t)+"</button>").join("");
+function detailTagsSync(){
+  const v=$("detail").value;
+  $("detailTags").querySelectorAll("[data-tag]").forEach(b=>{
+    b.setAttribute("aria-pressed",String(v.indexOf(b.dataset.tag)>=0));
+  });
+}
+$("detailTags").addEventListener("click",e=>{
+  const b=e.target.closest("[data-tag]"); if(!b)return;
+  const tag=b.dataset.tag, el=$("detail");
+  if(el.value.indexOf(tag)>=0){
+    el.value=el.value.split(tag).join("").replace(/,\s*,/g,",").replace(/^[\s,]+|[\s,]+$/g,"");
+  }else{
+    el.value=el.value.trim()?el.value.trim()+", "+tag:tag;
+  }
+  detailTagsSync();sync();
+});
+$("detail").addEventListener("input",detailTagsSync);
+detailTagsSync();
 
 /* ---------------- upload ---------------- */
 const drop=$("drop"), file=$("file");
