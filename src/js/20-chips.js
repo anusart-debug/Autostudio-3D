@@ -101,6 +101,20 @@ const ANGLE_ICONS={
 };
 const ANGLE_ICON_DEFAULT='<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(4,17)"><rect x="0" y="1.2" width="10" height="6.4" rx="1.4" stroke-width="1.3"/><rect x="3" y="-.8" width="4" height="2.4" rx=".6" stroke-width="1.1"/><circle cx="5" cy="4.4" r="2.1" stroke-width="1.2"/></g><rect x="20" y="14" width="34" height="16" rx="3"/><circle cx="29" cy="32" r="2.8" fill="currentColor" stroke="none"/><circle cx="47" cy="32" r="2.8" fill="currentColor" stroke="none"/></svg>';
 
+/* v41.4: สีพื้นของไทล์มุมกล้อง สุ่มจากมุมของภาพจริงแต่ละใบเอง (มุมบนซ้าย/ล่างขวา ของไฟล์ครอปจริง)
+   ไม่ใช้ tileGrad(idx) ตามลำดับแบบ 3 หมวดอื่น — เพราะภาพจริงมีขนาด/สัดส่วนเกือบเป็นสี่เหลี่ยมจัตุรัส
+   ในขณะที่การ์ดในแอปเป็นสี่เหลี่ยมแบนกว้าง (.icotop สูงแค่ 56px) ถ้าใช้ object-fit:cover เหมือน
+   VEHICLE_ICONS จะครอปด้านบน/ล่างของภาพทิ้งเยอะจนตัดหลังคารถ/ใบพัดโดรนขาด (ผู้ใช้แจ้งแล้ว) จึง
+   เปลี่ยนเป็น object-fit:contain (เห็นไอคอนเต็มเสมอ ไม่มีวันโดนครอป) แต่ contain จะเหลือแถบว่าง
+   ซ้าย-ขวาให้เห็นพื้นหลัง .icotop เดิม (ไล่สีตาม index) ซึ่งจะไม่ตรงกับสีพื้นในภาพแต่ละใบเลย ทำให้
+   เห็นรอยต่อสีชัดเจน — จึงต้องดึงสีจริงจากภาพมาตั้ง --t1/--t2 ให้ไล่สีของ .icotop เนียนสนิทกับ
+   สีพื้นในภาพเสมอไม่ว่าจะ contain แล้วเหลือขอบว่างด้านไหนก็ตาม (ไล่สีทิศทาง 135deg ตรงกับ tileHTML) */
+const ANGLE_TILE_BG={
+  hero34:["#194582","#102E5B"], low:["#4EAFD3","#2B6992"], profile:["#21A590","#187270"],
+  rear34:["#8050DC","#5D37A8"], drone:["#DA373C","#8D2429"], street:["#F1991C","#CB680A"],
+  track:["#121826","#121826"], detail:["#24AF85","#18725C"]
+};
+
 /* v41: การ์ดแบบมีข้อมูลประกอบสำหรับ "แสงและเวลา" กับ "โลเคชั่น" — สองหมวดนี้ผู้ใช้ต้องตัดสินใจ
    จากบริบท (ช่วงเวลาจริง/โทนสี, มีกี่สายรถเมล์ผ่าน) ไม่ใช่แค่ชื่อ จึงแสดงข้อมูลนั้นบนการ์ดเลย
    หมวดอื่นยังเป็นชิปข้อความสั้นเหมือนเดิม — ทุกแบบใช้ class .chip + data-id ชุดเดียวกัน
@@ -133,8 +147,8 @@ function locCardHTML(item,pressed,custom){
    เพราะใช้ currentColor อยู่แล้ว แค่ตั้ง color:#fff ผ่าน .icotop ที่ styles.css
    ปุ่ม .tick (ถูกกำหนดไว้แล้วที่ .chip.card ทั่วไปสำหรับติ๊กถูกตอนเลือก) ใส่เพิ่มให้ทั้ง 3 หมวดนี้
    เพราะพื้นเป็นสีสันแล้ว จะบอกว่า "เลือกอยู่" ด้วยกรอบสีแบรนด์แบบชิปธรรมดาไม่ชัดพอ */
-function tileHTML(item,pressed,custom,idx,iconHTML,extraCls){
-  const [t1,t2]=tileGrad(idx);
+function tileHTML(item,pressed,custom,idx,iconHTML,extraCls,bgOverride){
+  const [t1,t2]=bgOverride||tileGrad(idx);
   return '<button type="button" class="chip card icocard tile'+(extraCls?" "+extraCls:"")+(custom?' cust':'')+
     '" data-id="'+esc(item.id)+'" aria-pressed="'+(pressed?'true':'false')+
     '" style="--t1:'+t1+';--t2:'+t2+'">'+
@@ -146,7 +160,7 @@ function vehicleCardHTML(item,pressed,custom,idx){
   return tileHTML(item,pressed,custom,idx,VEHICLE_ICONS[item.id]||VEHICLE_ICON_DEFAULT);
 }
 function angleCardHTML(item,pressed,custom,idx){
-  return tileHTML(item,pressed,custom,idx,ANGLE_ICONS[item.id]||ANGLE_ICON_DEFAULT,"anglecard");
+  return tileHTML(item,pressed,custom,idx,ANGLE_ICONS[item.id]||ANGLE_ICON_DEFAULT,"anglecard",ANGLE_TILE_BG[item.id]);
 }
 function styleCardHTML(item,pressed,custom,idx){
   return tileHTML(item,pressed,custom,idx,STYLE_ICONS[item.id]||STYLE_ICON_DEFAULT);

@@ -250,6 +250,10 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .icocard[aria-pressed=true] .icotop{color:var(--brand-txt);background:var(--brand-glow)}
 .icocard .icotop svg{width:26px;height:26px}
 .icocard .icotop img.realicon{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+/* v41.4: มุมกล้อง (05) ใช้ contain ไม่ใช่ cover — ภาพจริงเกือบเป็นจัตุรัสแต่การ์ดแบนกว้าง
+   cover จะครอปบน-ล่างทิ้งจนตัดหลังคารถ/ใบพัดโดรนขาด (ผู้ใช้แจ้ง) พื้นหลัง --t1/--t2 ที่ตั้งจาก
+   ANGLE_TILE_BG ให้ตรงสีในภาพแต่ละใบแล้ว จึงไม่เห็นรอยต่อตอนเหลือขอบว่างจาก contain */
+.icocard.anglecard .icotop img.realicon{object-fit:contain}
 .icocard.anglecard .icotop{height:56px}
 .icocard.anglecard .icotop svg{width:74px;height:51px}
 .icocard .cardbody{text-align:center}
