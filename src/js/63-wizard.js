@@ -133,6 +133,9 @@ document.addEventListener("click",e=>{
   const el=$(id); if(el) el.addEventListener("change",()=>{SFX.play("tick");if(!$("wz").hidden)wzLive()});
 });
 
+/* mountAllChips() ต้องมาก่อน sync() และต้องอยู่ที่นี่ ไม่ใช่ท้าย 20-chips.js — การ์ดโลเคชั่น
+   อ่าน busOf() ที่พึ่ง BUSX (let ใน 50-map-intro.js ซึ่งโหลดหลัง 20-chips.js) ดูคอมเมนต์ที่นั่น */
+mountAllChips();
 sync();
 renderBus();
 mapInit(); mapGo(); mapNote(); renderRouteLegend();

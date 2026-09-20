@@ -45,15 +45,33 @@ const ANGLES=[
  {id:"detail",th:"โคลสอัพลายกราฟิก",en:"Wrap Detail",p:"tight macro detail of the printed wrap surface, vinyl texture and panel seam visible"}
 ];
 
+/* v41: เพิ่ม time (ช่วงเวลาที่แสงแบบนี้เกิดจริง) · mood (โทนสีที่จะได้) · g1/g2 (ไล่เฉดบนการ์ด)
+   เป็นข้อมูลไว้แสดงผลอย่างเดียว ไม่แตะ p ซึ่งเป็นข้อความที่ส่งให้ AI จริง — ของเดิม 8 แบบครบเหมือนเดิม */
 const LIGHTS=[
- {id:"golden",th:"ชั่วโมงทอง",en:"Golden Hour",p:"golden hour sunlight raking across the body, long warm shadows, glowing rim light on the roofline"},
- {id:"blue",th:"ช่วงฟ้าสีน้ำเงิน",en:"Blue Hour",p:"blue hour dusk, deep cobalt sky, city lights and headlights just switching on"},
- {id:"neon",th:"กลางคืน นีออน",en:"Night Neon",p:"night scene lit by neon signage and sodium street lamps, saturated colour spill across the bodywork"},
- {id:"overcast",th:"ฟ้าครึ้ม แสงนุ่ม",en:"Soft Overcast",p:"soft overcast daylight, even diffused illumination, gentle gradients on the panels"},
- {id:"noon",th:"แดดเที่ยงจัด",en:"Harsh Midday",p:"harsh tropical midday sun, hard specular highlights and crisp short shadows"},
- {id:"rain",th:"หลังฝน ถนนสะท้อน",en:"Post Rain",p:"just after rain, wet mirror-like asphalt reflecting the vehicle and the signage above it"},
- {id:"studio",th:"สตูดิโอ HDRI",en:"Studio HDRI",p:"studio HDRI lighting setup, large softbox reflections sliding down the flank, seamless gradient backdrop"},
- {id:"back",th:"ย้อนแสงดราม่า",en:"Backlit",p:"strong backlight behind the vehicle, atmospheric haze, glowing silhouette edge"}
+ {id:"golden",th:"แสงสีทอง บ่ายคล้อย",en:"Golden Hour Sunset",time:"16:30 - 17:45 น.",
+  mood:"ส้มทองอบอุ่น, เงายาวนุ่ม",g1:"#F59E0B",g2:"#EA580C",
+  p:"golden hour sunlight raking across the body, long warm shadows, glowing rim light on the roofline"},
+ {id:"blue",th:"ค่ำทไวไลท์ ฟ้าสีน้ำเงินเข้ม",en:"Blue Hour Twilight",time:"18:15 - 19:00 น.",
+  mood:"น้ำเงินโคบอลต์, ไฟเมืองเริ่มติด",g1:"#2563EB",g2:"#1E1B4B",
+  p:"blue hour dusk, deep cobalt sky, city lights and headlights just switching on"},
+ {id:"neon",th:"นีออนกรุงเทพฯ ยามราตรี",en:"Bangkok Neon Nightlife",time:"20:00 - 01:00 น.",
+  mood:"ชมพูมาเจนตา, ฟ้าไซแอนสด",g1:"#DB2777",g2:"#7C3AED",
+  p:"night scene lit by neon signage and sodium street lamps, saturated colour spill across the bodywork"},
+ {id:"rain",th:"ฝนตกชุ่มฉ่ำ มรสุมกรุงเทพฯ",en:"Rainy Monsoon Street",time:"ช่วงมีฝนตกปรอยๆ",
+  mood:"เงาสะท้อนผิวน้ำเป็นกระจก",g1:"#0E7490",g2:"#0F172A",
+  p:"just after rain, wet mirror-like asphalt reflecting the vehicle and the signage above it"},
+ {id:"noon",th:"แดดสว่างจัด เที่ยงวันคมกริบ",en:"Crisp Tropical Midday Sun",time:"11:00 - 14:00 น.",
+  mood:"สีอิ่มชัดเจน, เงาเข้มใต้ท้องรถ",g1:"#FACC15",g2:"#F59E0B",
+  p:"harsh tropical midday sun, hard specular highlights and crisp short shadows"},
+ {id:"overcast",th:"เมฆครึ้ม แสงนุ่มแบบถ่ายโฆษณา",en:"Moody Diffused Overcast",time:"เช้าตรู่ หรือวันฟ้าครึ้ม",
+  mood:"แสงนุ่มนวล, ไร้เงาแข็ง",g1:"#94A3B8",g2:"#475569",
+  p:"soft overcast daylight, even diffused illumination, gentle gradients on the panels"},
+ {id:"studio",th:"สตูดิโอ HDRI คุมแสงเอง",en:"Studio HDRI",time:"ในสตูดิโอ ไม่ขึ้นกับเวลา",
+  mood:"ซอฟต์บ็อกซ์ไล่ยาว, พื้นหลังเกลี้ยง",g1:"#E2E8F0",g2:"#64748B",
+  p:"studio HDRI lighting setup, large softbox reflections sliding down the flank, seamless gradient backdrop"},
+ {id:"back",th:"ย้อนแสงดราม่า ขอบทอง",en:"Backlit Silhouette",time:"ก่อนตะวันขึ้น / ตะวันตกดิน",
+  mood:"ซิลูเอตขอบทอง, หมอกฟุ้ง",g1:"#B91C1C",g2:"#581C87",
+  p:"strong backlight behind the vehicle, atmospheric haze, glowing silhouette edge"}
 ];
 
 const STYLES=[

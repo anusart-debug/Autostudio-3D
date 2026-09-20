@@ -40,20 +40,53 @@ const CATHINT={
   weather:{ex:"ฝุ่นตลบช่วงก่อสร้าง",en:"Dusty Site",p:"dusty construction-site air with fine particles catching the light"}
 };
 
-function chipHTML(item,pressed,custom){
+const IC_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const IC_PALETTE='<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.1.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10Z"/><circle cx="7.5" cy="12" r="1"/><circle cx="10" cy="8" r="1"/><circle cx="15" cy="8.5" r="1"/></svg>';
+const IC_PIN='<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>';
+const IC_TICK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+
+/* v41: การ์ดแบบมีข้อมูลประกอบสำหรับ "แสงและเวลา" กับ "โลเคชั่น" — สองหมวดนี้ผู้ใช้ต้องตัดสินใจ
+   จากบริบท (ช่วงเวลาจริง/โทนสี, มีกี่สายรถเมล์ผ่าน) ไม่ใช่แค่ชื่อ จึงแสดงข้อมูลนั้นบนการ์ดเลย
+   หมวดอื่นยังเป็นชิปข้อความสั้นเหมือนเดิม — ทุกแบบใช้ class .chip + data-id ชุดเดียวกัน
+   กลไกเลือก/ลบ/เพิ่มเองใน mountChips() จึงไม่ต้องแก้อะไรเลย */
+function lightCardHTML(item,pressed,custom){
+  const g=item.g1?'style="background:linear-gradient(135deg,'+esc(item.g1)+','+esc(item.g2)+')"':'';
+  return '<button type="button" class="chip card lightcard'+(custom?' cust':'')+'" data-id="'+esc(item.id)+
+    '" aria-pressed="'+(pressed?'true':'false')+'">'+
+    '<span class="cardtop" '+g+'>'+(item.time?'<span class="pill">'+IC_CLOCK+esc(item.time)+"</span>":"")+
+      '<span class="tick">'+IC_TICK+"</span></span>"+
+    '<span class="cardbody"><b>'+esc(item.th)+"</b>"+
+      (item.en?'<span class="en">'+esc(item.en)+"</span>":"")+
+      (item.mood?'<span class="meta">'+IC_PALETTE+esc(item.mood)+"</span>":"")+"</span>"+
+    (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':"")+"</button>";
+}
+function locCardHTML(item,pressed,custom){
+  const n=busOf(item).length;
+  return '<button type="button" class="chip card loccard'+(custom?' cust':'')+'" data-id="'+esc(item.id)+
+    '" aria-pressed="'+(pressed?'true':'false')+'">'+
+    '<span class="cardbody"><span class="loctop">'+IC_PIN+"<i>"+esc(item.th)+"</i>"+
+      '<span class="tick">'+IC_TICK+"</span></span>"+
+      (item.en?'<span class="en">'+esc(item.en)+"</span>":"")+
+      '<span class="pill soft">'+(n?"ผ่าน "+n+" สายรถเมล์":"ยังไม่มีข้อมูลสายรถเมล์")+"</span></span>"+
+    (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':"")+"</button>";
+}
+function chipHTML(item,pressed,custom,key){
+  if(key==="light") return lightCardHTML(item,pressed,custom);
+  if(key==="loc") return locCardHTML(item,pressed,custom);
   return '<button type="button" class="chip'+(custom?' cust':'')+'" data-id="'+esc(item.id)+'" aria-pressed="'+(pressed?'true':'false')+'">'+
     esc(item.th)+'<span class="en">'+esc(item.en||"")+'</span>'+
     (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':'')+'</button>';
 }
-function addChipHTML(){
-  return '<button type="button" class="chip add" data-add="1">＋ เพิ่มเอง</button>';
+function addChipHTML(key){
+  const card=(key==="light"||key==="loc")?" card":"";
+  return '<button type="button" class="chip add'+card+'" data-add="1">＋ เพิ่มเอง</button>';
 }
 
 function renderChips(key){
   const el=$(CHIPHOST[key]);
   const items=list(key);
   const pressed=i=> key==="style" ? S.styles.has(i.id) : S[key]===i.id;
-  el.innerHTML=items.map(i=>chipHTML(i,pressed(i),!!i.custom)).join("")+addChipHTML();
+  el.innerHTML=items.map(i=>chipHTML(i,pressed(i),!!i.custom,key)).join("")+addChipHTML(key);
   /* ถ้าตัวที่เลือกอยู่ถูกซ่อน/ลบไป ให้เด้งกลับตัวแรกที่เหลือ */
   if(key!=="style"&&items.length&&!items.some(i=>i.id===S[key])){S[key]=items[0].id;renderChips(key)}
 }
@@ -87,7 +120,12 @@ function mountChips(key,multi){
   });
 }
 
-mountChips("vehicle");mountChips("loc");mountChips("angle");mountChips("light");mountChips("style",true);
+/* v41: ย้ายการ mount ชิปไปไว้ท้าย 63-wizard.js แทนที่จะเรียกตรงนี้ — การ์ดโลเคชั่นแบบใหม่
+   ต้องอ่านจำนวนสายรถเมล์ผ่าน busOf() ซึ่งใช้ BUSX ที่เป็น let ใน 50-map-intro.js
+   (โหลดทีหลังไฟล์นี้) let ไม่ hoist ข้ามไฟล์ เรียกตรงนี้จะพังทันทีตอนบูตด้วย TDZ */
+function mountAllChips(){
+  mountChips("vehicle");mountChips("loc");mountChips("angle");mountChips("light");mountChips("style",true);
+}
 
 function fillSelect(id,arr,sel){
   $(id).innerHTML=arr.map((x,i)=>'<option value="'+i+'"'+(i===sel?' selected':'')+'>'+esc(x.t)+'</option>').join("")+

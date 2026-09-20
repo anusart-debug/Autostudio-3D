@@ -166,6 +166,46 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .loc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .loc-grid .chip{padding:7px 9px}
 
+/* ---- การ์ดแบบมีข้อมูลประกอบ: แสงและเวลา + โลเคชั่น (v41) ----
+   ใช้ .chip เป็นฐานเดิมทั้งหมด (เลือก/ลบ/เพิ่มเอง ใช้กลไกเดียวกัน) แค่เปลี่ยนโครงภายใน
+   กริดปรับเองตามความกว้างที่มี — แผงของแอปนี้แคบกว่าหน้าจอเต็ม จึงได้ 2 คอลัมน์เป็นหลัก */
+#lightChips{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:7px}
+.loc-grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:7px}
+.chip.card{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.chip.card .cardtop{
+  position:relative;display:block;min-height:34px;padding:7px 8px;
+  background:linear-gradient(135deg,var(--ink-300),var(--ink-200));
+}
+.chip.card .cardbody{display:block;padding:8px 9px 9px}
+.chip.card .cardbody b{display:block;font-size:11.5px;font-weight:600;color:var(--txt);line-height:1.35}
+.chip.card .en{margin-top:2px}
+.chip.card .meta{
+  display:flex;align-items:flex-start;gap:4px;margin-top:5px;
+  font-size:10px;line-height:1.4;color:var(--txt-mute);
+}
+.chip.card .meta svg,.chip.card .pill svg{width:11px;height:11px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8}
+.chip.card .pill{
+  display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.04em;
+  background:rgba(0,0,0,.42);color:#fff;
+}
+.chip.card .pill.soft{background:var(--brand-glow);color:var(--brand-txt);margin-top:6px}
+/* ติ๊กถูกมุมขวาบน โผล่เฉพาะตอนถูกเลือก */
+.chip.card .tick{
+  position:absolute;top:6px;right:6px;width:17px;height:17px;border-radius:50%;
+  display:none;place-items:center;background:#fff;color:#111;
+}
+.chip.card .tick svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.6}
+.chip.card[aria-pressed=true] .tick{display:grid}
+.chip.card[aria-pressed=true]{border-color:var(--brand-txt);background:var(--ink-100)}
+.chip.card .del{top:auto;bottom:5px;right:5px}
+/* โลเคชั่น: ไม่มีแถบไล่เฉด ใช้หัวการ์ดเป็นชื่อ+หมุดแทน */
+.loccard .loctop{display:flex;align-items:center;gap:5px;position:relative;padding-right:20px}
+.loccard .loctop svg{width:13px;height:13px;flex:none;stroke:var(--brand-txt);fill:none;stroke-width:1.8}
+.loccard .loctop i{font-style:normal;font-size:11.5px;font-weight:600;color:var(--txt);line-height:1.35}
+.loccard .tick{top:-1px;right:0}
+.chip.add.card{min-height:58px;padding:10px}
+
 /* custom entries */
 .chip.add{border-style:dashed;color:var(--txt-mute);display:flex;align-items:center;gap:6px;justify-content:center}
 .chip.add:hover{border-color:var(--brand-txt);color:var(--brand-txt)}
