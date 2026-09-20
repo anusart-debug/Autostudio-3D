@@ -432,7 +432,9 @@ function renderRouteLegend(){
   const key=soloG?geoKeyOf(soloG.ids):null;
   const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key));
   const busy=!!(key&&MAPD.geomBusy===key);
-  let head="<b>"+G.length+" สาย</b> ที่จอดป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. · แต่ละสีคือหนึ่งสาย";
+  /* v41: แยกคำอธิบายยาวๆ ไว้ใน .lgd-explain — การ์ดลอยบนแผนที่ (#mapBox .routelegend) ซ่อนส่วนนี้
+     ไว้ (พื้นที่แคบ) เหลือแค่จำนวนสาย + ปุ่ม ส่วนโหมดเต็มจอที่มีที่ว่างพอยังโชว์เต็มประโยคเหมือนเดิม */
+  let head="<b>"+G.length+" สาย</b><span class=\"lgd-explain\"> ที่จอดป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. · แต่ละสีคือหนึ่งสาย</span>";
   if(solo!=null){
     head+=' <button type="button" class="lgd-all" data-all="1">แสดงทุกสาย</button>';
     head+= MAPD.mode==="route"
@@ -446,13 +448,36 @@ function renderRouteLegend(){
     '<div class="lgd-head">'+head+"</div>"+
     '<div class="lgd-list">'+G.map((g,i)=>{
       const verified=curatedLabel(g.ref,curLoc()).verified;
-      return '<button type="button" class="lgd-i'+(solo===i?" on":"")+'" data-g="'+i+'">'+
+      /* --rc = สีประจำสายเป็น custom property แทนที่จะเซ็ต background ตรงๆ บนปุ่ม
+         เพราะสไตล์ฐาน (.routelegend .lgd-i) เป็นชิปกรอบเปล่าใช้ .dot สีต่างหาก ยังใช้ในโหมดเต็มจอ
+         ส่วนการ์ดลอยบนแผนที่ (#mapBox .routelegend .lgd-i ใน styles.css) จึงค่อยอ่าน --rc มาทำ
+         ทั้งปุ่มเป็นสีล้วนแบบ mockup — ไฟล์เดียวกัน ไม่ต้องเรนเดอร์ซ้ำสองแบบ */
+      const title=esc(g.ref+(g.pair?" · "+g.pair:"")+(verified?"":" · ยังไม่ตรวจกับรายการที่ยืนยันแล้ว"));
+      return '<button type="button" class="lgd-i'+(solo===i?" on":"")+'" data-g="'+i+
+        '" style="--rc:'+g.col+'" title="'+title+'">'+
         '<span class="dot" style="background:'+g.col+'"></span>'+
         "<b>"+esc(g.ref)+"</b>"+
         (verified?"":'<span title="สายนี้มาจาก OSM ยังไม่ตรวจกับรายการที่ยืนยันแล้ว"> ?</span>')+
         (g.pair?'<em>'+esc(g.pair)+"</em>":"")+
       "</button>";
     }).join("")+"</div>";
+  renderMapFoot();
+}
+
+/* v41: แถบสรุป "จุดที่เลือก" ใต้แผนที่ (#mapFoot ใน index.html) — เอาไว้ให้เห็นชื่อโลเคชั่นปัจจุบัน
+   กับจำนวน/สีสายรถเมล์แบบย่อโดยไม่ต้องมองขึ้นไปนับในการ์ดลอยด้านบน ใช้ข้อมูลชุดเดียวกับ
+   renderRouteLegend() ทุกอย่าง (MAPD.groups) ไม่ได้ยิง Overpass เพิ่มหรือมีสถานะของตัวเอง
+   เรียกจากท้าย renderRouteLegend() จึงอัปเดตพร้อมกันทุกจุดที่เคยเรียก renderRouteLegend() อยู่แล้ว */
+function renderMapFoot(){
+  if(!$("mfName")) return;
+  const l=curLoc(), G=MAPD.groups;
+  $("mfName").textContent=l.th;
+  $("mfSub").textContent=(l.en?l.en+" · ":"")+"กรุงเทพฯ";
+  const MAX=6;
+  $("mfRoutes").innerHTML = G.length
+    ? G.slice(0,MAX).map(g=>'<span class="mf-dot" style="background:'+g.col+'" title="สาย '+esc(g.ref)+'">'+esc(g.ref)+"</span>").join("")+
+      (G.length>MAX?'<span class="mf-more">+'+(G.length-MAX)+"</span>":"")
+    : '<span class="mf-empty">ยังไม่มีข้อมูลสายรถเมล์</span>';
 }
 $("routeLegend").addEventListener("click",async e=>{
   if(e.target.closest("[data-all]")){

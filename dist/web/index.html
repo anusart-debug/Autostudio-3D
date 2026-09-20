@@ -617,7 +617,8 @@ pre.final{
 .routelegend .lgd-i .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
 .routelegend .lgd-i em{font-style:normal;font-size:10px;color:var(--txt-mute);max-width:180px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.maptools{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:4px;z-index:6}
+/* v41: ย้ายปุ่มซูมไปมุมล่างขวา เปิดมุมบนขวาให้การ์ด "สายรถเมล์" (#mapBox .routelegend) ตาม mockup */
+.maptools{position:absolute;bottom:8px;right:8px;display:flex;flex-direction:column;gap:4px;z-index:6}
 .maptools button{width:30px;height:30px;display:grid;place-items:center;cursor:pointer;
   background:var(--overlay);border:1px solid var(--line);border-radius:7px;color:var(--txt-dim);
   font-size:16px;font-family:var(--body);line-height:1;padding:0}
@@ -639,6 +640,63 @@ pre.final{
 #mapBox{height:300px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--ink-050);position:relative}
 #mapBox .mapoff{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:18px;
   font-size:12px;line-height:1.75;color:var(--txt-mute);background:var(--ink-050);z-index:5}
+
+/* ---- v41: การ์ด "สายรถเมล์" ลอยมุมขวาบนของแผนที่ ตาม mockup ----
+   ใช้ selector #mapBox .routelegend เจาะจง ไม่แตะสไตล์ฐานของ .routelegend เดิม (ที่ยังใช้
+   ตอนย้ายเข้าโหมดเต็มจอผ่าน #fullLegend — ที่นั่นมีที่ว่างพอ จึงยังโชว์ต้นทาง-ปลายทางและจุดสีแยกได้)
+   สีพื้นแต่ละปุ่มมาจาก --rc ที่ตั้งเป็น inline style จาก routeColour() ใน renderRouteLegend()
+   ป้ายที่ยังไม่ยืนยัน (ดู curatedLabel()) ยังมี "?" ต่อท้ายเหมือนเดิม แค่ไม่โชว์ต้นทาง-ปลายทาง
+   ในพื้นที่แคบนี้ — รายละเอียดเต็มยังอยู่ใน title= (โฮเวอร์ดูได้) และในโหมดเต็มจอ */
+#mapBox .routelegend{
+  position:absolute;top:8px;right:8px;left:auto;z-index:6;
+  width:min(206px,46%);max-height:calc(100% - 16px);
+  margin-top:0;padding:9px;border:0;border-radius:14px;
+  background:var(--overlay);backdrop-filter:blur(6px);
+  box-shadow:0 10px 26px rgba(0,0,0,.35);
+  display:flex;flex-direction:column;gap:7px;
+}
+#mapBox .routelegend .lgd-head{font-size:10.5px;line-height:1.5;margin-bottom:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#mapBox .routelegend .lgd-explain{display:none}
+#mapBox .routelegend .lgd-tip{display:none}
+#mapBox .routelegend .lgd-all{font-size:9.5px;padding:3px 7px}
+#mapBox .routelegend .lgd-list{flex-direction:column;max-height:none;overflow:auto;gap:5px;flex:1;min-height:0}
+#mapBox .routelegend .lgd-i{
+  background:var(--rc,var(--ink-300));border:0;border-radius:999px;
+  padding:6px 11px;color:#fff;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.35);
+  justify-content:space-between;width:100%;
+}
+#mapBox .routelegend .lgd-i .dot{display:none}
+#mapBox .routelegend .lgd-i em{display:none}
+#mapBox .routelegend .lgd-i:hover{filter:brightness(1.1);border-color:transparent}
+#mapBox .routelegend .lgd-i.on{outline:2px solid #fff;outline-offset:-2px}
+#mapBox .routelegend .lgd-i::after{content:"›";opacity:.9;font-weight:700;margin-left:6px}
+
+/* ---- v41: แถบสรุป "จุดที่เลือก" + สายรถเมล์ย่อ ใต้แผนที่ ตาม mockup ---- */
+.mapfoot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  margin-top:9px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--ink-100);
+}
+.mf-loc{display:flex;align-items:center;gap:9px;min-width:0}
+.mf-pin{
+  flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+}
+.mf-pin svg{width:14px;height:14px;fill:var(--brand-on);stroke:none}
+.mf-text{display:flex;flex-direction:column;min-width:0;line-height:1.4}
+.mf-text b{font-size:12px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.mf-text small{font-size:9.5px;color:var(--txt-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.mf-routes{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.mf-dot{
+  display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:21px;
+  padding:0 7px;border-radius:999px;color:#fff;font-size:10px;font-weight:600;
+  font-family:var(--mono);text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+.mf-more{
+  display:inline-flex;align-items:center;height:21px;padding:0 8px;border-radius:999px;
+  background:var(--ink-300);color:var(--txt-dim);font-size:10px;font-family:var(--mono);
+}
+.mf-empty{font-size:10.5px;color:var(--txt-mute)}
 /* หมุดบนแผนที่คงสีส้มไว้เสมอ ไม่ตามธีมแบรนด์ — บนน้ำสีฟ้าอ่อนของธีมสว่าง หมุดน้ำเงินจะจมหาย
    ส่วนนี้ผูกกับ THEME_DARK/THEME_LIGHT ใน 51-map-render.js อยู่แล้ว (pin:"#FF6B2C" ทั้งคู่) ไม่ใช่ตัวแปร CSS */
 .pinico{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
@@ -1092,6 +1150,10 @@ footer.foot .sp{flex:1}
       <div class="field">
         <div id="mapBox">
           <div class="mapoff" id="mapOff"></div>
+          <!-- v41: การ์ด "Bus Routes" ลอยมุมขวาบนของแผนที่ ตาม mockup — ย้ายมาจากใต้แผนที่
+               (ดูคอมเมนต์ที่ 53-map-ui.js openFull()/closeFull() ที่ย้าย element นี้เข้า/ออก
+               โหมดเต็มจอ ต้องแก้จุดคืนที่ในนั้นคู่กันถ้าจะย้าย DOM ตรงนี้อีก) -->
+          <div class="routelegend" id="routeLegend" hidden></div>
           <div class="maptools" id="mapTools" hidden>
             <button type="button" data-z="in"  title="ซูมเข้า">+</button>
             <button type="button" data-z="out" title="ซูมออก">−</button>
@@ -1104,9 +1166,16 @@ footer.foot .sp{flex:1}
           </div>
           <div class="maphint" id="mapHint">ลากเพื่อเลื่อน · หมุนล้อเพื่อซูม · ดับเบิลคลิกเพื่อย้ายหมุด</div>
         </div>
+        <!-- v41: แถบสรุปโลเคชั่นที่เลือก + สายรถเมล์ที่ผ่านแบบย่อ (สีตรงกับการ์ดด้านบน) ตาม mockup -->
+        <div class="mapfoot" id="mapFoot">
+          <div class="mf-loc">
+            <span class="mf-pin"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+            <div class="mf-text"><b id="mfName">—</b><small id="mfSub"></small></div>
+          </div>
+          <div class="mf-routes" id="mfRoutes"></div>
+        </div>
         <div class="dnaline" style="margin-top:7px" id="mapNote"></div>
         <div class="stopbox" id="stopBox" hidden></div>
-        <div class="routelegend" id="routeLegend" hidden></div>
       </div>
 
       <div class="field">
@@ -3431,7 +3500,9 @@ function renderRouteLegend(){
   const key=soloG?geoKeyOf(soloG.ids):null;
   const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key));
   const busy=!!(key&&MAPD.geomBusy===key);
-  let head="<b>"+G.length+" สาย</b> ที่จอดป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. · แต่ละสีคือหนึ่งสาย";
+  /* v41: แยกคำอธิบายยาวๆ ไว้ใน .lgd-explain — การ์ดลอยบนแผนที่ (#mapBox .routelegend) ซ่อนส่วนนี้
+     ไว้ (พื้นที่แคบ) เหลือแค่จำนวนสาย + ปุ่ม ส่วนโหมดเต็มจอที่มีที่ว่างพอยังโชว์เต็มประโยคเหมือนเดิม */
+  let head="<b>"+G.length+" สาย</b><span class=\"lgd-explain\"> ที่จอดป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. · แต่ละสีคือหนึ่งสาย</span>";
   if(solo!=null){
     head+=' <button type="button" class="lgd-all" data-all="1">แสดงทุกสาย</button>';
     head+= MAPD.mode==="route"
@@ -3445,13 +3516,36 @@ function renderRouteLegend(){
     '<div class="lgd-head">'+head+"</div>"+
     '<div class="lgd-list">'+G.map((g,i)=>{
       const verified=curatedLabel(g.ref,curLoc()).verified;
-      return '<button type="button" class="lgd-i'+(solo===i?" on":"")+'" data-g="'+i+'">'+
+      /* --rc = สีประจำสายเป็น custom property แทนที่จะเซ็ต background ตรงๆ บนปุ่ม
+         เพราะสไตล์ฐาน (.routelegend .lgd-i) เป็นชิปกรอบเปล่าใช้ .dot สีต่างหาก ยังใช้ในโหมดเต็มจอ
+         ส่วนการ์ดลอยบนแผนที่ (#mapBox .routelegend .lgd-i ใน styles.css) จึงค่อยอ่าน --rc มาทำ
+         ทั้งปุ่มเป็นสีล้วนแบบ mockup — ไฟล์เดียวกัน ไม่ต้องเรนเดอร์ซ้ำสองแบบ */
+      const title=esc(g.ref+(g.pair?" · "+g.pair:"")+(verified?"":" · ยังไม่ตรวจกับรายการที่ยืนยันแล้ว"));
+      return '<button type="button" class="lgd-i'+(solo===i?" on":"")+'" data-g="'+i+
+        '" style="--rc:'+g.col+'" title="'+title+'">'+
         '<span class="dot" style="background:'+g.col+'"></span>'+
         "<b>"+esc(g.ref)+"</b>"+
         (verified?"":'<span title="สายนี้มาจาก OSM ยังไม่ตรวจกับรายการที่ยืนยันแล้ว"> ?</span>')+
         (g.pair?'<em>'+esc(g.pair)+"</em>":"")+
       "</button>";
     }).join("")+"</div>";
+  renderMapFoot();
+}
+
+/* v41: แถบสรุป "จุดที่เลือก" ใต้แผนที่ (#mapFoot ใน index.html) — เอาไว้ให้เห็นชื่อโลเคชั่นปัจจุบัน
+   กับจำนวน/สีสายรถเมล์แบบย่อโดยไม่ต้องมองขึ้นไปนับในการ์ดลอยด้านบน ใช้ข้อมูลชุดเดียวกับ
+   renderRouteLegend() ทุกอย่าง (MAPD.groups) ไม่ได้ยิง Overpass เพิ่มหรือมีสถานะของตัวเอง
+   เรียกจากท้าย renderRouteLegend() จึงอัปเดตพร้อมกันทุกจุดที่เคยเรียก renderRouteLegend() อยู่แล้ว */
+function renderMapFoot(){
+  if(!$("mfName")) return;
+  const l=curLoc(), G=MAPD.groups;
+  $("mfName").textContent=l.th;
+  $("mfSub").textContent=(l.en?l.en+" · ":"")+"กรุงเทพฯ";
+  const MAX=6;
+  $("mfRoutes").innerHTML = G.length
+    ? G.slice(0,MAX).map(g=>'<span class="mf-dot" style="background:'+g.col+'" title="สาย '+esc(g.ref)+'">'+esc(g.ref)+"</span>").join("")+
+      (G.length>MAX?'<span class="mf-more">+'+(G.length-MAX)+"</span>":"")
+    : '<span class="mf-empty">ยังไม่มีข้อมูลสายรถเมล์</span>';
 }
 $("routeLegend").addEventListener("click",async e=>{
   if(e.target.closest("[data-all]")){
@@ -3852,7 +3946,9 @@ function openFull(){
 function closeFull(){
   if($("mapFull").hidden) return;
   $("mapFull").hidden=true;
-  $("mapBox").parentNode.insertBefore($("routeLegend"),$("stopBox").nextSibling);
+  /* v41: บ้านเดิมของ #routeLegend ย้ายเข้ามาเป็นการ์ดลอยใน #mapBox เอง (ดู index.html)
+     แทนที่จะเป็น sibling ใต้ #stopBox เหมือนก่อนหน้านี้ */
+  $("mapBox").appendChild($("routeLegend"));
   paintMap();
 }
 function zoomBtn(e){

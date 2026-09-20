@@ -295,6 +295,10 @@
       <div class="field">
         <div id="mapBox">
           <div class="mapoff" id="mapOff"></div>
+          <!-- v41: การ์ด "Bus Routes" ลอยมุมขวาบนของแผนที่ ตาม mockup — ย้ายมาจากใต้แผนที่
+               (ดูคอมเมนต์ที่ 53-map-ui.js openFull()/closeFull() ที่ย้าย element นี้เข้า/ออก
+               โหมดเต็มจอ ต้องแก้จุดคืนที่ในนั้นคู่กันถ้าจะย้าย DOM ตรงนี้อีก) -->
+          <div class="routelegend" id="routeLegend" hidden></div>
           <div class="maptools" id="mapTools" hidden>
             <button type="button" data-z="in"  title="ซูมเข้า">+</button>
             <button type="button" data-z="out" title="ซูมออก">−</button>
@@ -307,9 +311,16 @@
           </div>
           <div class="maphint" id="mapHint">ลากเพื่อเลื่อน · หมุนล้อเพื่อซูม · ดับเบิลคลิกเพื่อย้ายหมุด</div>
         </div>
+        <!-- v41: แถบสรุปโลเคชั่นที่เลือก + สายรถเมล์ที่ผ่านแบบย่อ (สีตรงกับการ์ดด้านบน) ตาม mockup -->
+        <div class="mapfoot" id="mapFoot">
+          <div class="mf-loc">
+            <span class="mf-pin"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+            <div class="mf-text"><b id="mfName">—</b><small id="mfSub"></small></div>
+          </div>
+          <div class="mf-routes" id="mfRoutes"></div>
+        </div>
         <div class="dnaline" style="margin-top:7px" id="mapNote"></div>
         <div class="stopbox" id="stopBox" hidden></div>
-        <div class="routelegend" id="routeLegend" hidden></div>
       </div>
 
       <div class="field">

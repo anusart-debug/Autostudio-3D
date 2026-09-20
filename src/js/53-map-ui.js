@@ -9,7 +9,9 @@ function openFull(){
 function closeFull(){
   if($("mapFull").hidden) return;
   $("mapFull").hidden=true;
-  $("mapBox").parentNode.insertBefore($("routeLegend"),$("stopBox").nextSibling);
+  /* v41: บ้านเดิมของ #routeLegend ย้ายเข้ามาเป็นการ์ดลอยใน #mapBox เอง (ดู index.html)
+     แทนที่จะเป็น sibling ใต้ #stopBox เหมือนก่อนหน้านี้ */
+  $("mapBox").appendChild($("routeLegend"));
   paintMap();
 }
 function zoomBtn(e){

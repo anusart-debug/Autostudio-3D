@@ -595,7 +595,8 @@ pre.final{
 .routelegend .lgd-i .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
 .routelegend .lgd-i em{font-style:normal;font-size:10px;color:var(--txt-mute);max-width:180px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.maptools{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:4px;z-index:6}
+/* v41: ย้ายปุ่มซูมไปมุมล่างขวา เปิดมุมบนขวาให้การ์ด "สายรถเมล์" (#mapBox .routelegend) ตาม mockup */
+.maptools{position:absolute;bottom:8px;right:8px;display:flex;flex-direction:column;gap:4px;z-index:6}
 .maptools button{width:30px;height:30px;display:grid;place-items:center;cursor:pointer;
   background:var(--overlay);border:1px solid var(--line);border-radius:7px;color:var(--txt-dim);
   font-size:16px;font-family:var(--body);line-height:1;padding:0}
@@ -617,6 +618,63 @@ pre.final{
 #mapBox{height:300px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--ink-050);position:relative}
 #mapBox .mapoff{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:18px;
   font-size:12px;line-height:1.75;color:var(--txt-mute);background:var(--ink-050);z-index:5}
+
+/* ---- v41: การ์ด "สายรถเมล์" ลอยมุมขวาบนของแผนที่ ตาม mockup ----
+   ใช้ selector #mapBox .routelegend เจาะจง ไม่แตะสไตล์ฐานของ .routelegend เดิม (ที่ยังใช้
+   ตอนย้ายเข้าโหมดเต็มจอผ่าน #fullLegend — ที่นั่นมีที่ว่างพอ จึงยังโชว์ต้นทาง-ปลายทางและจุดสีแยกได้)
+   สีพื้นแต่ละปุ่มมาจาก --rc ที่ตั้งเป็น inline style จาก routeColour() ใน renderRouteLegend()
+   ป้ายที่ยังไม่ยืนยัน (ดู curatedLabel()) ยังมี "?" ต่อท้ายเหมือนเดิม แค่ไม่โชว์ต้นทาง-ปลายทาง
+   ในพื้นที่แคบนี้ — รายละเอียดเต็มยังอยู่ใน title= (โฮเวอร์ดูได้) และในโหมดเต็มจอ */
+#mapBox .routelegend{
+  position:absolute;top:8px;right:8px;left:auto;z-index:6;
+  width:min(206px,46%);max-height:calc(100% - 16px);
+  margin-top:0;padding:9px;border:0;border-radius:14px;
+  background:var(--overlay);backdrop-filter:blur(6px);
+  box-shadow:0 10px 26px rgba(0,0,0,.35);
+  display:flex;flex-direction:column;gap:7px;
+}
+#mapBox .routelegend .lgd-head{font-size:10.5px;line-height:1.5;margin-bottom:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#mapBox .routelegend .lgd-explain{display:none}
+#mapBox .routelegend .lgd-tip{display:none}
+#mapBox .routelegend .lgd-all{font-size:9.5px;padding:3px 7px}
+#mapBox .routelegend .lgd-list{flex-direction:column;max-height:none;overflow:auto;gap:5px;flex:1;min-height:0}
+#mapBox .routelegend .lgd-i{
+  background:var(--rc,var(--ink-300));border:0;border-radius:999px;
+  padding:6px 11px;color:#fff;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.35);
+  justify-content:space-between;width:100%;
+}
+#mapBox .routelegend .lgd-i .dot{display:none}
+#mapBox .routelegend .lgd-i em{display:none}
+#mapBox .routelegend .lgd-i:hover{filter:brightness(1.1);border-color:transparent}
+#mapBox .routelegend .lgd-i.on{outline:2px solid #fff;outline-offset:-2px}
+#mapBox .routelegend .lgd-i::after{content:"›";opacity:.9;font-weight:700;margin-left:6px}
+
+/* ---- v41: แถบสรุป "จุดที่เลือก" + สายรถเมล์ย่อ ใต้แผนที่ ตาม mockup ---- */
+.mapfoot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  margin-top:9px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--ink-100);
+}
+.mf-loc{display:flex;align-items:center;gap:9px;min-width:0}
+.mf-pin{
+  flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+}
+.mf-pin svg{width:14px;height:14px;fill:var(--brand-on);stroke:none}
+.mf-text{display:flex;flex-direction:column;min-width:0;line-height:1.4}
+.mf-text b{font-size:12px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.mf-text small{font-size:9.5px;color:var(--txt-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.mf-routes{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.mf-dot{
+  display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:21px;
+  padding:0 7px;border-radius:999px;color:#fff;font-size:10px;font-weight:600;
+  font-family:var(--mono);text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+.mf-more{
+  display:inline-flex;align-items:center;height:21px;padding:0 8px;border-radius:999px;
+  background:var(--ink-300);color:var(--txt-dim);font-size:10px;font-family:var(--mono);
+}
+.mf-empty{font-size:10.5px;color:var(--txt-mute)}
 /* หมุดบนแผนที่คงสีส้มไว้เสมอ ไม่ตามธีมแบรนด์ — บนน้ำสีฟ้าอ่อนของธีมสว่าง หมุดน้ำเงินจะจมหาย
    ส่วนนี้ผูกกับ THEME_DARK/THEME_LIGHT ใน 51-map-render.js อยู่แล้ว (pin:"#FF6B2C" ทั้งคู่) ไม่ใช่ตัวแปร CSS */
 .pinico{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
