@@ -199,6 +199,9 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 }
 .hintbox b{color:var(--brand-txt);font-weight:500}
 .dest{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-bottom:16px}
+.dest-head{grid-column:1/-1;font-family:var(--head);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--txt-mute);margin:10px 0 -2px}
+.dest-head:first-child{margin-top:0}
 .dcard{
   display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;
   border:1px solid var(--line);border-radius:var(--r);background:var(--ink-100);

@@ -40,12 +40,22 @@ const DESTS=[
   d:"ผู้ช่วย AI อเนกประสงค์ มีโหมด Create Images แนบภาพต้นแบบผ่านปุ่มแนบไฟล์ได้",
   t:"ต้องล็อกอิน",f:0,img:1}
 ];
+/* จัดกลุ่มตาม "แนบภาพต้นแบบได้ไหม" แทนเรียงตามลำดับที่เพิ่มเข้ามา — กลุ่มที่แนบภาพได้สำคัญกว่า
+   เพราะคงสื่อต้นแบบไว้ได้จริง เอาขึ้นก่อนเสมอไม่ว่าจะเพิ่มเว็บใหม่กี่เว็บก็ตาม ไม่ต้องคอยสลับมือ */
+function cardHTML(x,i){
+  return '<button class="dcard'+(x.img?' keeps':'')+'" data-i="'+i+'"><b>'+esc(x.n)+'</b><em>'+esc(x.d)+'</em>'+
+    '<span class="tags"><span class="tagi'+(x.f?' free':'')+'">'+esc(x.t)+'</span>'+
+    '<span class="tagi '+(x.img?'i2i':'txt')+'">'+(x.img?'แนบภาพต้นแบบได้':'ข้อความอย่างเดียว')+'</span></span></button>';
+}
 function renderDests(){
   $("hoTitle").textContent="คัดลอกคำสั่ง & ส่งงานเข้าเว็บ AI · "+DESTS.length+" ปลายทาง";
-  $("hoDest").innerHTML=DESTS.map((x,i)=>
-    '<button class="dcard'+(x.img?' keeps':'')+'" data-i="'+i+'"><b>'+esc(x.n)+'</b><em>'+esc(x.d)+'</em>'+
-    '<span class="tags"><span class="tagi'+(x.f?' free':'')+'">'+esc(x.t)+'</span>'+
-    '<span class="tagi '+(x.img?'i2i':'txt')+'">'+(x.img?'แนบภาพต้นแบบได้':'ข้อความอย่างเดียว')+'</span></span></button>').join("");
+  const withImg=[], textOnly=[];
+  DESTS.forEach((x,i)=>(x.img?withImg:textOnly).push(cardHTML(x,i)));
+  $("hoDest").innerHTML=
+    '<div class="dest-head">แนบภาพต้นแบบได้ ('+withImg.length+') — คงสื่อต้นแบบไว้ได้จริง</div>'+
+    withImg.join("")+
+    '<div class="dest-head">ข้อความอย่างเดียว ('+textOnly.length+')</div>'+
+    textOnly.join("");
 }
 $("hoDest").addEventListener("click",e=>{
   const b=e.target.closest("[data-i]"); if(!b)return;
