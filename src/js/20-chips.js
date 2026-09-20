@@ -40,6 +40,17 @@ const CATHINT={
   weather:{ex:"ฝุ่นตลบช่วงก่อสร้าง",en:"Dusty Site",p:"dusty construction-site air with fine particles catching the light"}
 };
 
+/* v41.2: จานสีการ์ดไอคอน (ประเภทสื่อ/มุมกล้อง/สไตล์) — ผู้ใช้ส่ง mockup ไอคอนสื่อ Plan B
+   ทรงสี่เหลี่ยมมุมโค้งไล่สีสันสดใส ป้ายชื่อทึบด้านล่าง มาให้ใช้เป็นแบบ ไล่สีตามลำดับ (index)
+   ไม่ผูกกับ id ตายตัว เพราะรายการที่ผู้ใช้เพิ่มเองต่อท้ายก็ควรได้สีต่อคิวไปด้วยเช่นกัน */
+const TILE_PALETTE=[
+  ["#2E86F5","#123B7A"],["#4FC3E8","#1B5F8C"],["#14B8A6","#0B5F63"],
+  ["#8B5CF6","#4C2E8F"],["#EF4444","#7A1F1F"],["#F5A623","#B5540A"],
+  ["#1E3A6E","#0B1830"],["#10B981","#065F46"],["#EC4899","#7A1D57"],
+  ["#64748B","#1E293B"]
+];
+function tileGrad(idx){ return TILE_PALETTE[((idx%TILE_PALETTE.length)+TILE_PALETTE.length)%TILE_PALETTE.length] }
+
 const IC_CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 const IC_PALETTE='<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.8-.4-1.1.4-2.2 1.6-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10Z"/><circle cx="7.5" cy="12" r="1"/><circle cx="10" cy="8" r="1"/><circle cx="15" cy="8.5" r="1"/></svg>';
 const IC_PIN='<svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>';
@@ -148,37 +159,37 @@ function locCardHTML(item,pressed,custom){
       '<span class="pill soft">'+(n?"ผ่าน "+n+" สายรถเมล์":"ยังไม่มีข้อมูลสายรถเมล์")+"</span></span>"+
     (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':"")+"</button>";
 }
-/* v41: การ์ดไอคอนสำหรับประเภทสื่อ/มุมกล้อง/สไตล์ — โครงเดียวกับ .ratiocard (icotop+cardbody)
-   ใช้ .chip.card ที่มีอยู่แล้วเป็นฐาน (padding:0, flex-column, cardbody b/.en) ต่างแค่ CSS
-   ของกล่องไอคอนด้านบน (.icotop ใน styles.css) ไม่มี pill/meta เพิ่มเพราะไม่มีข้อมูลบริบทแบบ
-   แสงหรือโลเคชั่นให้โชว์ แค่ไอคอนช่วยจำเป็นภาพ */
-function vehicleCardHTML(item,pressed,custom){
-  return '<button type="button" class="chip card icocard'+(custom?' cust':'')+'" data-id="'+esc(item.id)+
-    '" aria-pressed="'+(pressed?'true':'false')+'">'+
-    '<span class="icotop">'+(VEHICLE_ICONS[item.id]||VEHICLE_ICON_DEFAULT)+'</span>'+
+/* v41.2: การ์ด "ไทล์สี" สำหรับประเภทสื่อ/มุมกล้อง/สไตล์ — ตามภาพตัวอย่างไอคอนสื่อ Plan B ที่ผู้ใช้
+   ส่งมา (สี่เหลี่ยมมุมโค้งไล่สีสันสดใส ไอคอนสีขาวตรงกลาง ป้ายชื่อทึบด้านล่าง) แทนกล่องสีเทาเรียบ
+   เดิม สีมาจาก tileGrad(idx) ไล่ตามลำดับที่แสดง ไม่ผูกกับ id จึงรายการที่เพิ่มเองต่อท้ายก็ได้สี
+   ต่อคิวเอง — ไอคอนเดิม (VEHICLE_ICONS/STYLE_ICONS/angleIconSVG) ไม่ต้องแก้แม้แต่บรรทัดเดียว
+   เพราะใช้ currentColor อยู่แล้ว แค่ตั้ง color:#fff ผ่าน .icotop ที่ styles.css
+   ปุ่ม .tick (ถูกกำหนดไว้แล้วที่ .chip.card ทั่วไปสำหรับติ๊กถูกตอนเลือก) ใส่เพิ่มให้ทั้ง 3 หมวดนี้
+   เพราะพื้นเป็นสีสันแล้ว จะบอกว่า "เลือกอยู่" ด้วยกรอบสีแบรนด์แบบชิปธรรมดาไม่ชัดพอ */
+function tileHTML(item,pressed,custom,idx,iconHTML,extraCls){
+  const [t1,t2]=tileGrad(idx);
+  return '<button type="button" class="chip card icocard tile'+(extraCls?" "+extraCls:"")+(custom?' cust':'')+
+    '" data-id="'+esc(item.id)+'" aria-pressed="'+(pressed?'true':'false')+
+    '" style="--t1:'+t1+';--t2:'+t2+'">'+
+    '<span class="icotop">'+iconHTML+'<span class="tick">'+IC_TICK+'</span></span>'+
     '<span class="cardbody"><b>'+esc(item.th)+'</b>'+(item.en?'<span class="en">'+esc(item.en)+'</span>':'')+'</span>'+
     (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':'')+'</button>';
 }
-function angleCardHTML(item,pressed,custom){
-  return '<button type="button" class="chip card icocard anglecard'+(custom?' cust':'')+'" data-id="'+esc(item.id)+
-    '" aria-pressed="'+(pressed?'true':'false')+'">'+
-    '<span class="icotop">'+angleIconSVG(item.ic)+'</span>'+
-    '<span class="cardbody"><b>'+esc(item.th)+'</b>'+(item.en?'<span class="en">'+esc(item.en)+'</span>':'')+'</span>'+
-    (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':'')+'</button>';
+function vehicleCardHTML(item,pressed,custom,idx){
+  return tileHTML(item,pressed,custom,idx,VEHICLE_ICONS[item.id]||VEHICLE_ICON_DEFAULT);
 }
-function styleCardHTML(item,pressed,custom){
-  return '<button type="button" class="chip card icocard'+(custom?' cust':'')+'" data-id="'+esc(item.id)+
-    '" aria-pressed="'+(pressed?'true':'false')+'">'+
-    '<span class="icotop">'+(STYLE_ICONS[item.id]||STYLE_ICON_DEFAULT)+'</span>'+
-    '<span class="cardbody"><b>'+esc(item.th)+'</b>'+(item.en?'<span class="en">'+esc(item.en)+'</span>':'')+'</span>'+
-    (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':'')+'</button>';
+function angleCardHTML(item,pressed,custom,idx){
+  return tileHTML(item,pressed,custom,idx,angleIconSVG(item.ic),"anglecard");
 }
-function chipHTML(item,pressed,custom,key){
+function styleCardHTML(item,pressed,custom,idx){
+  return tileHTML(item,pressed,custom,idx,STYLE_ICONS[item.id]||STYLE_ICON_DEFAULT);
+}
+function chipHTML(item,pressed,custom,key,idx){
   if(key==="light") return lightCardHTML(item,pressed,custom);
   if(key==="loc") return locCardHTML(item,pressed,custom);
-  if(key==="vehicle") return vehicleCardHTML(item,pressed,custom);
-  if(key==="angle") return angleCardHTML(item,pressed,custom);
-  if(key==="style") return styleCardHTML(item,pressed,custom);
+  if(key==="vehicle") return vehicleCardHTML(item,pressed,custom,idx);
+  if(key==="angle") return angleCardHTML(item,pressed,custom,idx);
+  if(key==="style") return styleCardHTML(item,pressed,custom,idx);
   return '<button type="button" class="chip'+(custom?' cust':'')+'" data-id="'+esc(item.id)+'" aria-pressed="'+(pressed?'true':'false')+'">'+
     esc(item.th)+'<span class="en">'+esc(item.en||"")+'</span>'+
     (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':'')+'</button>';
@@ -192,7 +203,7 @@ function renderChips(key){
   const el=$(CHIPHOST[key]);
   const items=list(key);
   const pressed=i=> key==="style" ? S.styles.has(i.id) : S[key]===i.id;
-  el.innerHTML=items.map(i=>chipHTML(i,pressed(i),!!i.custom,key)).join("")+addChipHTML(key);
+  el.innerHTML=items.map((i,idx)=>chipHTML(i,pressed(i),!!i.custom,key,idx)).join("")+addChipHTML(key);
   /* ถ้าตัวที่เลือกอยู่ถูกซ่อน/ลบไป ให้เด้งกลับตัวแรกที่เหลือ */
   if(key!=="style"&&items.length&&!items.some(i=>i.id===S[key])){S[key]=items[0].id;renderChips(key)}
 }

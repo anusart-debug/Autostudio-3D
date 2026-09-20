@@ -244,7 +244,7 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 #vehicleChips,#angleChips,#styleChips{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px}
 .icocard{align-items:stretch;text-align:center}
 .icocard .icotop{
-  display:flex;align-items:center;justify-content:center;height:42px;
+  position:relative;display:flex;align-items:center;justify-content:center;height:42px;
   background:var(--ink-300);border-bottom:1px solid var(--line-soft);color:var(--txt-dim);
 }
 .icocard[aria-pressed=true] .icotop{color:var(--brand-txt);background:var(--brand-glow)}
@@ -253,6 +253,20 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .icocard.anglecard .icotop svg{width:74px;height:51px}
 .icocard .cardbody{text-align:center}
 .icocard .cardbody b{font-size:10.8px}
+
+/* ---- v41.2: ไทล์สีสำหรับประเภทสื่อ/มุมกล้อง/สไตล์ ตามภาพตัวอย่างไอคอนสื่อ Plan B ----
+   สี่เหลี่ยมมุมโค้งไล่สี (--t1/--t2 ตั้งจาก tileGrad() แบบ inline ต่อการ์ด) ไอคอนสีขาวตรงกลาง
+   ป้ายชื่อเป็นแถบทึบด้านล่าง — ใช้ specificity สูง (4 คลาส) กันไม่ให้ .chip/.chip.card เดิม
+   ทับสี ไม่ต้องสนลำดับประกาศในไฟล์ */
+.chip.card.icocard.tile{background:linear-gradient(135deg,var(--t1),var(--t2));border:0}
+.chip.card.icocard.tile:hover{border:0;filter:brightness(1.08)}
+.chip.card.icocard.tile .icotop{background:transparent;border-bottom:0;color:#fff}
+.chip.card.icocard.tile .cardbody{background:rgba(0,0,0,.34)}
+.chip.card.icocard.tile .cardbody b{color:#fff}
+.chip.card.icocard.tile .cardbody .en{color:rgba(255,255,255,.72)}
+.chip.card.icocard.tile[aria-pressed=true]{border:0;background:linear-gradient(135deg,var(--t1),var(--t2))}
+.chip.card.icocard.tile[aria-pressed=true] .icotop{outline:2px solid #fff;outline-offset:-3px;color:#fff;background:transparent}
+.chip.card.icocard.tile .tick{background:#fff;color:var(--ink-000)}
 
 /* ---- การ์ดเลือกอัตราส่วนภาพ (v41) ---- */
 .ratiogrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
