@@ -132,3 +132,40 @@ const DETAIL_TAGS=[
  "บรรยากาศเมืองกรุงเทพฯ สมจริง","ละอองฝนโปรยปรายรอบไฟหน้ารถ","ต้นไม้ร่มรื่นริมถนน"
 ];
 
+/* v41: "คำสั่งพร้อมใช้งาน" (quick presets) — ผู้ใช้ส่ง mockup มา 4 ปุ่ม ขอเพิ่มอีก 8 ปุ่มในสไตล์
+   เดียวกัน (รวม 12) คลิกปุ่มเดียวตั้งค่าประเภทสื่อ+โลเคชั่น+มุมกล้อง+แสง+สภาพอากาศให้ครบทันที
+   ไม่ต้องไล่กดทีละแผง — ทุก id ที่อ้างต้องมีอยู่จริงใน VEHICLES/LOCATIONS/ANGLES/LIGHTS ด้านบน
+   (ดู applyPreset() ใน 20-chips.js) · weather เป็น index ของ WEATHERS (0-4) ตรงกับ <select id="weather">
+   4 รายการแรกคือของที่ผู้ใช้ส่งมาในภาพ ข้อความปุ่มคงไว้คำต่อคำ ไม่ได้แต่งใหม่ */
+const PRESETS=[
+ {id:"bus8victory",label:"รถเมล์สาย 8 อนุสาวรีย์ชัยฯ ฝนตกยามเย็น",
+  vehicle:"wrap",loc:"victory",angle:"hero34",light:"rain",weather:3,
+  detail:"คนรอรถเมล์ถือร่มหลากสี"},
+ {id:"evsiam",label:"รถเมล์ไฟฟ้า EV ป้ายโฆษณา Full Wrap สยามสแควร์",
+  vehicle:"wrap",loc:"rama1",angle:"profile",light:"noon",weather:0,
+  detail:"ป้ายโฆษณาคมชัดอ่านออก"},
+ {id:"tuktukyaowarat",label:"รถตุ๊กตุ๊กไฟนีออน สตรีทฟู้ดเยาวราชยามค่ำคืน",
+  vehicle:"muvmi",loc:"yaowarat",angle:"street",light:"neon",weather:0,
+  detail:"มีแผงลอยสตรีทฟู้ดริมฟุตบาทข้างทาง"},
+ {id:"smartshelterasok",label:"ป้ายรอรถเมล์อัจฉริยะ & รถเมล์ NGV สีฟ้า อโศกมนตรี",
+  vehicle:"shelter",loc:"asoke",angle:"hero34",light:"noon",weather:0,
+  detail:"ป้ายไฟบอกสายรถเมล์ดิจิทัล LED"},
+ {id:"billboardexpwy",label:"ป้ายบิลบอร์ดทางด่วน หมอกเช้าเบาบาง",
+  vehicle:"billboard",loc:"expressway",angle:"hero34",light:"overcast",weather:2},
+ {id:"ledcentralworld",label:"จอ LED เซ็นทรัลเวิลด์ ราตรีสีสันจัดจ้าน",
+  vehicle:"ledscreen",loc:"centralworld",angle:"street",light:"neon",weather:0},
+ {id:"ddriverside",label:"รถบัส 2 ชั้นริมเจ้าพระยา แดดเที่ยงคมชัด",
+  vehicle:"dd",loc:"riverside",angle:"hero34",light:"noon",weather:0},
+ {id:"bus3dmahanakhon",label:"รถเมล์ 3 มิติตึกมหานคร มุมต่ำทรงพลัง",
+  vehicle:"bus3d",loc:"mahanakhon",angle:"low",light:"golden",weather:0},
+ {id:"billboardmochit",label:"ป้ายบิลบอร์ดหมอชิต 2 ฝนตกถนนเปียกสะท้อนแสง",
+  vehicle:"billboard",loc:"mochit2",angle:"hero34",light:"rain",weather:1,
+  detail:"เงาสะท้อนกระจกเปียกน้ำ"},
+ {id:"wraparun",label:"รถเมล์ Full Wrap วัดอรุณฯ เช้าแสงนุ่มนวล",
+  vehicle:"wrap",loc:"arun",angle:"hero34",light:"overcast",weather:0},
+ {id:"muvmiratchadamri",label:"ตุ๊กตุ๊กไฟฟ้าราชดำริ ย้อนแสงดราม่า",
+  vehicle:"muvmi",loc:"ratchadamri",angle:"rear34",light:"back",weather:0},
+ {id:"ledsanamluang",label:"จอ LED สนามหลวง ทไวไลท์สีทองยามเย็น",
+  vehicle:"ledscreen",loc:"sanamluang",angle:"hero34",light:"golden",weather:0}
+];
+

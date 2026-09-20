@@ -161,3 +161,28 @@ $("ratioChips").addEventListener("click",e=>{
 });
 renderRatioCards();
 
+/* ---- "คำสั่งพร้อมใช้งาน" (v41) — แถบปุ่มลัดใต้เฮดเดอร์ คลิกครั้งเดียวตั้งประเภทสื่อ/โลเคชั่น/
+   มุมกล้อง/แสง/สภาพอากาศครบตาม PRESETS (10-data.js) แทนการไล่กดทีละแผง 2-4-5-6 เอง
+   ไม่แตะ styles/ratio/lens — ปล่อยเป็นค่าที่ผู้ใช้ตั้งไว้อยู่แล้ว เพราะพรีเซ็ตนี้เน้นแค่ "ฉากคืออะไร"
+   ไม่ใช่ "จะเรนเดอร์แบบไหน" ผู้ใช้ยังปรับต่อได้ทุกช่องตามปกติหลังกด */
+function renderPresets(){
+  $("presetScroll").innerHTML=PRESETS.map(p=>
+    '<button type="button" class="presetchip" data-preset="'+esc(p.id)+'">'+esc(p.label)+"</button>").join("");
+}
+function applyPreset(id){
+  const p=PRESETS.find(x=>x.id===id); if(!p) return;
+  S.vehicle=p.vehicle; S.loc=p.loc; S.angle=p.angle; S.light=p.light;
+  if(p.weather!=null) S.weather=p.weather;
+  if(p.detail) $("detail").value=p.detail;
+  ["vehicle","angle","light"].forEach(renderChips);
+  renderChips("loc"); renderBus(); mapGo();
+  refreshWeather(); detailTagsSync();
+  sync();
+  toast("ตั้งค่าอัตโนมัติแล้ว: "+p.label);
+}
+$("presetScroll").addEventListener("click",e=>{
+  const b=e.target.closest("[data-preset]"); if(!b)return;
+  applyPreset(b.dataset.preset);
+});
+renderPresets();
+

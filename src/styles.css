@@ -91,6 +91,38 @@ header.top{
 .drivebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dvwho{font-family:var(--mono);font-size:10.5px;color:var(--txt-dim);white-space:nowrap}
 
+/* ---------- "คำสั่งพร้อมใช้งาน" แถบปุ่มลัดใต้เฮดเดอร์ (v41) ----------
+   เลื่อนแนวนอนได้ (scroll-x) กันชนความกว้างจอเมื่อมีปุ่มเยอะ ไม่ตัดข้อความ
+   หัวข้อฝั่งซ้ายไม่เลื่อนตาม ให้เห็นชื่อหมวดตลอดเวลา (flex:0 0 auto) */
+.presetbar{
+  display:flex;align-items:center;gap:12px;
+  padding:9px 20px;border-bottom:1px solid var(--line-soft);
+  background:var(--ink-050);overflow:hidden;
+}
+.presetbar-head{
+  display:flex;align-items:center;gap:6px;flex:0 0 auto;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--txt-dim);
+  white-space:nowrap;
+}
+.presetbar-head svg{width:13px;height:13px;stroke:var(--brand-txt);fill:var(--brand-txt);stroke-width:0}
+.presetbar-scroll{
+  display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;
+  scrollbar-width:thin;
+}
+.presetbar-scroll::-webkit-scrollbar{height:5px}
+.presetbar-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.presetchip{
+  flex:0 0 auto;white-space:nowrap;cursor:pointer;
+  border:1px solid var(--line);border-radius:999px;background:var(--ink-100);
+  color:var(--txt-dim);font-size:11.5px;padding:8px 15px;transition:.15s;
+}
+.presetchip:hover{border-color:var(--brand-txt);color:var(--txt);background:var(--ink-200)}
+.presetchip:active{background:var(--brand-glow)}
+
+/* ---------- ลิงก์สื่อตัวอย่างในแผง 01 · Source (v41) ---------- */
+.samplelink{display:inline-flex;align-items:center;gap:5px;font-size:11px}
+.samplelink svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
 /* ---------- layout ---------- */
 .workspace{
   flex:1 1 auto;

@@ -74,6 +74,14 @@
   </button>
 </header>
 
+<div class="presetbar" id="presetBar">
+  <div class="presetbar-head">
+    <svg viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+    <span>คำสั่งพร้อมใช้งาน</span>
+  </div>
+  <div class="presetbar-scroll" id="presetScroll"></div>
+</div>
+
 <div class="workspace">
 
   <!-- ================= LEFT RAIL : SOURCE ================= -->
@@ -92,6 +100,13 @@
           <span>PNG · JPG · WEBP</span>
         </div>
         <input type="file" id="file" accept="image/*" hidden>
+      </div>
+
+      <div class="field" style="margin-top:-6px">
+        <a class="linkbtn samplelink" href="https://drive.google.com/drive/folders/1GbtqM4DQQ1I0ApTOf9XCBszWgHg7F1kH?usp=drive_link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+          ยังไม่มีภาพสื่อของตัวเอง? ดาวน์โหลดภาพตัวอย่างจากคลัง Plan B
+        </a>
       </div>
 
       <div class="field" id="refBox" hidden>

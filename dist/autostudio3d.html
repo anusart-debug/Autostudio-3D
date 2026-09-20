@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-jpI8x6Cuhm7p3Vd801lFtAG93RpmUsbpjqbkPX7r/4M='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-MkFKhALLPK+zDp47NEm53krQ4u5d6RyAWpDYq5w63to='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -112,6 +112,38 @@ header.top{
 /* v41 เฟส 6 (เว็บเท่านั้น) — แถบล็อกอิน Google */
 .drivebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dvwho{font-family:var(--mono);font-size:10.5px;color:var(--txt-dim);white-space:nowrap}
+
+/* ---------- "คำสั่งพร้อมใช้งาน" แถบปุ่มลัดใต้เฮดเดอร์ (v41) ----------
+   เลื่อนแนวนอนได้ (scroll-x) กันชนความกว้างจอเมื่อมีปุ่มเยอะ ไม่ตัดข้อความ
+   หัวข้อฝั่งซ้ายไม่เลื่อนตาม ให้เห็นชื่อหมวดตลอดเวลา (flex:0 0 auto) */
+.presetbar{
+  display:flex;align-items:center;gap:12px;
+  padding:9px 20px;border-bottom:1px solid var(--line-soft);
+  background:var(--ink-050);overflow:hidden;
+}
+.presetbar-head{
+  display:flex;align-items:center;gap:6px;flex:0 0 auto;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--txt-dim);
+  white-space:nowrap;
+}
+.presetbar-head svg{width:13px;height:13px;stroke:var(--brand-txt);fill:var(--brand-txt);stroke-width:0}
+.presetbar-scroll{
+  display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;
+  scrollbar-width:thin;
+}
+.presetbar-scroll::-webkit-scrollbar{height:5px}
+.presetbar-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.presetchip{
+  flex:0 0 auto;white-space:nowrap;cursor:pointer;
+  border:1px solid var(--line);border-radius:999px;background:var(--ink-100);
+  color:var(--txt-dim);font-size:11.5px;padding:8px 15px;transition:.15s;
+}
+.presetchip:hover{border-color:var(--brand-txt);color:var(--txt);background:var(--ink-200)}
+.presetchip:active{background:var(--brand-glow)}
+
+/* ---------- ลิงก์สื่อตัวอย่างในแผง 01 · Source (v41) ---------- */
+.samplelink{display:inline-flex;align-items:center;gap:5px;font-size:11px}
+.samplelink svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- layout ---------- */
 .workspace{
@@ -829,6 +861,14 @@ footer.foot .sp{flex:1}
   </button>
 </header>
 
+<div class="presetbar" id="presetBar">
+  <div class="presetbar-head">
+    <svg viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+    <span>คำสั่งพร้อมใช้งาน</span>
+  </div>
+  <div class="presetbar-scroll" id="presetScroll"></div>
+</div>
+
 <div class="workspace">
 
   <!-- ================= LEFT RAIL : SOURCE ================= -->
@@ -847,6 +887,13 @@ footer.foot .sp{flex:1}
           <span>PNG · JPG · WEBP</span>
         </div>
         <input type="file" id="file" accept="image/*" hidden>
+      </div>
+
+      <div class="field" style="margin-top:-6px">
+        <a class="linkbtn samplelink" href="https://drive.google.com/drive/folders/1GbtqM4DQQ1I0ApTOf9XCBszWgHg7F1kH?usp=drive_link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>
+          ยังไม่มีภาพสื่อของตัวเอง? ดาวน์โหลดภาพตัวอย่างจากคลัง Plan B
+        </a>
       </div>
 
       <div class="field" id="refBox" hidden>
@@ -1667,6 +1714,43 @@ const DETAIL_TAGS=[
  "บรรยากาศเมืองกรุงเทพฯ สมจริง","ละอองฝนโปรยปรายรอบไฟหน้ารถ","ต้นไม้ร่มรื่นริมถนน"
 ];
 
+/* v41: "คำสั่งพร้อมใช้งาน" (quick presets) — ผู้ใช้ส่ง mockup มา 4 ปุ่ม ขอเพิ่มอีก 8 ปุ่มในสไตล์
+   เดียวกัน (รวม 12) คลิกปุ่มเดียวตั้งค่าประเภทสื่อ+โลเคชั่น+มุมกล้อง+แสง+สภาพอากาศให้ครบทันที
+   ไม่ต้องไล่กดทีละแผง — ทุก id ที่อ้างต้องมีอยู่จริงใน VEHICLES/LOCATIONS/ANGLES/LIGHTS ด้านบน
+   (ดู applyPreset() ใน 20-chips.js) · weather เป็น index ของ WEATHERS (0-4) ตรงกับ <select id="weather">
+   4 รายการแรกคือของที่ผู้ใช้ส่งมาในภาพ ข้อความปุ่มคงไว้คำต่อคำ ไม่ได้แต่งใหม่ */
+const PRESETS=[
+ {id:"bus8victory",label:"รถเมล์สาย 8 อนุสาวรีย์ชัยฯ ฝนตกยามเย็น",
+  vehicle:"wrap",loc:"victory",angle:"hero34",light:"rain",weather:3,
+  detail:"คนรอรถเมล์ถือร่มหลากสี"},
+ {id:"evsiam",label:"รถเมล์ไฟฟ้า EV ป้ายโฆษณา Full Wrap สยามสแควร์",
+  vehicle:"wrap",loc:"rama1",angle:"profile",light:"noon",weather:0,
+  detail:"ป้ายโฆษณาคมชัดอ่านออก"},
+ {id:"tuktukyaowarat",label:"รถตุ๊กตุ๊กไฟนีออน สตรีทฟู้ดเยาวราชยามค่ำคืน",
+  vehicle:"muvmi",loc:"yaowarat",angle:"street",light:"neon",weather:0,
+  detail:"มีแผงลอยสตรีทฟู้ดริมฟุตบาทข้างทาง"},
+ {id:"smartshelterasok",label:"ป้ายรอรถเมล์อัจฉริยะ & รถเมล์ NGV สีฟ้า อโศกมนตรี",
+  vehicle:"shelter",loc:"asoke",angle:"hero34",light:"noon",weather:0,
+  detail:"ป้ายไฟบอกสายรถเมล์ดิจิทัล LED"},
+ {id:"billboardexpwy",label:"ป้ายบิลบอร์ดทางด่วน หมอกเช้าเบาบาง",
+  vehicle:"billboard",loc:"expressway",angle:"hero34",light:"overcast",weather:2},
+ {id:"ledcentralworld",label:"จอ LED เซ็นทรัลเวิลด์ ราตรีสีสันจัดจ้าน",
+  vehicle:"ledscreen",loc:"centralworld",angle:"street",light:"neon",weather:0},
+ {id:"ddriverside",label:"รถบัส 2 ชั้นริมเจ้าพระยา แดดเที่ยงคมชัด",
+  vehicle:"dd",loc:"riverside",angle:"hero34",light:"noon",weather:0},
+ {id:"bus3dmahanakhon",label:"รถเมล์ 3 มิติตึกมหานคร มุมต่ำทรงพลัง",
+  vehicle:"bus3d",loc:"mahanakhon",angle:"low",light:"golden",weather:0},
+ {id:"billboardmochit",label:"ป้ายบิลบอร์ดหมอชิต 2 ฝนตกถนนเปียกสะท้อนแสง",
+  vehicle:"billboard",loc:"mochit2",angle:"hero34",light:"rain",weather:1,
+  detail:"เงาสะท้อนกระจกเปียกน้ำ"},
+ {id:"wraparun",label:"รถเมล์ Full Wrap วัดอรุณฯ เช้าแสงนุ่มนวล",
+  vehicle:"wrap",loc:"arun",angle:"hero34",light:"overcast",weather:0},
+ {id:"muvmiratchadamri",label:"ตุ๊กตุ๊กไฟฟ้าราชดำริ ย้อนแสงดราม่า",
+  vehicle:"muvmi",loc:"ratchadamri",angle:"rear34",light:"back",weather:0},
+ {id:"ledsanamluang",label:"จอ LED สนามหลวง ทไวไลท์สีทองยามเย็น",
+  vehicle:"ledscreen",loc:"sanamluang",angle:"hero34",light:"golden",weather:0}
+];
+
 /* ================= สแนปช็อตข้อมูลสายรถเมล์จริงจาก OpenStreetMap (v41) =========================
    ทำไมต้องมีไฟล์นี้: overpass-api.de ปฏิเสธ CORS ทันทีเมื่อเปิดจาก file:// (origin null)
    ดูคอมเมนต์ยาวใน 51-map-render.js/README.md — ทดสอบแล้วว่าไม่มีเซิร์ฟเวอร์ Overpass
@@ -1880,6 +1964,31 @@ $("ratioChips").addEventListener("click",e=>{
   sync();
 });
 renderRatioCards();
+
+/* ---- "คำสั่งพร้อมใช้งาน" (v41) — แถบปุ่มลัดใต้เฮดเดอร์ คลิกครั้งเดียวตั้งประเภทสื่อ/โลเคชั่น/
+   มุมกล้อง/แสง/สภาพอากาศครบตาม PRESETS (10-data.js) แทนการไล่กดทีละแผง 2-4-5-6 เอง
+   ไม่แตะ styles/ratio/lens — ปล่อยเป็นค่าที่ผู้ใช้ตั้งไว้อยู่แล้ว เพราะพรีเซ็ตนี้เน้นแค่ "ฉากคืออะไร"
+   ไม่ใช่ "จะเรนเดอร์แบบไหน" ผู้ใช้ยังปรับต่อได้ทุกช่องตามปกติหลังกด */
+function renderPresets(){
+  $("presetScroll").innerHTML=PRESETS.map(p=>
+    '<button type="button" class="presetchip" data-preset="'+esc(p.id)+'">'+esc(p.label)+"</button>").join("");
+}
+function applyPreset(id){
+  const p=PRESETS.find(x=>x.id===id); if(!p) return;
+  S.vehicle=p.vehicle; S.loc=p.loc; S.angle=p.angle; S.light=p.light;
+  if(p.weather!=null) S.weather=p.weather;
+  if(p.detail) $("detail").value=p.detail;
+  ["vehicle","angle","light"].forEach(renderChips);
+  renderChips("loc"); renderBus(); mapGo();
+  refreshWeather(); detailTagsSync();
+  sync();
+  toast("ตั้งค่าอัตโนมัติแล้ว: "+p.label);
+}
+$("presetScroll").addEventListener("click",e=>{
+  const b=e.target.closest("[data-preset]"); if(!b)return;
+  applyPreset(b.dataset.preset);
+});
+renderPresets();
 
 /* ---------------- หน้าต่างเพิ่มรายการ ---------------- */
 let addKey="loc";
