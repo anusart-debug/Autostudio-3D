@@ -129,17 +129,36 @@ function curatedLabel(ref,loc){
   return {label:ref,verified:false};
 }
 
-/* v41.8: seed สแนปช็อตเส้นทางเต็มสาย (10d-route-geom-seed.js) จาก Google My Maps ที่ผู้ใช้ทำเอง —
+/* v41.9: ตรวจก่อนเชื่อ seed ว่าเส้นทางที่จับคู่ได้ผ่านใกล้จุดที่กำลังดูอยู่จริงหรือไม่ —
+   หลังใช้งานจริงพบว่าบางสาย (เช่น "A3" ในไฟล์ Google My Maps ต้นฉบับ ระบุต้นทาง-ปลายทางว่า
+   ดอนเมือง-สวนลุมพินี แต่ geometry จริงที่วาดไว้กลับอยู่แถวบางนา/สนามบินสุวรรณภูมิ ห่างจากจุดที่
+   ควรจะผ่านเป็นสิบกิโล) เป็นข้อผิดพลาดในไฟล์ต้นฉบับที่แก้ทีละสายไม่จบ (188 สาย ตรวจมือไม่ทันหมด)
+   จึงป้องกันที่ปลายทางแทน: seed จะใช้ได้ก็ต่อเมื่อมีจุดใดจุดหนึ่งของเส้นทางอยู่ในรัศมี 8 กม.
+   จากหมุดที่กำลังดูอยู่ (MAPD.at) เท่านั้น — ไกลกว่านั้นถือว่าน่าจะเป็นข้อมูลผิดสาย/ผิดจุด ทิ้งแล้ว
+   ถอยไป cache/live ตามปกติ (ปลอดภัยกว่าเชื่อ seed อย่างไม่มีเงื่อนไข ต่อให้ทำให้ seed ใช้ไม่ได้กับ
+   บางสายที่จริงๆถูกก็ตาม) 8 กม. เผื่อพอสำหรับเส้นทางที่จริงผ่านแถวนั้นแต่จุดจาก KML ที่ถูกย่อไว้
+   ตั้งแต่ต้นทางบังเอิญข้ามช่วงนั้นไปพอดี (ดูตัวอย่างสาย "145"/"513" ที่ระยะจริงห่างสุด ~4.5 กม.) */
+function seedNearPin(rec,tolM){
+  if(!MAPD.at) return true;
+  const [pLat,pLon]=MAPD.at;
+  for(const w of rec.ways){
+    for(const [la,lo] of w){
+      if(metres(pLat,pLon,la,lo)<=tolM) return true;
+    }
+  }
+  return false;
+}
+/* seed สแนปช็อตเส้นทางเต็มสาย (10d-route-geom-seed.js) จาก Google My Maps ที่ผู้ใช้ทำเอง —
    เช็กก่อน cache/live เสมอ เพราะไม่ต้องพึ่งเน็ตเลย ครอบคลุม 188 สาย (รวม alias เลขสายเก่า/ใหม่)
    g.ref จาก OSM มักเป็น "เก่า (ใหม่)" รวมกันมาในสตริงเดียว เช่น "17 (4-3)" — แยกด้วยวิธีเดียวกับ
    curatedLabel() (ตัดวงเล็บออกแล้ว split ด้วยช่องว่าง) แล้วลองจับคู่ทีละส่วน คืน null ถ้าไม่มีสายนี้
-   ในสแนปช็อต ให้ loadRouteGeom() ถอยไป cache/live ตามลำดับเดิม */
+   ในสแนปช็อต หรือมีแต่ไม่ผ่านใกล้จุดนี้จริง (seedNearPin) ให้ loadRouteGeom() ถอยไป cache/live */
 function applyRouteGeomSeed(ref){
   const parts=String(ref||"").replace(/[()]/g,"").split(/\s+/).filter(Boolean);
   for(const part of parts){
     const key=normRef(part);
     const rec=ROUTE_GEOM_SEED[key]||ROUTE_GEOM_SEED[ROUTE_GEOM_ALIAS[key]];
-    if(rec) return {ways:rec.ways,stops:[],bbox:rec.bbox,from:rec.from,to:rec.to,op:""};
+    if(rec&&seedNearPin(rec,8000)) return {ways:rec.ways,stops:[],bbox:rec.bbox,from:rec.from,to:rec.to,op:""};
   }
   return null;
 }
