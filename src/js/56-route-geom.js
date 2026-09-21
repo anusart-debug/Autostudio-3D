@@ -16,7 +16,22 @@ const GEO=new Map();                 /* cache ในหน่วยความ�
 const GEO_KEY="as3d_geo";            /* cache ถาวรใน localStorage ผ่าน store wrapper เดิม */
 const GEO_MAX_ROUTES=30;             /* LRU แบบนับจำนวนสาย ไม่ใช่ไบต์ — เรียบง่ายพอสำหรับเคสนี้ */
 
-function geoKeyOf(ids){ return ids.slice().sort((a,b)=>a-b).join(","); }
+/* v41.10: geoKeyOf ต้องรับกลุ่ม (g) ทั้งก้อน ไม่ใช่แค่ g.ids — เจอบั๊กจริง: เมื่อดึงสายรถเมล์
+   สดไม่สำเร็จ (เช่น overpass-api.de บล็อก origin *.github.io ของเว็บที่ deploy จริง) แอปถอยไปใช้
+   ROUTE_SEED ซึ่ง**ไม่มี relation id ติดมาตั้งใจ** (ดูคอมเมนต์ใน 10b-route-seed.js) ทุกกลุ่มที่ตกมา
+   ทางนี้จึงได้ g.ids เป็น [null,null] เหมือนกันหมด — เดิม geoKeyOf เอา ids ไป join ตรงๆ ได้ผลลัพธ์
+   "" (ว่าง) ทุกสาย ทำให้ทุกสายที่ไม่มี relation id ใช้ cache key เดียวกันหมดข้ามสายข้ามโลเคชั่น
+   สายแรกที่ดึงสำเร็จ (ผ่าน ROUTE_GEOM_SEED) จะไปแคชทับคีย์นั้น แล้วสายอื่นๆที่คลิกตามมาทีหลัง
+   (ที่จริงไม่มี geometry ให้) กลับ "เห็น" เส้นทางของสายแรกที่ไม่ใช่ของตัวเองเลย — นี่คือสาเหตุที่
+   ผู้ใช้แจ้งว่า "เส้นทางไม่ตรงกับสายรถ" ใช้ ref เป็น key แทนเมื่อ ids ใช้ไม่ได้ (ref มีความหมายเสมอ
+   ต่อให้ไม่มี relation id) — เมื่อ ids เป็นตัวเลขจริงยังคงคีย์แบบเดิม (แชร์แคชข้ามโลเคชั่นได้เหมือนก่อน) */
+function geoKeyOf(g){
+  const ids=(g&&g.ids)||[];
+  if(ids.length&&ids.every(id=>typeof id==="number"&&Number.isFinite(id))){
+    return ids.slice().sort((a,b)=>a-b).join(",");
+  }
+  return "ref:"+normRef(g&&g.ref);
+}
 
 /* C) เส้นทางเต็มสายของสายที่เลือก — ดึงตอนคลิก "ดูทั้งสาย" เท่านั้น ไม่ใช่ตอนโหลดแผนที่ */
 function qRouteGeom(ids){
@@ -167,7 +182,7 @@ function applyRouteGeomSeed(ref){
    คืน null เมื่อพัง (toast บอกเหตุผลแล้ว) — เรียกจาก UI ตอนกด "ดูทั้งสาย" เท่านั้น */
 async function loadRouteGeom(gi){
   const g=MAPD.groups[gi]; if(!g||!g.ids||!g.ids.length) return null;
-  const key=geoKeyOf(g.ids);
+  const key=geoKeyOf(g);
   const cached=geoRecall(key);
   if(cached) return cached;
   const seeded=applyRouteGeomSeed(g.ref);

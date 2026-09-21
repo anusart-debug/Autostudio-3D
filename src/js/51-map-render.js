@@ -160,7 +160,7 @@ function drawMap(cx,W,H,T,K){
   const G=MAPD.groups, WR=MAPD.wayRoutes;
   if(MAPD.solo!=null&&G[MAPD.solo]){
     const g=G[MAPD.solo];
-    const geo=(typeof GEO!=="undefined")?GEO.get(geoKeyOf(g.ids)):null;
+    const geo=(typeof GEO!=="undefined")?GEO.get(geoKeyOf(g)):null;
     if(geo&&typeof drawRouteLayer==="function"){
       drawRouteLayer(cx,W,H,T,K,g,geo);
     }else if(G.length&&WR){
@@ -435,7 +435,7 @@ function renderRouteLegend(){
   $("routeLegend").hidden=false;
   const solo=MAPD.solo;
   const soloG=solo!=null?G[solo]:null;
-  const key=soloG?geoKeyOf(soloG.ids):null;
+  const key=soloG?geoKeyOf(soloG):null;
   const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key))||!!(soloG&&applyRouteGeomSeed(soloG.ref));
   const busy=!!(key&&MAPD.geomBusy===key);
   /* v41: แยกคำอธิบายยาวๆ ไว้ใน .lgd-explain — การ์ดลอยบนแผนที่ (#mapBox .routelegend) ซ่อนส่วนนี้

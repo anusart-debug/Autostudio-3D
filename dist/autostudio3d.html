@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-ezK016P4xWTTH4obuJ1a1qD6E9fiKeoJI82Bc/kvt60='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-LdGeffyAXvxrmR+x8OQAskk/TYeFu4J69wHgnEFJkms='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -3364,7 +3364,7 @@ function drawMap(cx,W,H,T,K){
   const G=MAPD.groups, WR=MAPD.wayRoutes;
   if(MAPD.solo!=null&&G[MAPD.solo]){
     const g=G[MAPD.solo];
-    const geo=(typeof GEO!=="undefined")?GEO.get(geoKeyOf(g.ids)):null;
+    const geo=(typeof GEO!=="undefined")?GEO.get(geoKeyOf(g)):null;
     if(geo&&typeof drawRouteLayer==="function"){
       drawRouteLayer(cx,W,H,T,K,g,geo);
     }else if(G.length&&WR){
@@ -3639,7 +3639,7 @@ function renderRouteLegend(){
   $("routeLegend").hidden=false;
   const solo=MAPD.solo;
   const soloG=solo!=null?G[solo]:null;
-  const key=soloG?geoKeyOf(soloG.ids):null;
+  const key=soloG?geoKeyOf(soloG):null;
   const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key))||!!(soloG&&applyRouteGeomSeed(soloG.ref));
   const busy=!!(key&&MAPD.geomBusy===key);
   /* v41: แยกคำอธิบายยาวๆ ไว้ใน .lgd-explain — การ์ดลอยบนแผนที่ (#mapBox .routelegend) ซ่อนส่วนนี้
@@ -4375,7 +4375,22 @@ const GEO=new Map();                 /* cache ในหน่วยความ�
 const GEO_KEY="as3d_geo";            /* cache ถาวรใน localStorage ผ่าน store wrapper เดิม */
 const GEO_MAX_ROUTES=30;             /* LRU แบบนับจำนวนสาย ไม่ใช่ไบต์ — เรียบง่ายพอสำหรับเคสนี้ */
 
-function geoKeyOf(ids){ return ids.slice().sort((a,b)=>a-b).join(","); }
+/* v41.10: geoKeyOf ต้องรับกลุ่ม (g) ทั้งก้อน ไม่ใช่แค่ g.ids — เจอบั๊กจริง: เมื่อดึงสายรถเมล์
+   สดไม่สำเร็จ (เช่น overpass-api.de บล็อก origin *.github.io ของเว็บที่ deploy จริง) แอปถอยไปใช้
+   ROUTE_SEED ซึ่ง**ไม่มี relation id ติดมาตั้งใจ** (ดูคอมเมนต์ใน 10b-route-seed.js) ทุกกลุ่มที่ตกมา
+   ทางนี้จึงได้ g.ids เป็น [null,null] เหมือนกันหมด — เดิม geoKeyOf เอา ids ไป join ตรงๆ ได้ผลลัพธ์
+   "" (ว่าง) ทุกสาย ทำให้ทุกสายที่ไม่มี relation id ใช้ cache key เดียวกันหมดข้ามสายข้ามโลเคชั่น
+   สายแรกที่ดึงสำเร็จ (ผ่าน ROUTE_GEOM_SEED) จะไปแคชทับคีย์นั้น แล้วสายอื่นๆที่คลิกตามมาทีหลัง
+   (ที่จริงไม่มี geometry ให้) กลับ "เห็น" เส้นทางของสายแรกที่ไม่ใช่ของตัวเองเลย — นี่คือสาเหตุที่
+   ผู้ใช้แจ้งว่า "เส้นทางไม่ตรงกับสายรถ" ใช้ ref เป็น key แทนเมื่อ ids ใช้ไม่ได้ (ref มีความหมายเสมอ
+   ต่อให้ไม่มี relation id) — เมื่อ ids เป็นตัวเลขจริงยังคงคีย์แบบเดิม (แชร์แคชข้ามโลเคชั่นได้เหมือนก่อน) */
+function geoKeyOf(g){
+  const ids=(g&&g.ids)||[];
+  if(ids.length&&ids.every(id=>typeof id==="number"&&Number.isFinite(id))){
+    return ids.slice().sort((a,b)=>a-b).join(",");
+  }
+  return "ref:"+normRef(g&&g.ref);
+}
 
 /* C) เส้นทางเต็มสายของสายที่เลือก — ดึงตอนคลิก "ดูทั้งสาย" เท่านั้น ไม่ใช่ตอนโหลดแผนที่ */
 function qRouteGeom(ids){
@@ -4526,7 +4541,7 @@ function applyRouteGeomSeed(ref){
    คืน null เมื่อพัง (toast บอกเหตุผลแล้ว) — เรียกจาก UI ตอนกด "ดูทั้งสาย" เท่านั้น */
 async function loadRouteGeom(gi){
   const g=MAPD.groups[gi]; if(!g||!g.ids||!g.ids.length) return null;
-  const key=geoKeyOf(g.ids);
+  const key=geoKeyOf(g);
   const cached=geoRecall(key);
   if(cached) return cached;
   const seeded=applyRouteGeomSeed(g.ref);
@@ -4569,7 +4584,7 @@ function bboxCenterRadius(bbox){
 }
 function enterRouteMode(gi){
   const g=MAPD.groups[gi]; if(!g) return;
-  const geo=geoRecall(geoKeyOf(g.ids)); if(!geo) return;
+  const geo=geoRecall(geoKeyOf(g)); if(!geo) return;
   if(!MAPD.localView) MAPD.localView={c:viewC().slice(),r:viewR()};
   const fit=bboxCenterRadius(geo.bbox);
   MAPD.mode="route"; MAPD.routeFitR=fit.r;

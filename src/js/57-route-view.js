@@ -18,7 +18,7 @@ function bboxCenterRadius(bbox){
 }
 function enterRouteMode(gi){
   const g=MAPD.groups[gi]; if(!g) return;
-  const geo=geoRecall(geoKeyOf(g.ids)); if(!geo) return;
+  const geo=geoRecall(geoKeyOf(g)); if(!geo) return;
   if(!MAPD.localView) MAPD.localView={c:viewC().slice(),r:viewR()};
   const fit=bboxCenterRadius(geo.bbox);
   MAPD.mode="route"; MAPD.routeFitR=fit.r;
