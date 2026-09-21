@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-45DruJ7VxTOjotN1eh+7SRvPcnNrKugeFHVcjIMnUgY='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-8ZOlkQF+GdDCwLtxw4cvX378pJODxczmnzdVhDIMV7U='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -4701,25 +4701,25 @@ const DESTS=[
  {n:"Bing Image Creator",u:"https://www.bing.com/images/create",
   d:"DALL·E 3 เข้าใจคำสั่งยาวดี มีเครดิต Boost ฟรีทุกวัน",t:"ฟรี",f:1,img:0,logo:LOGO_BING},
  {n:"Microsoft Designer",u:"https://designer.microsoft.com/image-creator",
-  d:"ตัวเดียวกับ Bing แต่มีเครื่องมือจัดหน้าเพิ่ม",t:"ฟรี",f:1,img:0,logo:LOGO_MSFT},
+  d:"ตัวเดียวกับ Bing แต่มีเครื่องมือจัดหน้าเพิ่ม",t:"ฟรี",f:1,img:0,logo:LOGO_IDEOGRAM},
  {n:"Leonardo.AI",u:"https://app.leonardo.ai/ai-generations",
   d:"เครดิตฟรีวันละ 150 · มี ControlNet ปรับละเอียด",t:"ฟรีรายวัน",f:1,img:0,logo:LOGO_LEONARDO},
  {n:"Ideogram",u:"https://ideogram.ai/t/explore",
-  d:"ตัวอักษรบนภาพคมที่สุด เหมาะกับงานที่ต้องมีข้อความ",t:"ฟรีจำกัด",f:1,img:0,logo:LOGO_IDEOGRAM},
+  d:"ตัวอักษรบนภาพคมที่สุด เหมาะกับงานที่ต้องมีข้อความ",t:"ฟรีจำกัด",f:1,img:0,logo:LOGO_MSFT},
  {n:"Hugging Face · FLUX.1",u:"https://huggingface.co/spaces/black-forest-labs/FLUX.1-schnell",
   d:"โมเดลโอเพนซอร์สคุณภาพสูง ไม่ต้องสมัคร",t:"ฟรี",f:1,img:0,logo:LOGO_HF},
  {n:"Arena AI",u:"https://arena.ai",
   d:"เว็บจัดอันดับ/แข่งขันโมเดล AI หลายด้าน มีโหมด Design to Code แนบภาพแล้วให้ AI สร้างต่อ",
-  t:"ฟรี",f:1,img:1,logo:LOGO_ARENA},
+  t:"ฟรี",f:1,img:1,logo:LOGO_DESIGNARENA},
  {n:"Adobe Firefly",u:"https://firefly.adobe.com",
   d:"สตูดิโอสร้างภาพของ Adobe รวมกว่า 30 โมเดล มี Structure Reference แนบภาพต้นแบบคุมองค์ประกอบได้",
-  t:"ต้องล็อกอิน",f:0,img:1,logo:LOGO_FIREFLY},
+  t:"ต้องล็อกอิน",f:0,img:1,logo:LOGO_DOLA},
  {n:"Design Arena",u:"https://designarena.ai",
   d:"เว็บเปรียบเทียบโมเดล AI แบบ crowdsourced มีหมวด Image และ Image Editing ให้แนบภาพต้นแบบ",
-  t:"ฟรี",f:1,img:1,logo:LOGO_DESIGNARENA},
+  t:"ฟรี",f:1,img:1,logo:LOGO_ARENA},
  {n:"Dola AI",u:"https://dola.com",
   d:"ผู้ช่วย AI อเนกประสงค์ มีโหมด Create Images แนบภาพต้นแบบผ่านปุ่มแนบไฟล์ได้",
-  t:"ต้องล็อกอิน",f:0,img:1,logo:LOGO_DOLA}
+  t:"ต้องล็อกอิน",f:0,img:1,logo:LOGO_FIREFLY}
 ];
 /* จัดกลุ่มตาม "แนบภาพต้นแบบได้ไหม" แทนเรียงตามลำดับที่เพิ่มเข้ามา — กลุ่มที่แนบภาพได้สำคัญกว่า
    เพราะคงสื่อต้นแบบไว้ได้จริง เอาขึ้นก่อนเสมอไม่ว่าจะเพิ่มเว็บใหม่กี่เว็บก็ตาม ไม่ต้องคอยสลับมือ */
