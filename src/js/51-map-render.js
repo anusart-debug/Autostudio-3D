@@ -436,7 +436,7 @@ function renderRouteLegend(){
   const solo=MAPD.solo;
   const soloG=solo!=null?G[solo]:null;
   const key=soloG?geoKeyOf(soloG.ids):null;
-  const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key));
+  const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key))||!!(soloG&&applyRouteGeomSeed(soloG.ref));
   const busy=!!(key&&MAPD.geomBusy===key);
   /* v41: แยกคำอธิบายยาวๆ ไว้ใน .lgd-explain — การ์ดลอยบนแผนที่ (#mapBox .routelegend) ซ่อนส่วนนี้
      ไว้ (พื้นที่แคบ) เหลือแค่จำนวนสาย + ปุ่ม ส่วนโหมดเต็มจอที่มีที่ว่างพอยังโชว์เต็มประโยคเหมือนเดิม */

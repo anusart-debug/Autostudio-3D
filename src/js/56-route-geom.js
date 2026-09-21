@@ -129,13 +129,25 @@ function curatedLabel(ref,loc){
   return {label:ref,verified:false};
 }
 
-/* ดึง geometry เต็มสาย — cache ก่อน (ไม่ยิงเน็ตซ้ำ) ไม่เจอค่อยถาม Overpass
+/* v41.8: seed สแนปช็อตเส้นทางเต็มสาย (10d-route-geom-seed.js) จาก Google My Maps ที่ผู้ใช้ทำเอง —
+   เช็กก่อน cache/live เสมอ เพราะไม่ต้องพึ่งเน็ตเลย ครอบคลุม 188 สาย (รวม alias เลขสายเก่า/ใหม่)
+   คืน null ถ้าไม่มีสายนี้ในสแนปช็อต ให้ loadRouteGeom() ถอยไป cache/live ตามลำดับเดิม */
+function applyRouteGeomSeed(ref){
+  const key=normRef(ref);
+  const rec=ROUTE_GEOM_SEED[key]||ROUTE_GEOM_SEED[ROUTE_GEOM_ALIAS[key]];
+  if(!rec) return null;
+  return {ways:rec.ways,stops:[],bbox:rec.bbox,from:rec.from,to:rec.to,op:""};
+}
+
+/* ดึง geometry เต็มสาย — seed (Google My Maps) ก่อน แล้ว cache (ไม่ยิงเน็ตซ้ำ) ไม่เจอค่อยถาม Overpass
    คืน null เมื่อพัง (toast บอกเหตุผลแล้ว) — เรียกจาก UI ตอนกด "ดูทั้งสาย" เท่านั้น */
 async function loadRouteGeom(gi){
   const g=MAPD.groups[gi]; if(!g||!g.ids||!g.ids.length) return null;
   const key=geoKeyOf(g.ids);
   const cached=geoRecall(key);
   if(cached) return cached;
+  const seeded=applyRouteGeomSeed(g.ref);
+  if(seeded){ geoRemember(key,seeded); return seeded; }
   if(MAPD.geomBusy===key) return null;
   MAPD.geomBusy=key; renderRouteLegend();
   try{

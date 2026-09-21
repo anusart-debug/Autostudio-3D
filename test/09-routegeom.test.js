@@ -9,9 +9,14 @@ const {chromium}=require(process.env.PW||'playwright');
 const {expect,done}=require('./_expect');
 const LAT=13.722, LNG=100.529;   // สาทร
 
+/* v41.8: ref สายทดสอบใช้ "ZT#" ไม่ใช่ "A1" เหมือนเดิม — หลังเพิ่ม ROUTE_GEOM_SEED (10d-route-geom-seed.js,
+   188 สายจริงจาก Google My Maps) พบว่า "A1" ชนกับสายรถตู้สนามบินจริงในสแนปช็อตนั้น ทำให้ seed
+   ตัดหน้า Overpass ก่อนเทสต์นี้จะทันยิงเน็ต (ผลลัพธ์ถูกแล้วในเชิงพฤติกรรมจริง แค่ทำให้เทสต์นี้ที่
+   ตั้งใจวัด "เส้นทางการดึงสด" ไม่ได้เดินตามเส้นทางที่ต้องการวัด) เปลี่ยนเป็น ref ที่ไม่มีทางชนกับ
+   เลขสายรถเมล์ในกรุงเทพฯจริงแทน */
 function stopsPayload(){
   const el=[{type:'node',id:100,lat:LAT,lon:LNG,tags:{highway:'bus_stop',name:'ป้ายทดสอบ'}}];
-  ['A1','B2','C3'].forEach((ref,i)=>{
+  ['ZT1','ZT2','ZT3'].forEach((ref,i)=>{
     el.push({type:'relation',id:9000+i,tags:{type:'route',route:'bus',ref,name:'สาย '+ref,from:'ต้นทาง',to:'ปลายทาง'}});
   });
   return {elements:el};
@@ -24,13 +29,13 @@ function basePayload(){
 /* stage C ตั้งใจให้ "พัง" (ไม่มี way hit เลย) — พิสูจน์ว่า painted() ในใบนำเสนอไม่โกหกแม้ตัวสาย
    ที่ถูกเลือกจะมี geometry เต็มสายจาก stage แยกแล้วก็ตาม (คนละกลไกกัน) */
 function linesPayloadEmpty(){
-  return {elements:[{type:'relation',id:9000,tags:{ref:'A1'}}]}; // relation แต่ไม่มี way ตามมา
+  return {elements:[{type:'relation',id:9000,tags:{ref:'ZT1'}}]}; // relation แต่ไม่มี way ตามมา
 }
 /* rel(id:...);out geom; — relation เดียว มี way member ยาวไกลเกินรัศมีแผนที่ฐานมาก
    บวก node member role=stop (ต้องไม่ถูกวาดเป็นเส้น) */
 function geomPayload(){
   return {elements:[{
-    type:'relation',id:9000,tags:{ref:'A1',from:'ต้นทางไกล',to:'ปลายทางไกล'},
+    type:'relation',id:9000,tags:{ref:'ZT1',from:'ต้นทางไกล',to:'ปลายทางไกล'},
     members:[
       {type:'way',ref:1,role:'',geometry:[{lat:LAT-0.05,lon:LNG-0.05},{lat:LAT,lon:LNG},{lat:LAT+0.05,lon:LNG+0.05}]},
       {type:'node',ref:200,role:'stop',lat:LAT,lon:LNG}
@@ -65,7 +70,7 @@ function geomPayload(){
   const clampBefore=await pg.evaluate(()=>{const v=__as3d.map().view;return v?v.r:null});
   expect('โหลดแผนที่สำเร็จ มีสายรถเมล์', (await pg.$$eval('#routeLegend .lgd-i',n=>n.length))===3);
 
-  // เลือกสาย A1 (isolate อย่างเดียว ยังไม่ดึง geometry)
+  // เลือกสาย ZT1 (isolate อย่างเดียว ยังไม่ดึง geometry)
   await pg.click('#routeLegend .lgd-i[data-g="0"]');
   await pg.waitForTimeout(150);
   const fullBtnText=await pg.$eval('#routeLegend [data-fullroute]',n=>n.textContent.trim());
@@ -102,9 +107,9 @@ function geomPayload(){
   await pg.waitForTimeout(600);
   const shLines=await pg.$$eval('#shLines .shline',n=>n.map(x=>({txt:x.textContent.trim(),dot:!!x.querySelector('i')})));
   // v41: ต่อท้ายด้วยข้อความต้นทาง-ปลายทาง (g.pair) แล้ว จึงจับคู่ด้วย startsWith แทนเทียบเป๊ะ
-  const a1=shLines.find(x=>x.txt.indexOf('A1')===0), b2=shLines.find(x=>x.txt.indexOf('B2')===0);
-  expect('ใบนำเสนอ: A1 มีจุดสี', !!(a1&&a1.dot), a1);
-  expect('ใบนำเสนอ: B2 ก็มีจุดสีเหมือนกัน (มาจากข้อมูลสด ไม่ผูกกับการวาดบนแผนที่แล้ว)', !!(b2&&b2.dot), b2);
+  const a1=shLines.find(x=>x.txt.indexOf('ZT1')===0), b2=shLines.find(x=>x.txt.indexOf('ZT2')===0);
+  expect('ใบนำเสนอ: ZT1 มีจุดสี', !!(a1&&a1.dot), a1);
+  expect('ใบนำเสนอ: ZT2 ก็มีจุดสีเหมือนกัน (มาจากข้อมูลสด ไม่ผูกกับการวาดบนแผนที่แล้ว)', !!(b2&&b2.dot), b2);
 
   expect('ไม่มี pageerror', errs.length===0, errs);
   done();

@@ -5,6 +5,7 @@
   "10-data.js",
   "10b-route-seed.js",
   "10c-map-seed.js",
+  "10d-route-geom-seed.js",
   "11-state.js",
   "20-chips.js",
   "21-add-dialog.js",
