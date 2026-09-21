@@ -256,6 +256,10 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .icocard.anglecard .icotop img.realicon{object-fit:contain}
 .icocard.anglecard .icotop{height:56px}
 .icocard.anglecard .icotop svg{width:74px;height:51px}
+/* v41.6: สไตล์เรนเดอร์ (08) ภาพจริงเกือบเป็นจัตุรัสเหมือน 05 — ใช้ contain เหตุผลเดียวกัน
+   (ไม่ใช่ transparency ที่ต้องกัน เพราะ flatten พื้นหลังทับไปแล้วตอนสร้างไฟล์ แต่ป้องกันการครอป
+   เนื้อไอคอนเช่นดาว UE5/จุดแฟลชกล้อง HDR ที่อยู่ใกล้ขอบบนของภาพเหมือนกัน) */
+.icocard.stylecard .icotop img.realicon{object-fit:contain}
 .icocard .cardbody{text-align:center}
 .icocard .cardbody b{font-size:10.8px}
 
