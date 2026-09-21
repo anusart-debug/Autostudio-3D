@@ -131,12 +131,17 @@ function curatedLabel(ref,loc){
 
 /* v41.8: seed สแนปช็อตเส้นทางเต็มสาย (10d-route-geom-seed.js) จาก Google My Maps ที่ผู้ใช้ทำเอง —
    เช็กก่อน cache/live เสมอ เพราะไม่ต้องพึ่งเน็ตเลย ครอบคลุม 188 สาย (รวม alias เลขสายเก่า/ใหม่)
-   คืน null ถ้าไม่มีสายนี้ในสแนปช็อต ให้ loadRouteGeom() ถอยไป cache/live ตามลำดับเดิม */
+   g.ref จาก OSM มักเป็น "เก่า (ใหม่)" รวมกันมาในสตริงเดียว เช่น "17 (4-3)" — แยกด้วยวิธีเดียวกับ
+   curatedLabel() (ตัดวงเล็บออกแล้ว split ด้วยช่องว่าง) แล้วลองจับคู่ทีละส่วน คืน null ถ้าไม่มีสายนี้
+   ในสแนปช็อต ให้ loadRouteGeom() ถอยไป cache/live ตามลำดับเดิม */
 function applyRouteGeomSeed(ref){
-  const key=normRef(ref);
-  const rec=ROUTE_GEOM_SEED[key]||ROUTE_GEOM_SEED[ROUTE_GEOM_ALIAS[key]];
-  if(!rec) return null;
-  return {ways:rec.ways,stops:[],bbox:rec.bbox,from:rec.from,to:rec.to,op:""};
+  const parts=String(ref||"").replace(/[()]/g,"").split(/\s+/).filter(Boolean);
+  for(const part of parts){
+    const key=normRef(part);
+    const rec=ROUTE_GEOM_SEED[key]||ROUTE_GEOM_SEED[ROUTE_GEOM_ALIAS[key]];
+    if(rec) return {ways:rec.ways,stops:[],bbox:rec.bbox,from:rec.from,to:rec.to,op:""};
+  }
+  return null;
 }
 
 /* ดึง geometry เต็มสาย — seed (Google My Maps) ก่อน แล้ว cache (ไม่ยิงเน็ตซ้ำ) ไม่เจอค่อยถาม Overpass
