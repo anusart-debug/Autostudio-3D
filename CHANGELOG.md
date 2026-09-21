@@ -2,6 +2,16 @@
 
 เก็บเฉพาะการตัดสินใจที่เปลี่ยนสถาปัตยกรรม ไม่ใช่ทุกการแก้
 
+## v41 (กำลังทำ) — โลโก้ปลายทางรอบสาม วงหมุน 3 เว็บ (Firefly/Microsoft Designer/Dola AI)
+รอบก่อนแก้เป็นวงหมุน 4 เว็บรวม Ideogram ด้วย แต่ผู้ใช้แจ้งต่อว่า Ideogram ถูกแล้ว เหลือแค่ Adobe
+Firefly/Microsoft Designer/Dola AI ที่ยังวนผิดอยู่ — ภาพลูกศรรอบนี้ชี้เป็นวงหมุน 3 ทอด (Firefly→
+Microsoft Designer→Dola AI→กลับมา Firefly) แก้โดยไล่ตามลูกศร:
+- Microsoft Designer เปลี่ยนเป็น `LOGO_FIREFLY` (ไล่สีรูปตัว S)
+- Adobe Firefly เปลี่ยนเป็น `LOGO_IDEOGRAM` (ป้าย "Fi" สีแดง)
+- Dola AI เปลี่ยนเป็น `LOGO_MSFT` (ริบบิ้นม่วง)
+- Ideogram/Arena AI/Design Arena ไม่แก้เพิ่ม (ไม่ได้ถูกวงไว้รอบนี้ แปลว่าถูกแล้ว)
+- ตรวจแล้ว: `node build.mjs` สำเร็จทั้งสองเป้าหมาย · `node test/run.mjs` ผ่านครบ 10 ไฟล์
+
 ## v41 (กำลังทำ) — โลโก้ปลายทางยังผิดต่อ รอบนี้เป็นวงหมุน 4 เว็บ ไม่ใช่สลับคู่
 รอบก่อนแก้เป็นสลับคู่ (pairwise) แต่ผู้ใช้แจ้งต่อว่า Adobe Firefly/Dola AI/Microsoft Designer/
 Ideogram ยังผิดอยู่ — ภาพลูกศรรอบนี้ชี้เป็น**วงหมุน 4 ทอด** ไม่ใช่คู่สลับ (Firefly→Ideogram→
