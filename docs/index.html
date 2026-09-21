@@ -295,8 +295,17 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .chip.card.icocard.tile .cardbody{background:rgba(0,0,0,.34)}
 .chip.card.icocard.tile .cardbody b{color:#fff}
 .chip.card.icocard.tile .cardbody .en{color:rgba(255,255,255,.72)}
-.chip.card.icocard.tile[aria-pressed=true]{border:0;background:linear-gradient(135deg,var(--t1),var(--t2))}
-.chip.card.icocard.tile[aria-pressed=true] .icotop{outline:2px solid #fff;outline-offset:-3px;color:#fff;background:transparent}
+/* v41.12: กรอบตัวเลือก (เดิม outline บน .icotop, outline-offset ติดลบ) จมอยู่หลังรูปภาพจริงของ
+   ไอคอน 3 หมวด (VEHICLE_ICONS/ANGLE_ICONS/STYLE_ICONS เป็น <img class="realicon"> เต็มพื้นที่
+   .icotop ตั้งแต่ก่อนหน้านี้แล้ว) — outline offset ติดลบวาดเข้าไปในตัวกล่อง ถูก <img> ที่ทับเต็ม
+   พื้นที่บังจนมองไม่เห็นเลย ย้ายกรอบไปที่ปุ่มทั้งใบ (outer .chip.card.icocard.tile) ด้วย offset
+   เป็นบวกวาด**ออกด้านนอก**กล่องแทน — อยู่นอกพื้นที่ของรูปภาพเสมอ ไม่มีทางถูกทับได้อีก และดูเป็น
+   กรอบรอบทั้งการ์ด (ไอคอน+ป้ายชื่อ) สวยงามกว่าเดิมที่มีแค่กรอบเล็กๆรอบไอคอนอย่างเดียวด้วย */
+.chip.card.icocard.tile[aria-pressed=true]{
+  border:0;background:linear-gradient(135deg,var(--t1),var(--t2));
+  outline:2.5px solid #fff;outline-offset:2px;
+}
+.chip.card.icocard.tile[aria-pressed=true] .icotop{color:#fff;background:transparent}
 .chip.card.icocard.tile .tick{background:#fff;color:var(--ink-000)}
 
 /* ---- การ์ดเลือกอัตราส่วนภาพ (v41) ---- */
