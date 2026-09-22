@@ -10,7 +10,7 @@
    ใส่ไว้ใน DV_FIELD_IDS จะกลายเป็นค่าที่ไม่มีทางรอดถึงตอนโหลด (ยืนยันด้วย test/10-drive-roundtrip.test.js) */
 const DV_FIELD_IDS = [
   "negative", "artwork", "detail", "bodyNotes", "fidelity",
-  "lockColor", "lockBody", "lockView", "srcRatio", "editStyle",
+  "lockColor", "lockBody", "lockView", "lockLoc", "srcRatio", "editStyle",
   "col1", "col2", "adKeepScene", "adFit",
 ];
 

@@ -22,9 +22,12 @@ function openReview(){
   const d=dims(), v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
         a=find(list("angle"),S.angle), li=find(list("light"),S.light);
   const styleNames=list("style").filter(s=>S.styles.has(s.id)).map(s=>s.en);
+  const keepLocActive=hasSketch()&&!hasAd()&&v.stat&&$("lockLoc").checked;
   const rows=[
     row(true,"Vehicle",v.th,v.en),
-    row(true,"Location",l.th,l.en+" · Bangkok"),
+    keepLocActive
+      ? row(true,"Location","คงจากภาพต้นแบบ (ไม่เปลี่ยน)","ไม่ใช้โลเคชั่นที่เลือกไว้ทางขวา — แต่งแสง-เงาแทน")
+      : row(true,"Location",l.th,l.en+" · Bangkok"),
     row(true,"Camera",a.th,a.en+" · "+lensList()[S.lens].s),
     row(true,"Lighting",li.th,li.en+" · HDR "+S.hdr+"%"),
     row(styleNames.length>0,"Render",styleNames.length?styleNames.join(" + "):"ยังไม่ได้เลือกสไตล์การเรนเดอร์",
@@ -43,6 +46,7 @@ function openReview(){
     if($("lockColor").checked) locks.push("สี "+hexName($("col1").value).name+" + "+hexName($("col2").value).name);
     if($("lockBody").checked) locks.push("สัดส่วนโครงสร้าง");
     if($("lockView").checked&&S.refOrient) locks.push("มุมมองตามต้นแบบ");
+    if(keepLocActive) locks.push("โลเคชั่นเดิม (ไม่เปลี่ยนสถานที่)");
     rows.splice(1,0,row(fid>=30&&locks.length>0,"Reference",
       locks.length?("ล็อก "+locks.join(" · ")+" ที่ "+fid+"%"):"ไม่ได้ล็อกค่าใดจากภาพร่าง",
       locks.length?esc(S.refFileName):"ภาพที่ออกมาจะไม่อิงรถต้นแบบ — เปิดสวิตช์ในแผง 01B ก่อน"));

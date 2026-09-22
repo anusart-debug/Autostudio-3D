@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-jJ6rskIRsSnP35xr6f8vJLeGJ3hsIN9MvihWyMe57AU='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-1N9k4khYQXSAYPrRrYGEVDFa317GNyy1AndDaNrmLP4='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -1076,6 +1076,12 @@ footer.foot .sp{flex:1}
           <label class="tg"><input type="checkbox" id="lockColor" checked><span class="tl">ล็อกสีตามภาพต้นแบบ<em>บังคับให้ AI ใช้สีที่ถอดได้ ห้ามเปลี่ยนเอง</em></span></label>
           <label class="tg"><input type="checkbox" id="lockBody" checked><span class="tl">ล็อกสัดส่วนและโครงสร้าง<em>ความยาว แนวกรอบ แนวกระจก ตามต้นแบบ</em></span></label>
           <label class="tg"><input type="checkbox" id="lockView"><span class="tl">ล็อกมุมมองตามภาพร่าง<em>ถ้าต้นแบบเป็นภาพด้านข้าง จะบังคับมุมด้านข้าง</em></span></label>
+        </div>
+      </div>
+
+      <div class="field" id="lockLocField" hidden>
+        <div class="toggles">
+          <label class="tg"><input type="checkbox" id="lockLoc"><span class="tl">ไม่เปลี่ยนโลเคชั่น (คงพื้นหลังเดิมจากภาพ)<em>สำหรับสื่อติดตั้งอยู่กับที่ เช่น ป้ายบิลบอร์ด/จอ LED — ใช้สถานที่จริงในภาพต้นแบบ ไม่ย้ายไปที่อื่น แต่ยังแต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพได้</em></span></label>
         </div>
       </div>
 
@@ -2624,6 +2630,7 @@ function buildPrompt(){
 }
 
 function sync(){
+  $("lockLocField").hidden=!subjInfo().stat;
   const srcActive=srcRatioActive();
   const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;
@@ -2842,8 +2849,12 @@ function buildEditPromptTH(){
           :" รถคันอื่น คน และอาคารอยู่ฉากหลัง ห้ามทับหรือบัง");
   const col=$("lockColor").checked?" สีต้องเป็น"+thColor($("col1").value)+" กับ"+thColor($("col2").value):"";
   const bn=$("bodyNotes").value.trim(), body=($("lockBody").checked&&bn)?" "+bn:"";
-  const scene=" เปลี่ยนเฉพาะสิ่งรอบตัว — วางไว้ที่ "+l.th+" · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+
-    " · แสง "+li.th+" · สภาพอากาศ "+thWeather()+" · "+thHdr();
+  const keepLoc=v.stat&&$("lockLoc").checked;
+  const scene=keepLoc
+    ? " คงสถานที่และพื้นหลังเดิมจากภาพต้นแบบ ไม่ย้ายไปที่อื่น เปลี่ยนเฉพาะสิ่งที่จำเป็น · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+
+      " · แต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพ: แสง "+li.th+" · สภาพอากาศ "+thWeather()+" · "+thHdr()
+    : " เปลี่ยนเฉพาะสิ่งรอบตัว — วางไว้ที่ "+l.th+" · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+
+      " · แสง "+li.th+" · สภาพอากาศ "+thWeather()+" · "+thHdr();
   const fin=$("editStyle").checked
     ? " เก็บงานแบบภาพโฆษณารถ: "+list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th).join(", ")
     : " คงความเป็นภาพถ่ายจริง ชัดลึกธรรมชาติ เงาใต้ล้อถูกต้อง";
@@ -2955,6 +2966,7 @@ function updateDnaLine(){
   if($("lockColor").checked) on.push("สี");
   if($("lockBody").checked) on.push("โครงสร้าง");
   if($("lockView").checked) on.push("มุมมอง");
+  if(subjInfo().stat&&$("lockLoc").checked) on.push("โลเคชั่น");
   $("dnaLine").innerHTML=
     "ล็อก: <b>"+(on.length?on.join(" + "):"ไม่ล็อกอะไรเลย")+"</b> · ความเหมือน <b>"+fid+"%</b><br>"+
     "สีหลัก <b>"+c1.name+"</b> · สีรอง <b>"+c2.name+"</b>"+
@@ -2963,7 +2975,7 @@ function updateDnaLine(){
 ["col1","col2"].forEach(id=>$(id).addEventListener("input",e=>{
   $(id+"n").textContent=hexName(e.target.value).name;updateDnaLine();sync();
 }));
-["lockColor","lockBody","lockView","srcRatio","editStyle"].forEach(id=>$(id).addEventListener("change",()=>{updateDnaLine();sync()}));
+["lockColor","lockBody","lockView","lockLoc","srcRatio","editStyle"].forEach(id=>$(id).addEventListener("change",()=>{updateDnaLine();sync()}));
 $("fidelity").addEventListener("input",e=>{$("fidVal").textContent=e.target.value+"%";updateDnaLine();sync()});
 $("bodyNotes").addEventListener("input",sync);
 
@@ -2990,9 +3002,14 @@ function buildEditPrompt(){
     ? " Its paint stays "+hexName($("col1").value).name+" and "+hexName($("col2").value).name+"." : "";
   const body = ($("lockBody").checked&&bodyNotes) ? " "+bodyNotes+"." : "";
 
-  const scene = " Change only what is around it: place the "+N+" on "+l.p+
-    ". Camera: "+angleText(a)+", "+lensList()[S.lens].v+
-    ". Light: "+li.p+", "+weatherList()[S.weather].v+".";
+  const keepLoc = SB.stat && $("lockLoc").checked;
+  const scene = keepLoc
+    ? " Keep the exact same real-world location and background as shown in the photograph — do not relocate it or change the surroundings, only refine them."+
+      " Camera: "+angleText(a)+", "+lensList()[S.lens].v+
+      ". Retouch the lighting and shadows to professional editorial/advertising photography quality: "+li.p+", "+weatherList()[S.weather].v+"."
+    : " Change only what is around it: place the "+N+" on "+l.p+
+      ". Camera: "+angleText(a)+", "+lensList()[S.lens].v+
+      ". Light: "+li.p+", "+weatherList()[S.weather].v+".";
 
   const finish = $("editStyle").checked
     ? " Finish as a polished automotive advertising photograph: "+
@@ -3107,9 +3124,12 @@ function openReview(){
   const d=dims(), v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
         a=find(list("angle"),S.angle), li=find(list("light"),S.light);
   const styleNames=list("style").filter(s=>S.styles.has(s.id)).map(s=>s.en);
+  const keepLocActive=hasSketch()&&!hasAd()&&v.stat&&$("lockLoc").checked;
   const rows=[
     row(true,"Vehicle",v.th,v.en),
-    row(true,"Location",l.th,l.en+" · Bangkok"),
+    keepLocActive
+      ? row(true,"Location","คงจากภาพต้นแบบ (ไม่เปลี่ยน)","ไม่ใช้โลเคชั่นที่เลือกไว้ทางขวา — แต่งแสง-เงาแทน")
+      : row(true,"Location",l.th,l.en+" · Bangkok"),
     row(true,"Camera",a.th,a.en+" · "+lensList()[S.lens].s),
     row(true,"Lighting",li.th,li.en+" · HDR "+S.hdr+"%"),
     row(styleNames.length>0,"Render",styleNames.length?styleNames.join(" + "):"ยังไม่ได้เลือกสไตล์การเรนเดอร์",
@@ -3128,6 +3148,7 @@ function openReview(){
     if($("lockColor").checked) locks.push("สี "+hexName($("col1").value).name+" + "+hexName($("col2").value).name);
     if($("lockBody").checked) locks.push("สัดส่วนโครงสร้าง");
     if($("lockView").checked&&S.refOrient) locks.push("มุมมองตามต้นแบบ");
+    if(keepLocActive) locks.push("โลเคชั่นเดิม (ไม่เปลี่ยนสถานที่)");
     rows.splice(1,0,row(fid>=30&&locks.length>0,"Reference",
       locks.length?("ล็อก "+locks.join(" · ")+" ที่ "+fid+"%"):"ไม่ได้ล็อกค่าใดจากภาพร่าง",
       locks.length?esc(S.refFileName):"ภาพที่ออกมาจะไม่อิงรถต้นแบบ — เปิดสวิตช์ในแผง 01B ก่อน"));

@@ -21,9 +21,14 @@ function buildEditPrompt(){
     ? " Its paint stays "+hexName($("col1").value).name+" and "+hexName($("col2").value).name+"." : "";
   const body = ($("lockBody").checked&&bodyNotes) ? " "+bodyNotes+"." : "";
 
-  const scene = " Change only what is around it: place the "+N+" on "+l.p+
-    ". Camera: "+angleText(a)+", "+lensList()[S.lens].v+
-    ". Light: "+li.p+", "+weatherList()[S.weather].v+".";
+  const keepLoc = SB.stat && $("lockLoc").checked;
+  const scene = keepLoc
+    ? " Keep the exact same real-world location and background as shown in the photograph — do not relocate it or change the surroundings, only refine them."+
+      " Camera: "+angleText(a)+", "+lensList()[S.lens].v+
+      ". Retouch the lighting and shadows to professional editorial/advertising photography quality: "+li.p+", "+weatherList()[S.weather].v+"."
+    : " Change only what is around it: place the "+N+" on "+l.p+
+      ". Camera: "+angleText(a)+", "+lensList()[S.lens].v+
+      ". Light: "+li.p+", "+weatherList()[S.weather].v+".";
 
   const finish = $("editStyle").checked
     ? " Finish as a polished automotive advertising photograph: "+
