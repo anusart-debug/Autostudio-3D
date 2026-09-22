@@ -52,6 +52,11 @@ function buildAdPrompt(){
   const l=find(list("loc"),S.loc), li=find(list("light"),S.light);
   let a=find(list("angle"),S.angle);
   const notes=$("detail").value.trim();
+  const styles=list("style").filter(s=>S.styles.has(s.id)).map(s=>s.p);
+  const hdrWord = S.hdr>=85?"extreme HDR dynamic range, punchy contrast"
+               : S.hdr>=60?"strong HDR dynamic range, rich contrast"
+               : S.hdr>=35?"balanced dynamic range, natural contrast"
+               : "low contrast, flat log-style grade";
 
   let t="TASK: advertising mockup — replace the creative on an out-of-home media asset."+
     " You are given two images in order. IMAGE 1 (the first attachment) is the photograph to edit: it shows a "+N+
@@ -74,16 +79,20 @@ function buildAdPrompt(){
     " Blend it into the original lighting, shadows, reflections, gloss and surface texture so it reads as physically printed and installed on that surface, not pasted on top.";
 
   if(keepScene){
-    t+=" Do not change the background, the camera angle, the time of day or the lighting — everything except the advertising face stays byte-for-byte the same.";
+    t+=" Keep the exact same real-world location and background as shown in IMAGE 1 — do not relocate the scene or change the surroundings, only refine them."+
+       " Camera: "+angleText(a)+", "+lensList()[S.lens].v+"."+
+       " Light: "+li.p+", "+weatherList()[S.weather].v+", "+hdrWord+"."+
+       " Retouch the lighting, shadows and colour grading on the whole photograph to professional editorial/advertising photography quality, consistent with this camera angle and light, while keeping the same place.";
   }else{
     t+=" Then re-stage and re-light the entire photograph around it — this part must visibly change:"+
        " relocate the whole scene to "+l.p+"."+
        " Camera: "+angleText(a)+", "+lensList()[S.lens].v+"."+
-       " Light: "+li.p+", "+weatherList()[S.weather].v+"."+
+       " Light: "+li.p+", "+weatherList()[S.weather].v+", "+hdrWord+"."+
        " Rebuild the sky, the background, the road surface and every reflection to match that place and that light, and relight the "+N+
        " itself so its shadows, highlights and colour temperature agree with the new scene.";
     t+=heroClause();
   }
+  if(styles.length) t+=" Overall finish: "+styles.join(", ")+".";
   if(notes) t+=" "+notes+".";
   return t+srcRatioClause()+negClause()+" Output one single photorealistic image, no text overlay, no watermark, no collage, no before-after split.";
 }
@@ -92,6 +101,7 @@ function buildAdPromptTH(){
   const keepScene=$("adKeepScene").checked, fit=$("adFit").value;
   const l=find(list("loc"),S.loc), li=find(list("light"),S.light), a=find(list("angle"),S.angle);
   const notes=$("detail").value.trim();
+  const styles=list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th);
   let t="งาน: ทำ mockup เปลี่ยนโฆษณาบนสื่อนอกบ้าน — ใช้ภาพสองใบตามลำดับ"+
     " ใบที่ 1 (ไฟล์แรก) คือภาพ"+N+"ที่มีโฆษณาเดิมติดอยู่ ใบที่ 2 (ไฟล์ที่สอง) คืออาร์ตเวิร์กโฆษณาชิ้นใหม่ที่เป็นคนละชิ้นกัน"+
     " ให้ลบโฆษณาเดิมบน"+N+"ออกให้หมด ทั้งแบรนด์ ภาพ โลโก้ และข้อความทุกตัวต้องหายไปไม่เหลือร่องรอย ห้ามปรากฏที่ใดในภาพผลลัพธ์"+
@@ -110,10 +120,13 @@ function buildAdPromptTH(){
     " สี ฟอนต์ ถ้อยคำ และโลโก้ต้องเหมือนใบที่ 2 ทุกตัวอักษร ทั้งไทยและอังกฤษสะกดเหมือนเดิม ห้ามแปล ห้ามพิมพ์ใหม่ ห้ามแต่งข้อความเพิ่ม"+
     " กลมกลืนกับแสง เงา แสงสะท้อน ความมันวาว และผิวสัมผัสของภาพเดิม ให้ดูเหมือนพิมพ์ติดอยู่บนสื่อจริง ไม่ใช่แปะทับ";
   t+= keepScene
-    ? " ห้ามเปลี่ยนฉากหลัง มุมกล้อง เวลา หรือแสง — ทุกอย่างนอกจากหน้าโฆษณาต้องเหมือนเดิมทั้งหมด"
+    ? " คงสถานที่และพื้นหลังเดิมจากใบที่ 1 ไม่ย้ายไปที่อื่น เปลี่ยนเฉพาะสิ่งที่จำเป็น · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+
+      " · แสง "+li.th+" · "+thWeather()+" · "+thHdr()+
+      " · แต่งแสง เงา และเกรดสีทั้งภาพให้สวยระดับภาพถ่ายมืออาชีพ ให้เข้ากับมุมกล้องและแสงนี้ โดยยังอยู่ที่เดิม"
     : " จากนั้นจัดฉากและจัดแสงใหม่ทั้งภาพ ส่วนนี้ต้องเปลี่ยนให้เห็นชัด — ย้ายฉากทั้งหมดไปที่ "+l.th+
-      " · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+" · แสง "+li.th+" · "+thWeather()+
+      " · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+" · แสง "+li.th+" · "+thWeather()+" · "+thHdr()+
       " · สร้างท้องฟ้า ฉากหลัง ผิวถนน และเงาสะท้อนใหม่ให้ตรงกับสถานที่และแสงนั้น พร้อมจัดแสงบนตัวสื่อใหม่ให้เงา ไฮไลต์ และอุณหภูมิสีเข้ากับฉากใหม่";
+  if(styles.length) t+=" · เก็บงานสไตล์: "+styles.join(", ");
   if(notes) t+=" "+notes;
   return t+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อเทียบก่อนหลัง";
 }

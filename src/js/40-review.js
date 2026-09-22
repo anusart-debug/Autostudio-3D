@@ -22,7 +22,7 @@ function openReview(){
   const d=dims(), v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
         a=find(list("angle"),S.angle), li=find(list("light"),S.light);
   const styleNames=list("style").filter(s=>S.styles.has(s.id)).map(s=>s.en);
-  const keepLocActive=hasSketch()&&!hasAd()&&$("lockLoc").checked;
+  const keepLocActive=(hasSketch()&&!hasAd()&&$("lockLoc").checked)||(adReady()&&$("adKeepScene").checked);
   const rows=[
     row(true,"Vehicle",v.th,v.en),
     keepLocActive
@@ -37,7 +37,7 @@ function openReview(){
   ];
   if(hasAd()){
     rows.splice(1,0,row(adMode(),"Artwork",
-      adReady()?("เปลี่ยนโฆษณาในจุดเดิม"+($("adKeepScene").checked?" · คงฉากเดิม":" · จัดฉากใหม่ด้วย")):"ยังไม่มีภาพสื่อต้นแบบ",
+      adReady()?("เปลี่ยนโฆษณาในจุดเดิม"+($("adKeepScene").checked?" · คงโลเคชั่นเดิม":" · จัดฉากใหม่ด้วย")):"ยังไม่มีภาพสื่อต้นแบบ",
       adReady()?esc(S.adFileName):"อัปโหลดภาพสื่อต้นแบบในช่องบนด้วย"));
   }
   if(S.refData){
