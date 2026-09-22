@@ -146,8 +146,32 @@ function buildPrompt(){
   return parts.join(", ")+"."+ratioClause()+negClause();
 }
 
+/* โหมดเปลี่ยนโฆษณา (adReady()) ไม่ได้ใช้ทุกช่องที่หน้าจอยังเปิดให้กดอยู่ — ต้องบอกตรงๆ ไม่ใช่ปล่อยให้
+   ผู้ใช้เลือกอะไรก็ได้ที่ไม่มีผลจริงในคำสั่ง (ดู buildAdPrompt() ใน 36-edit-prompt.js):
+   - "คงฉากหลังเดิมทั้งหมด" ติ๊กแล้ว โลเคชั่น/มุมกล้อง/เลนส์/แสง/สภาพอากาศ ไม่ถูกใช้เลย
+   - สไตล์การเรนเดอร์และ HDR/Contrast ไม่ถูกใช้ในโหมดนี้ไม่ว่าจะติ๊กคงฉากหรือไม่ */
+function setChipsLock(chipsId,fieldIds,noteId,off,msg){
+  const chips=$(chipsId); if(chips) chips.classList.toggle("chipsOff",off);
+  (fieldIds||[]).forEach(id=>{const el=$(id); if(el) el.disabled=off});
+  const note=$(noteId); if(note){ note.hidden=!off; if(off) note.textContent=msg }
+}
+function updateAdLocks(){
+  const ready=adReady();
+  const sceneOff=ready&&$("adKeepScene").checked;
+  setChipsLock("locChips",[],"locAdNote",sceneOff,
+    "การเลือกโลเคชั่นไม่มีผล — ติ๊ก \"คงฉากหลังเดิมทั้งหมด\" ไว้ที่ขั้นอัปโหลด (01) แล้ว สถานที่จากภาพต้นแบบจะถูกใช้แทน");
+  setChipsLock("angleChips",["lens"],"angleAdNote",sceneOff,
+    "มุมกล้องและเลนส์ไม่มีผล — \"คงฉากหลังเดิมทั้งหมด\" ครอบคลุมมุมกล้องด้วย");
+  setChipsLock("lightChips",["weather"],"lightAdNote",sceneOff,
+    "แสงและสภาพอากาศไม่มีผล — \"คงฉากหลังเดิมทั้งหมด\" ครอบคลุมแสงและเวลาด้วย");
+  setChipsLock("styleChips",["hdr"],"styleAdNote",ready,
+    "สไตล์การเรนเดอร์และ HDR ไม่มีผลกับโหมดเปลี่ยนโฆษณา — ระบบคงภาพต้นฉบับไว้ทั้งหมด เปลี่ยนแค่หน้าป้าย");
+}
 function sync(){
-  $("lockLocField").hidden=!hasSketch();
+  /* ในโหมดเปลี่ยนโฆษณา (adReady()) buildAdPrompt() มี "คงฉากหลังเดิมทั้งหมด" (#adKeepScene) เป็น
+     ตัวคุมโลเคชั่นของตัวเองอยู่แล้ว — #lockLoc ไม่ถูกอ่านเลยในโหมดนี้ ซ่อนไว้กันสับสนว่ามีสองสวิตช์ */
+  $("lockLocField").hidden=!hasSketch()||adReady();
+  updateAdLocks();
   const srcActive=srcRatioActive();
   const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;

@@ -520,6 +520,9 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .hint{font-size:11px;color:var(--txt-mute);font-family:var(--mono);letter-spacing:.03em}
+select:disabled,input[type=range]:disabled{opacity:.45;cursor:not-allowed}
+.chipsOff{opacity:.4;filter:saturate(.35);pointer-events:none}
+.dnaline.warn{color:var(--warn-txt);background:var(--warn-glow);border-color:var(--warn-dim)}
 
 /* gallery */
 .gal-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line-soft);padding-bottom:9px}
