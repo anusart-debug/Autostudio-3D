@@ -22,7 +22,7 @@ function openReview(){
   const d=dims(), v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
         a=find(list("angle"),S.angle), li=find(list("light"),S.light);
   const styleNames=list("style").filter(s=>S.styles.has(s.id)).map(s=>s.en);
-  const keepLocActive=hasSketch()&&!hasAd()&&v.stat&&$("lockLoc").checked;
+  const keepLocActive=hasSketch()&&!hasAd()&&$("lockLoc").checked;
   const rows=[
     row(true,"Vehicle",v.th,v.en),
     keepLocActive

@@ -147,7 +147,7 @@ function buildPrompt(){
 }
 
 function sync(){
-  $("lockLocField").hidden=!subjInfo().stat;
+  $("lockLocField").hidden=!hasSketch();
   const srcActive=srcRatioActive();
   const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;

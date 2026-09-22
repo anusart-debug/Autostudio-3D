@@ -21,7 +21,7 @@ function buildEditPrompt(){
     ? " Its paint stays "+hexName($("col1").value).name+" and "+hexName($("col2").value).name+"." : "";
   const body = ($("lockBody").checked&&bodyNotes) ? " "+bodyNotes+"." : "";
 
-  const keepLoc = SB.stat && $("lockLoc").checked;
+  const keepLoc = $("lockLoc").checked;
   const scene = keepLoc
     ? " Keep the exact same real-world location and background as shown in the photograph — do not relocate it or change the surroundings, only refine them."+
       " Camera: "+angleText(a)+", "+lensList()[S.lens].v+

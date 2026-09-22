@@ -48,7 +48,7 @@ function buildEditPromptTH(){
           :" รถคันอื่น คน และอาคารอยู่ฉากหลัง ห้ามทับหรือบัง");
   const col=$("lockColor").checked?" สีต้องเป็น"+thColor($("col1").value)+" กับ"+thColor($("col2").value):"";
   const bn=$("bodyNotes").value.trim(), body=($("lockBody").checked&&bn)?" "+bn:"";
-  const keepLoc=v.stat&&$("lockLoc").checked;
+  const keepLoc=$("lockLoc").checked;
   const scene=keepLoc
     ? " คงสถานที่และพื้นหลังเดิมจากภาพต้นแบบ ไม่ย้ายไปที่อื่น เปลี่ยนเฉพาะสิ่งที่จำเป็น · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+
       " · แต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพ: แสง "+li.th+" · สภาพอากาศ "+thWeather()+" · "+thHdr()
@@ -165,7 +165,7 @@ function updateDnaLine(){
   if($("lockColor").checked) on.push("สี");
   if($("lockBody").checked) on.push("โครงสร้าง");
   if($("lockView").checked) on.push("มุมมอง");
-  if(subjInfo().stat&&$("lockLoc").checked) on.push("โลเคชั่น");
+  if($("lockLoc").checked) on.push("โลเคชั่น");
   $("dnaLine").innerHTML=
     "ล็อก: <b>"+(on.length?on.join(" + "):"ไม่ล็อกอะไรเลย")+"</b> · ความเหมือน <b>"+fid+"%</b><br>"+
     "สีหลัก <b>"+c1.name+"</b> · สีรอง <b>"+c2.name+"</b>"+

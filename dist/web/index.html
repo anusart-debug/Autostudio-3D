@@ -1089,12 +1089,6 @@ footer.foot .sp{flex:1}
         </div>
       </div>
 
-      <div class="field" id="lockLocField" hidden>
-        <div class="toggles">
-          <label class="tg"><input type="checkbox" id="lockLoc"><span class="tl">ไม่เปลี่ยนโลเคชั่น (คงพื้นหลังเดิมจากภาพ)<em>สำหรับสื่อติดตั้งอยู่กับที่ เช่น ป้ายบิลบอร์ด/จอ LED — ใช้สถานที่จริงในภาพต้นแบบ ไม่ย้ายไปที่อื่น แต่ยังแต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพได้</em></span></label>
-        </div>
-      </div>
-
       <div class="field">
         <label class="lbl" for="fidelity">ความเหมือนต้นแบบ <b id="fidVal">80%</b></label>
         <input type="range" id="fidelity" min="0" max="100" value="80" step="10">
@@ -1198,6 +1192,9 @@ footer.foot .sp{flex:1}
       <div class="block-head">
         <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
         <h2>04 · Location</h2><span class="th">โลเคชั่นกรุงเทพฯ</span>
+      </div>
+      <div class="field" id="lockLocField" hidden>
+        <label class="tg"><input type="checkbox" id="lockLoc"><span class="tl">ไม่กำหนดโลเคชั่น (ใช้ตามภาพต้นแบบ)<em>สำหรับผู้ใช้ที่มีภาพต้นแบบและต้องการคงสถานที่จริงในภาพไว้ ไม่ย้ายไปโลเคชั่นที่เลือกด้านล่าง แต่ยังแต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพ</em></span></label>
       </div>
       <div class="loc-grid chips" id="locChips"></div>
     </section>
@@ -2693,7 +2690,7 @@ function buildPrompt(){
 }
 
 function sync(){
-  $("lockLocField").hidden=!subjInfo().stat;
+  $("lockLocField").hidden=!hasSketch();
   const srcActive=srcRatioActive();
   const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;
@@ -2912,7 +2909,7 @@ function buildEditPromptTH(){
           :" รถคันอื่น คน และอาคารอยู่ฉากหลัง ห้ามทับหรือบัง");
   const col=$("lockColor").checked?" สีต้องเป็น"+thColor($("col1").value)+" กับ"+thColor($("col2").value):"";
   const bn=$("bodyNotes").value.trim(), body=($("lockBody").checked&&bn)?" "+bn:"";
-  const keepLoc=v.stat&&$("lockLoc").checked;
+  const keepLoc=$("lockLoc").checked;
   const scene=keepLoc
     ? " คงสถานที่และพื้นหลังเดิมจากภาพต้นแบบ ไม่ย้ายไปที่อื่น เปลี่ยนเฉพาะสิ่งที่จำเป็น · มุมกล้อง "+a.th+" · เลนส์ "+thLens()+
       " · แต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพ: แสง "+li.th+" · สภาพอากาศ "+thWeather()+" · "+thHdr()
@@ -3029,7 +3026,7 @@ function updateDnaLine(){
   if($("lockColor").checked) on.push("สี");
   if($("lockBody").checked) on.push("โครงสร้าง");
   if($("lockView").checked) on.push("มุมมอง");
-  if(subjInfo().stat&&$("lockLoc").checked) on.push("โลเคชั่น");
+  if($("lockLoc").checked) on.push("โลเคชั่น");
   $("dnaLine").innerHTML=
     "ล็อก: <b>"+(on.length?on.join(" + "):"ไม่ล็อกอะไรเลย")+"</b> · ความเหมือน <b>"+fid+"%</b><br>"+
     "สีหลัก <b>"+c1.name+"</b> · สีรอง <b>"+c2.name+"</b>"+
@@ -3065,7 +3062,7 @@ function buildEditPrompt(){
     ? " Its paint stays "+hexName($("col1").value).name+" and "+hexName($("col2").value).name+"." : "";
   const body = ($("lockBody").checked&&bodyNotes) ? " "+bodyNotes+"." : "";
 
-  const keepLoc = SB.stat && $("lockLoc").checked;
+  const keepLoc = $("lockLoc").checked;
   const scene = keepLoc
     ? " Keep the exact same real-world location and background as shown in the photograph — do not relocate it or change the surroundings, only refine them."+
       " Camera: "+angleText(a)+", "+lensList()[S.lens].v+
@@ -3187,7 +3184,7 @@ function openReview(){
   const d=dims(), v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
         a=find(list("angle"),S.angle), li=find(list("light"),S.light);
   const styleNames=list("style").filter(s=>S.styles.has(s.id)).map(s=>s.en);
-  const keepLocActive=hasSketch()&&!hasAd()&&v.stat&&$("lockLoc").checked;
+  const keepLocActive=hasSketch()&&!hasAd()&&$("lockLoc").checked;
   const rows=[
     row(true,"Vehicle",v.th,v.en),
     keepLocActive

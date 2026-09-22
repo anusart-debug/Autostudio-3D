@@ -179,12 +179,6 @@
         </div>
       </div>
 
-      <div class="field" id="lockLocField" hidden>
-        <div class="toggles">
-          <label class="tg"><input type="checkbox" id="lockLoc"><span class="tl">ไม่เปลี่ยนโลเคชั่น (คงพื้นหลังเดิมจากภาพ)<em>สำหรับสื่อติดตั้งอยู่กับที่ เช่น ป้ายบิลบอร์ด/จอ LED — ใช้สถานที่จริงในภาพต้นแบบ ไม่ย้ายไปที่อื่น แต่ยังแต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพได้</em></span></label>
-        </div>
-      </div>
-
       <div class="field">
         <label class="lbl" for="fidelity">ความเหมือนต้นแบบ <b id="fidVal">80%</b></label>
         <input type="range" id="fidelity" min="0" max="100" value="80" step="10">
@@ -288,6 +282,9 @@
       <div class="block-head">
         <svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
         <h2>04 · Location</h2><span class="th">โลเคชั่นกรุงเทพฯ</span>
+      </div>
+      <div class="field" id="lockLocField" hidden>
+        <label class="tg"><input type="checkbox" id="lockLoc"><span class="tl">ไม่กำหนดโลเคชั่น (ใช้ตามภาพต้นแบบ)<em>สำหรับผู้ใช้ที่มีภาพต้นแบบและต้องการคงสถานที่จริงในภาพไว้ ไม่ย้ายไปโลเคชั่นที่เลือกด้านล่าง แต่ยังแต่งแสง-เงาให้สวยระดับภาพถ่ายมืออาชีพ</em></span></label>
       </div>
       <div class="loc-grid chips" id="locChips"></div>
     </section>
