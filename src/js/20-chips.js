@@ -147,12 +147,18 @@ function lightCardHTML(item,pressed,custom){
       (item.mood?'<span class="meta">'+IC_PALETTE+esc(item.mood)+"</span>":"")+"</span>"+
     (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':"")+"</button>";
 }
+/* v41: การ์ดโลเคชั่นจัดกลุ่มตามเขตกรุงเทพฯ ก่อน (แถวเล็กบนสุด มีหมุด) แล้วค่อยเป็นชื่อจุด/ถนน
+   ที่เจาะจงตัวหนาด้านล่าง — ให้ผู้ใช้กวาดหาย่านที่คุ้นเคยก่อนแล้วค่อยดูจุดเจาะจง แทนที่จะเห็นแต่
+   ชื่อถนนเรียงกันไม่มีบริบทว่าอยู่เขตไหน ตัวเลข "ผ่าน N สายรถเมล์" มาจาก busOf(item).length เสมอ
+   (ข้อมูลสายจริงที่ตรวจสอบแล้วต่อจุด ไม่ใช่ตัวเลขที่พิมพ์ตายตัว) รายการที่ผู้ใช้เพิ่มเอง (custom)
+   ไม่มี dist ให้ตกไปที่ป้ายกลางๆ "กรุงเทพฯ" ตรงๆ ไม่เดาเขตให้ */
 function locCardHTML(item,pressed,custom){
   const n=busOf(item).length;
   return '<button type="button" class="chip card loccard'+(custom?' cust':'')+'" data-id="'+esc(item.id)+
     '" aria-pressed="'+(pressed?'true':'false')+'">'+
-    '<span class="cardbody"><span class="loctop">'+IC_PIN+"<i>"+esc(item.th)+"</i>"+
+    '<span class="cardbody"><span class="loctop">'+IC_PIN+"<i>"+esc(item.dist||"กรุงเทพฯ")+"</i>"+
       '<span class="tick">'+IC_TICK+"</span></span>"+
+      '<b class="loctitle">'+esc(item.th)+"</b>"+
       (item.en?'<span class="en">'+esc(item.en)+"</span>":"")+
       '<span class="pill soft">'+(n?"ผ่าน "+n+" สายรถเมล์":"ยังไม่มีข้อมูลสายรถเมล์")+"</span></span>"+
     (custom?'<span class="del" data-del="'+esc(item.id)+'" title="ลบรายการนี้">×</span>':"")+"</button>";

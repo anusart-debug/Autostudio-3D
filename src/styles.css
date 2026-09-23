@@ -231,10 +231,15 @@ input[type=range]{width:100%;accent-color:var(--brand);background:transparent}
 .chip.card[aria-pressed=true] .tick{display:grid}
 .chip.card[aria-pressed=true]{border-color:var(--brand-txt);background:var(--ink-100)}
 .chip.card .del{top:auto;bottom:5px;right:5px}
-/* โลเคชั่น: ไม่มีแถบไล่เฉด ใช้หัวการ์ดเป็นชื่อ+หมุดแทน */
+/* โลเคชั่น: ไม่มีแถบไล่เฉด ใช้หัวการ์ดเป็นชื่อ+หมุดแทน
+   v41: แถวบน (.loctop) เปลี่ยนจากชื่อจุดเป็น "เขต" (ย่านกว้างๆ ของกรุงเทพฯ) แบบเล็ก-มัวลง
+   ส่วนชื่อจุด/ถนนที่เจาะจง (item.th เดิม) ย้ายไปเป็น .loctitle ตัวหนาใหญ่กว่าแทน */
 .loccard .loctop{display:flex;align-items:center;gap:5px;position:relative;padding-right:20px}
-.loccard .loctop svg{width:13px;height:13px;flex:none;stroke:var(--brand-txt);fill:none;stroke-width:1.8}
-.loccard .loctop i{font-style:normal;font-size:11.5px;font-weight:600;color:var(--txt);line-height:1.35}
+.loccard .loctop svg{width:12px;height:12px;flex:none;stroke:var(--txt-mute);fill:none;stroke-width:1.8}
+.loccard .loctop i{font-style:normal;font-size:9.5px;font-weight:500;color:var(--txt-mute);line-height:1.3;letter-spacing:.02em}
+.loccard .loctitle{display:block;font-size:12.5px;font-weight:600;color:var(--txt);line-height:1.35;margin-top:3px}
+.loccard[aria-pressed=true] .loctop svg{stroke:var(--brand-txt)}
+.loccard[aria-pressed=true] .loctop i{color:var(--brand-txt)}
 .loccard .tick{top:-1px;right:0}
 .chip.add.card{min-height:58px;padding:10px}
 
