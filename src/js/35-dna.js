@@ -58,7 +58,7 @@ function buildEditPromptTH(){
     ? " เก็บงานแบบภาพโฆษณารถ: "+list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th).join(", ")
     : " คงความเป็นภาพถ่ายจริง ชัดลึกธรรมชาติ เงาใต้ล้อถูกต้อง";
   const notes=$("detail").value.trim();
-  return keep+hero+col+body+scene+fin+(notes?" "+notes:"")+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อหลายช่อง";
+  return keep+hero+col+body+scene+fin+(notes?" "+notes:"")+busSignClauseTH()+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อหลายช่อง";
 }
 function buildPromptTH(){
   const v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
@@ -76,7 +76,7 @@ function buildPromptTH(){
   return [head,hero,lock.join(" "),art,"ฉาก "+l.th,"มุมกล้อง "+a.th,"เลนส์ "+thLens(),
     "แสง "+li.th,thWeather(),thHdr(),
     list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th).join(", "),
-    "ความละเอียดสูง รายละเอียดคมชัด เก็บงานระดับมืออาชีพ",notes].filter(Boolean).join(" · ")+ratioClauseTH()+negClauseTH();
+    "ความละเอียดสูง รายละเอียดคมชัด เก็บงานระดับมืออาชีพ",notes].filter(Boolean).join(" · ")+busSignClauseTH()+ratioClauseTH()+negClauseTH();
 }
 function activePromptTH(){return adReady()?buildAdPromptTH():editMode()?buildEditPromptTH():buildPromptTH()}
 

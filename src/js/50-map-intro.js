@@ -18,5 +18,16 @@ function locPos(l){
 function busOf(l){ return BUSX[l.id] ? BUSX[l.id].slice() : (l.bus||[]).slice(); }
 function isCustomLoc(l){ return typeof l.lat!=="number"; }
 
+/* ข้อความป้ายจุดหมายปลายทาง (บนกระจกหน้ารถ) ต่อสาย — มาจาก ROUTE_SEED.rels ที่ดึงจาก OpenStreetMap
+   จริงต่อจุด (ตอนนี้มีให้แค่ 5 โลเคชั่นใหม่ที่เพิ่งเพิ่ม — ยังไม่ได้ไล่ทำครบทั้ง 26 จุด) ถ้าจุดนั้นไม่มี
+   ข้อมูล from/to เก็บไว้ ให้คืน null ตรงๆ ไม่เดาว่าสายนี้วิ่งไปไหน */
+function destTextFor(l,ref){
+  const seed=ROUTE_SEED[l.id];
+  if(!seed||!seed.rels) return null;
+  const r=seed.rels.find(x=>x.tags&&x.tags.ref===ref);
+  if(!r||!r.tags.from||!r.tags.to) return null;
+  return r.tags.from+" - "+r.tags.to;
+}
+
 const CONFTH={high:"ตรวจสอบแล้ว",medium:"ควรตรวจซ้ำ",low:"ข้อมูลไม่ยืนยัน"};
 

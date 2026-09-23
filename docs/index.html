@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-0XxR89h+9/HnE6mvG7WD7OdjHQxx5TXB9Sd9U4vHyz0='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sBROqN2prfsKimVJdCc3X/MaIw1vfnQ6K5F28wuyxM0=' 'sha256-rkopG8p1ypCB/SSGsmsH/VmCGeFkeZr7tf0ygS8XzRg='; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src data: blob:; font-src https://fonts.gstatic.com; connect-src https://overpass-api.de https://fonts.googleapis.com https://fonts.gstatic.com; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* ---------------- ธีม: สว่าง/มืด ----------------
@@ -1290,6 +1290,14 @@ footer.foot .sp{flex:1}
         </div>
       </div>
 
+      <div class="field" id="busSignField" hidden>
+        <label class="lbl">เลือกสายเพื่อกำหนดป้ายหน้ารถในคำสั่ง <b id="busSignVal">ยังไม่เลือก</b></label>
+        <div class="chips" id="busSignChips"></div>
+        <div class="dnaline" style="margin-top:7px">
+          คลิกเลขสายเพื่อใส่ป้ายจุดหมายปลายทางจริงของสายนั้นลงในคำสั่ง (มีข้อมูลปลายทางจริงเฉพาะบางจุด — ถ้าไม่มีจะใส่แค่เลขสายอย่างเดียว) คลิกซ้ำเพื่อยกเลิก
+        </div>
+      </div>
+
       <div class="field" style="margin-bottom:0;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn primary" id="sheetBtn" type="button">
           <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg>
@@ -1754,11 +1762,11 @@ const LOCATIONS=[
  {id:"motorway",th:"มอเตอร์เวย์",en:"Motorway",dist:"นอกเขตกรุงเทพฯ · ต่างจังหวัด",p:"a wide intercity motorway outside Bangkok, six open lanes of smooth asphalt with painted lane markings running straight to the horizon, a landscaped central median, green verges and utility poles along the shoulder, tall billboards standing back from the carriageway, big blue overhead sign gantries, wide open sky above and low hills in the distance",lat:13.71,lng:100.75,conf:"low",src:"ไม่พบสายรถเมล์ประจำทาง",bus:[]},
  /* v41: เพิ่ม 5 จุดตามคำขอผู้ใช้ — สายรถเมล์ทุกจุดตรวจสอบจากแหล่งอ้างอิงจริงก่อนใส่ (ดู src ต่อรายการ)
     ไม่ใช่เดาหรือคัดลอกจากภาพตัวอย่างที่ผู้ใช้ส่งมาก่อนหน้า (ยืนยันแล้วว่าภาพนั้นเป็นแค่ตัวอย่างดีไซน์) */
- {id:"siamsquare",th:"สยามสแควร์",en:"Siam Square",dist:"เขตปทุมวัน · Pathum Wan",p:"Siam Square Bangkok, dense low-rise shopfronts and covered walkways beneath the BTS Siam interchange, students and shoppers crossing the plaza",lat:13.7457,lng:100.5331,conf:"high",src:"transitbangkok.com",bus:["15","16","40","48","54","73","141","183","204","21E","501","508","73ก","2-34R"]},
- {id:"silomsala",th:"ถนนสีลม แยกศาลาแดง",en:"Silom - Sala Daeng",dist:"เขตบางรัก · Bang Rak",p:"Silom Road at the Sala Daeng junction Bangkok, the BTS Silom line viaduct overhead beside Lumphini Park, office towers and evening street-food stalls",lat:13.7286,lng:100.5341,conf:"high",src:"transitbangkok.com",bus:["4 (3-36)","45","46","47 (3-41)","50 (2-7)","67 (3-43)","74","109","141 (4-24E)","163 (4-55)","172","177","21E (4-7E)","505 (2-24E)","507 (3-13)","3-53","3-9E","4-68","3-52L"]},
- {id:"iconsiam",th:"ไอคอนสยาม ถนนเจริญนคร",en:"ICONSIAM",dist:"เขตคลองสาน · Khlong San",p:"Charoen Nakhon Road beside ICONSIAM Bangkok, the mall's rippling metallic facade catching the light along the Chao Phraya riverside",lat:13.7267,lng:100.5099,conf:"medium",src:"mangozero.com",bus:["3","6","84","88","89","111","149","167","177"]},
- {id:"bangsue",th:"สถานีกลางกรุงเทพอภิวัฒน์ (บางซื่อ)",en:"Krung Thep Aphiwat (Bang Sue)",dist:"เขตจตุจักร · Chatuchak",p:"the vast forecourt of Krung Thep Aphiwat Central Terminal Bangkok, the terminal's soaring glass-and-steel canopy and multi-level bus bays",lat:13.8008,lng:100.5372,conf:"high",src:"bangkokbiznews.com",bus:["3 (2-37)","5","26 (1-36)","49 (2-43)","96 (1-42)","134 (2-20)","136 (3-47)","138 (4-22E)","145 (3-18)","204 (2-52)","509 (4-60)","536 (3-24E)","A1","3-19E"]},
- {id:"rama8bridge",th:"สะพานพระราม 8",en:"Rama VIII Bridge",dist:"สะพานพระราม 8 · หลายเขต",p:"the approach to Rama VIII Bridge Bangkok, the asymmetric single-pylon suspension span crossing the Chao Phraya river with Rama VIII Park below",lat:13.7691,lng:100.4967,conf:"medium",src:"transitbangkok.com (Suan Luang Rama 8 + Arun Amarin Intersection)",bus:["1-63","4-44","124 (4-51)","157","710"]}
+ {id:"siamsquare",th:"สยามสแควร์",en:"Siam Square",dist:"เขตปทุมวัน · Pathum Wan",p:"Siam Square Bangkok, dense low-rise shopfronts and covered walkways beneath the BTS Siam interchange, students and shoppers crossing the plaza",lat:13.7457,lng:100.5331,conf:"high",src:"OpenStreetMap Overpass (rel[route=bus] around 400m)",bus:["48 (3-11)","50 (2-7)","141 (4-24E)","108 (4-19)","40 (4-39)","34E (1-2E)","29 (1-1)","47 (3-41)","34 (1-3)","1-63","11 (3-3)","163 (4-55)","4-68","2-34","204 (2-52)","529 (4-28)","21E (4-7E)","2-2","34","54 (2-44)","36 (2-40)","37 (4-9)","93 (1-40)","501 (1-53)","73 (2-45)","73 (2-46)","79 (4-42)","15 (4-2)","24 (2-39)"]},
+ {id:"silomsala",th:"ถนนสีลม แยกศาลาแดง",en:"Silom - Sala Daeng",dist:"เขตบางรัก · Bang Rak",p:"Silom Road at the Sala Daeng junction Bangkok, the BTS Silom line viaduct overhead beside Lumphini Park, office towers and evening street-food stalls",lat:13.7286,lng:100.5341,conf:"high",src:"OpenStreetMap Overpass (rel[route=bus] around 350m)",bus:["50 (2-7)","507 (3-13)","141 (4-24E)","76 (4-14)","A3","504 (1-18E)","3-53","67 (3-43)","47 (3-41)","46 (3-10)","3-52","14 (3-39)","163 (4-55)","4-68","4 (3-36)","77 (3-45)","167 (4-26)","115 (1-45)","45 (3-9E)","21E (4-7E)","2-2","2-28","37 (4-9)","93 (1-40)","514 (1-54)","514E (1-55E)","505E (2-24E)","15 (4-2)","24 (2-39)","3-31"]},
+ {id:"iconsiam",th:"ไอคอนสยาม ถนนเจริญนคร",en:"ICONSIAM",dist:"เขตคลองสาน · Khlong San",p:"Charoen Nakhon Road beside ICONSIAM Bangkok, the mall's rippling metallic facade catching the light along the Chao Phraya riverside",lat:13.7267,lng:100.5099,conf:"high",src:"OpenStreetMap Overpass (rel[route=bus] around 400m)",bus:["3 (2-37)","111","6 (4-1)","105 (4-18)","84 (4-46)","120 (4-21)","57 (4-41)","89 (4-47)","149 (4-53)","505E (2-24E)"]},
+ {id:"bangsue",th:"สถานีกลางกรุงเทพอภิวัฒน์ (บางซื่อ)",en:"Krung Thep Aphiwat (Bang Sue)",dist:"เขตจตุจักร · Chatuchak",p:"the vast forecourt of Krung Thep Aphiwat Central Terminal Bangkok, the terminal's soaring glass-and-steel canopy and multi-level bus bays",lat:13.8008,lng:100.5372,conf:"high",src:"bangkokbiznews.com (ตรวจซ้ำแล้ว 13/14 สายตรงกับ OpenStreetMap Overpass ในรัศมี 500 ม.)",bus:["3 (2-37)","5","26 (1-36)","49 (2-43)","96 (1-42)","134 (2-20)","136 (3-47)","138 (4-22E)","145 (3-18)","204 (2-52)","509 (4-60)","536 (3-24E)","A1","3-19E"]},
+ {id:"rama8bridge",th:"สะพานพระราม 8",en:"Rama VIII Bridge",dist:"สะพานพระราม 8 · หลายเขต",p:"the approach to Rama VIII Bridge Bangkok, the asymmetric single-pylon suspension span crossing the Chao Phraya river with Rama VIII Park below",lat:13.7691,lng:100.4967,conf:"medium",src:"OpenStreetMap Overpass (rel[route=bus] around 400m — สะพานเองมีสายวิ่งผ่านจริงน้อยมาก ไม่ได้พิมพ์ผิด)",bus:["1-63","80A (4-44)"]}
 ];
 
 /* v41.3: ฟิลด์ ic (ตำแหน่งกล้อง/แนวมอง) เดิมใช้คำนวณไดอะแกรมสดใน 20-chips.js — ตอนนี้เปลี่ยนไป
@@ -1925,7 +1933,7 @@ const PRESETS=[
    relation ดิบ {tags:{ref,name,from,to,operator,network}} แล้วป้อนเข้า groupRoutes()
    ตัวเดียวกับที่ live fetch ใช้ — สี/การเรียงลำดับ/การรวมทิศทางจึงตรงกันเป๊ะ ไม่ต้องทำซ้ำ */
 const ROUTE_SEED_DATE="2026-09-20";
-const ROUTE_SEED={
+const ROUTE_SEED={siamsquare:{"stops":[],"rels":[{"tags":{"ref":"48 (3-11)","name":"48 (3-11) ม.รามคำแหง 2 - ท่าช้าง","from":"ม.รามคำแหง 2","to":"ท่าช้าง"}},{"tags":{"ref":"50 (2-7)","name":"50 (2-7) พระราม 7 - สวนลุมพินี","from":"สะพานพระราม 7","to":"สวนลุมพินี"}},{"tags":{"ref":"141 (4-24E)","name":"141 (4-24E) จุฬาลงกรณ์มหาวิทยาลัย - อู่แสมดำ","from":"จุฬาลงกรณ์มหาวิทยาลัย","to":"อู่แสมดำ"}},{"tags":{"ref":"108 (4-19)","name":"108 (4-19) วงกลม: เดอะมอลล์ท่าพระ - อนุสาวรีย์ชัยสมรภูมิ","from":"เดอะมอลล์ท่าพระ","to":"อนุสาวรีย์ชัยสมรภูมิ"}},{"tags":{"ref":"40 (4-39)","name":"40 (4-39) สายใต้ใหม่ - เอกมัย","from":"สายใต้ใหม่ (ตลิ่งชัน)","to":"เอกมัย"}},{"tags":{"ref":"34E (1-2E)","name":"34E (1-2E) รังสิต - หัวลำโพง (ทางด่วน)","from":"รังสิต","to":"หัวลำโพง"}},{"tags":{"ref":"29 (1-1)","name":"29 (1-1) บางเขน - หัวลำโพง","from":"บางเขน","to":"หัวลำโพง"}},{"tags":{"ref":"47 (3-41)","name":"47 (3-41) ท่าเรือคลองเตย - สำนักงานที่ดินกรุงเทพฯ","from":"ท่าเรือคลองเตย","to":"สำนักงานที่ดินกรุงเทพฯ"}},{"tags":{"ref":"34 (1-3)","name":"34 (1-3) บางเขน - หัวลำโพง","from":"บางเขน","to":"หัวลำโพง"}},{"tags":{"ref":"1-63","name":"1-63 ปัฐวิกรณ์ - สวนหลวงพระราม 8","from":"ปัฐวิกรณ์","to":"สวนหลวงพระราม 8"}},{"tags":{"ref":"11 (3-3)","name":"11 (3-3) สวนหลวง ร.9 - สนามกีฬาแห่งชาติ","from":"สวนหลวง ร.9","to":"สนามกีฬาแห่งชาติ"}},{"tags":{"ref":"163 (4-55)","name":"163 (4-55) ศาลายา - สนามกีฬาแห่งชาติ","from":"ศาลายา","to":"สนามกีฬาแห่งชาติ"}},{"tags":{"ref":"4-68","name":"4-68 สวนผัก - ถนนตก","from":"สวนผัก","to":"ถนนตก"}},{"tags":{"ref":"2-34","name":"2-34 วงกลม: สถานีรถไฟสามเสน - ดินแดง","from":"สถานีรถไฟสามเสน","to":"ดินแดง"}},{"tags":{"ref":"204 (2-52)","name":"204 (2-52) หมอชิต 2 - ห้วยขวาง - ท่าน้ำราชวงศ์","from":"หมอชิต 2","to":"ท่าน้ำราชวงศ์"}},{"tags":{"ref":"529 (4-28)","name":"529 (4-28) แสมดำ - อนุสาวรีย์ชัยสมรภูมิ","from":"แสมดำ","to":"อนุสาวรีย์ชัยสมรภูมิ"}},{"tags":{"ref":"21E (4-7E)","name":"21E (4-7E) จุฬาลงกรณ์มหาวิทยาลัย - วัดคู่สร้าง","from":"จุฬาลงกรณ์มหาวิทยาลัย","to":"วัดคู่สร้าง"}},{"tags":{"ref":"2-2","name":"2-2 ปากเกร็ด - ท่าน้ำสี่พระยา","from":"ปากเกร็ด","to":"ท่าน้ำสี่พระยา"}},{"tags":{"ref":"34","name":"34 รังสิต - หัวลำโพง","from":"รังสิต","to":"หัวลำโพง"}},{"tags":{"ref":"54 (2-44)","name":"54 (2-44) วงกลมรอบเมือง: พระราม 9 - โบสถ์แม่พระ","from":"พระราม 9","to":"โบสถ์แม่พระ"}},{"tags":{"ref":"36 (2-40)","name":"36 (2-40) อู่พระราม 9 - ฟอร์จูน - สี่พระยา","from":"อู่พระราม 9","to":"สี่พระยา"}},{"tags":{"ref":"37 (4-9)","name":"37 (4-9) จุฬาลงกรณ์มหาวิทยาลัย - ท่าน้ำพระประแดง","from":"จุฬาลงกรณ์มหาวิทยาลัย","to":"ท่าน้ำพระประแดง"}},{"tags":{"ref":"93 (1-40)","name":"93 (1-40) หมู่บ้านนักกีฬาฯ - พัฒนาการ - สี่พระยา","from":"หมู่บ้านนักกีฬาฯ","to":"สี่พระยา"}},{"tags":{"ref":"501 (1-53)","name":"501 (1-53) หมู่บ้านนักกีฬาฯ - ท่าราชวรดิฐ","from":"หมู่บ้านนักกีฬาฯ","to":"ท่าราชวรดิฐ"}},{"tags":{"ref":"73 (2-45)","name":"73 (2-45) บ้านเอื้ออาทรบึงกุ่ม - สะพานพุทธ","from":"บ้านเอื้ออาทรบึงกุ่ม","to":"สะพานพุทธ"}},{"tags":{"ref":"73 (2-46)","name":"73 (2-46) อู่สวนสยาม - โพธิ์แก้ว - สนามกีฬาแห่งชาติ","from":"อู่สวนสยาม","to":"สนามกีฬาแห่งชาติ"}},{"tags":{"ref":"79 (4-42)","name":"79 (4-42) อู่บรมราชชนนี - ราชประสงค์","from":"อู่บรมราชชนนี","to":"ราชประสงค์"}},{"tags":{"ref":"15 (4-2)","name":"15 (4-2) วงกลม: BRT ราชพฤกษ์ - สยาม - บางลำพู","from":"BRT ราชพฤกษ์","to":"บางลำพู"}},{"tags":{"ref":"24 (2-39)","name":"24 (2-39) ประชานิเวศน์ 3 - จุฬาลงกรณ์มหาวิทยาลัย","from":"ประชานิเวศน์ 3","to":"จุฬาลงกรณ์มหาวิทยาลัย"}}]},silomsala:{"stops":[],"rels":[{"tags":{"ref":"50 (2-7)","name":"50 (2-7) พระราม 7 - สวนลุมพินี","from":"สะพานพระราม 7","to":"สวนลุมพินี"}},{"tags":{"ref":"507 (3-13)","name":"507 (3-13) สายใต้ใหม่ - สำโรง","from":"สายใต้ใหม่ (ตลิ่งชัน)","to":"สำโรง"}},{"tags":{"ref":"141 (4-24E)","name":"141 (4-24E) อู่แสมดำ - จุฬาลงกรณ์มหาวิทยาลัย","from":"อู่แสมดำ","to":"จุฬาลงกรณ์มหาวิทยาลัย"}},{"tags":{"ref":"76 (4-14)","name":"76 (4-14) อู่แสมดำ - ประตูน้ำ","from":"อู่แสมดำ","to":"ประตูน้ำ"}},{"tags":{"ref":"A3","name":"A3 ท่าอากาศยานดอนเมือง - สวนลุมพินี","from":"ท่าอากาศยานดอนเมือง","to":"สวนลุมพินี"}},{"tags":{"ref":"504 (1-18E)","name":"504 (1-18E) รังสิต - บางรัก","from":"รังสิต","to":"บางรัก"}},{"tags":{"ref":"3-53","name":"3-53 สถานีรถไฟฟ้าหัวหมาก - เสาชิงช้า","from":"สถานีรถไฟฟ้าหัวหมาก","to":"เสาชิงช้า"}},{"tags":{"ref":"67 (3-43)","name":"67 (3-43) วัดเสมียนนารี - เซ็นทรัลพระราม 3","from":"วัดเสมียนนารี","to":"เซ็นทรัลพระราม 3"}},{"tags":{"ref":"47 (3-41)","name":"47 (3-41) ท่าเรือคลองเตย - สำนักงานที่ดินกรุงเทพฯ","from":"ท่าเรือคลองเตย","to":"สำนักงานที่ดินกรุงเทพฯ"}},{"tags":{"ref":"46 (3-10)","name":"46 (3-10) ม.รามคำแหง 2 - สี่พระยา","from":"ม.รามคำแหง 2","to":"สี่พระยา"}},{"tags":{"ref":"3-52","name":"3-52 วงกลม: เซ็นทรัลพระราม 3 - หัวลำโพง","from":"เซ็นทรัลพระราม 3","to":"หัวลำโพง"}},{"tags":{"ref":"14 (3-39)","name":"14 (3-39) ถนนตก - ศรีย่าน","from":"ถนนตก","to":"ศรีย่าน"}},{"tags":{"ref":"163 (4-55)","name":"163 (4-55) ศาลายา - สนามกีฬาแห่งชาติ","from":"ศาลายา","to":"สนามกีฬาแห่งชาติ"}},{"tags":{"ref":"4-68","name":"4-68 สวนผัก - ถนนตก","from":"สวนผัก","to":"ถนนตก"}},{"tags":{"ref":"4 (3-36)","name":"4 (3-36) ท่าเรือคลองเตย - ท่าน้ำภาษีเจริญ","from":"ท่าเรือคลองเตย","to":"ท่าน้ำภาษีเจริญ"}},{"tags":{"ref":"77 (3-45)","name":"77 (3-45) เซ็นทรัลพระราม 3 - หมอชิต 2","from":"เซ็นทรัลพระราม 3","to":"หมอชิต 2"}},{"tags":{"ref":"167 (4-26)","name":"167 (4-26) สวนลุมพินี - เคหะธนบุรี","from":"สวนลุมพินี","to":"เคหะธนบุรี"}},{"tags":{"ref":"115 (1-45)","name":"115 (1-45) สวนสยาม - บางรัก","from":"สวนสยาม","to":"บางรัก"}},{"tags":{"ref":"45 (3-9E)","name":"45 (3-9E) หนามแดง - สี่พระยา","from":"หนามแดง","to":"สี่พระยา"}},{"tags":{"ref":"21E (4-7E)","name":"21E (4-7E) วัดคู่สร้าง - จุฬาลงกรณ์มหาวิทยาลัย","from":"วัดคู่สร้าง","to":"จุฬาลงกรณ์มหาวิทยาลัย"}},{"tags":{"ref":"2-2","name":"2-2 ปากเกร็ด - ท่าน้ำสี่พระยา","from":"ปากเกร็ด","to":"ท่าน้ำสี่พระยา"}},{"tags":{"ref":"2-28","name":"2-28 บางบัวทอง - สวนลุมพินี","from":"บางบัวทอง","to":"สวนลุมพินี"}},{"tags":{"ref":"37 (4-9)","name":"37 (4-9) ท่าน้ำพระประแดง - จุฬาลงกรณ์มหาวิทยาลัย","from":"ท่าน้ำพระประแดง","to":"จุฬาลงกรณ์มหาวิทยาลัย"}},{"tags":{"ref":"93 (1-40)","name":"93 (1-40) หมู่บ้านนักกีฬาฯ - พัฒนาการ - สี่พระยา","from":"หมู่บ้านนักกีฬาฯ","to":"สี่พระยา"}},{"tags":{"ref":"514 (1-54)","name":"514 (1-54) มีนบุรี - สวนลุมพินี","from":"มีนบุรี","to":"สวนลุมพินี"}},{"tags":{"ref":"514E (1-55E)","name":"514E (1-55E) มีนบุรี - ท่าน้ำสี่พระยา","from":"มีนบุรี","to":"ท่าน้ำสี่พระยา"}},{"tags":{"ref":"505E (2-24E)","name":"505E (2-24E) ปากเกร็ด - วงเวียนใหญ่","from":"ปากเกร็ด","to":"วงเวียนใหญ่"}},{"tags":{"ref":"15 (4-2)","name":"15 (4-2) วงกลม: BRT ราชพฤกษ์ - สยาม - บางลำพู","from":"BRT ราชพฤกษ์","to":"บางลำพู"}},{"tags":{"ref":"24 (2-39)","name":"24 (2-39) จุฬาลงกรณ์มหาวิทยาลัย - ประชานิเวศน์ 3","from":"จุฬาลงกรณ์มหาวิทยาลัย","to":"ประชานิเวศน์ 3"}},{"tags":{"ref":"3-31","name":"3-31 เมกาบางนา - สีลม","from":"เมกาบางนา","to":"สีลม"}}]},iconsiam:{"stops":[],"rels":[{"tags":{"ref":"3 (2-37)","name":"3 (2-37) คลองสาน - กรุงเทพอภิวัฒน์","from":"คลองสาน","to":"กรุงเทพอภิวัฒน์"}},{"tags":{"ref":"111","name":"111 วงกลม: เจริญนคร - ตลาดพลู","from":"เจริญนคร","to":"ตลาดพลู"}},{"tags":{"ref":"6 (4-1)","name":"6 AC (4-1) พระประแดง - บางลำพู","from":"พระประแดง","to":"บางลำพู"}},{"tags":{"ref":"105 (4-18)","name":"105 (4-18) คลองสาน - สมุทรสาคร","from":"คลองสาน","to":"สมุทรสาคร"}},{"tags":{"ref":"84 (4-46)","name":"84 (4-46) วัดไร่ขิง - บีทีเอส กรุงธนบุรี","from":"วัดไร่ขิง","to":"บีทีเอส กรุงธนบุรี"}},{"tags":{"ref":"120 (4-21)","name":"120 (4-21) สมุทรสาคร - แยกบ้านแขก","from":"สมุทรสาคร","to":"แยกบ้านแขก"}},{"tags":{"ref":"57 (4-41)","name":"57 (4-41) วงกลม: ตลิ่งชัน - วงเวียนใหญ่","from":"ตลิ่งชัน","to":"วงเวียนใหญ่"}},{"tags":{"ref":"89 (4-47)","name":"89 (4-47) สายใต้ใหม่ - ราชมงคลกรุงเทพ","from":"สายใต้ใหม่","to":"ราชมงคลกรุงเทพ"}},{"tags":{"ref":"149 (4-53)","name":"149 (4-53) พุทธมณฑลสาย 2 - เอกมัย","from":"พุทธมณฑลสาย 2","to":"เอกมัย"}},{"tags":{"ref":"505E (2-24E)","name":"505E (2-24E) ปากเกร็ด - วงเวียนใหญ่","from":"ปากเกร็ด","to":"วงเวียนใหญ่"}}]},bangsue:{"stops":[],"rels":[{"tags":{"ref":"3 (2-37)","name":"3 (2-37) คลองสาน - กรุงเทพอภิวัฒน์","from":"คลองสาน","to":"กรุงเทพอภิวัฒน์"}},{"tags":{"ref":"5","name":"5 อู่กำแพงเพชร - สะพานพุทธ","from":"อู่กำแพงเพชร","to":"สะพานพุทธ"}},{"tags":{"ref":"26 (1-36)","name":"26 (1-36) มีนบุรี - รามอินทรา - หมอชิต 2","from":"มีนบุรี","to":"หมอชิต 2"}},{"tags":{"ref":"49 (2-43)","name":"49 (2-43) หัวลำโพง - กรุงเทพอภิวัฒน์","from":"หัวลำโพง","to":"กรุงเทพอภิวัฒน์"}},{"tags":{"ref":"96 (1-42)","name":"96 (1-42) มีนบุรี - หมอชิต 2","from":"มีนบุรี","to":"หมอชิต 2"}},{"tags":{"ref":"134 (2-20)","name":"134 (2-20) บัวทองเคหะ - หมอชิต 2","from":"บัวทองเคหะ","to":"หมอชิต 2"}},{"tags":{"ref":"136 (3-47)","name":"136 (3-47) คลองเตย - หมอชิต 2","from":"คลองเตย","to":"หมอชิต 2"}},{"tags":{"ref":"138 (4-22E)","name":"138 (4-22E) อู่ราชประชา - หมอชิต 2","from":"อู่ราชประชา","to":"หมอชิต 2"}},{"tags":{"ref":"145 (3-18)","name":"145 (3-18) ปากน้ำ - หมอชิต 2","from":"ปากน้ำ","to":"หมอชิต 2"}},{"tags":{"ref":"204 (2-52)","name":"204 (2-52) หมอชิต 2 - ห้วยขวาง - ท่าน้ำราชวงศ์","from":"หมอชิต 2","to":"ท่าน้ำราชวงศ์"}},{"tags":{"ref":"509 (4-60)","name":"509 (4-60) หมู่บ้านเศรษฐกิจ - หมอชิต 2","from":"หมู่บ้านเศรษฐกิจ","to":"หมอชิต 2"}},{"tags":{"ref":"536 (3-24E)","name":"536 (3-24E) ปากน้ำ - หมอชิต 2","from":"ปากน้ำ","to":"หมอชิต 2"}},{"tags":{"ref":"3-19E","name":"3-19E (145E) ปากน้ำ - หมอชิต 2 (ทางด่วน)","from":"ปากน้ำ","to":"หมอชิต 2"}}]},rama8bridge:{"stops":[],"rels":[{"tags":{"ref":"1-63","name":"1-63 ปัฐวิกรณ์ - สวนหลวงพระราม 8","from":"ปัฐวิกรณ์","to":"สวนหลวงพระราม 8"}},{"tags":{"ref":"80A (4-44)","name":"80A (4-44)","from":"","to":""}}]},
  sathorn:{stops:[{name:"สาทร",lat:13.7210948,lon:100.5305395},{name:"Sathorn",lat:13.7212134,lon:100.5307318},{name:"Opposite the House on Sathon",lat:13.7212172,lon:100.5286913},{name:"",lat:13.7237291,lon:100.5290701}],rels:[{tags:{ref:"402",name:"รถโดยสารประจำทางด่วนพิเศษ 402: สาทร → ราชพฤกษ์",from:"สาทร",to:"ราชพฤกษ์",operator:"BTS Group Holdings",network:"BRT"}},{tags:{ref:"17 (4-3)",name:"17 (4-3) อนุสาวรีย์ชัยสมรภูมิ - บิ๊กซี พระประแดง",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"3-52",name:"3-52 วงกลม : เซ็นทรัลพระราม 3 - หัวลำโพง (วนซ้าย)",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"1-32E",name:"1-32E บางเขน - สถานีรถไฟฟ้าตลาดพลู",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"77 (3-45)",name:"77 (3-45) เซ็นทรัลพระราม 3 - หมอชิต 2",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"167 (4-26)",name:"167 (4-26) สวนลุมพินี - เคหะธนบุรี",from:"",to:"",operator:"smart bus",network:"smart bus"}},{tags:{ref:"149 (4-53)",name:"149 (4-53) เอกมัย - พุทธมณฑลสาย 2",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"21E (4-7E)",name:"21E (4-7E) วัดคู่สร้าง - จุฬาลงกรณ์มหาวิทยาลัย (ทางด่วน)",from:"วัดคู่สร้าง",to:"จุฬาลงกรณ์มหาวิทยาลัย",operator:"BMTA",network:"BMTA"}},{tags:{ref:"21E (4-7E)",name:"21E (4-7E) จุฬาลงกรณ์มหาวิทยาลัย - วัดคู่สร้าง (ทางด่วน)",from:"จุฬาลงกรณ์ฯ",to:"วัดคู่สร้าง",operator:"BMTA",network:"BMTA"}},{tags:{ref:"402",name:"รถโดยสารประจำทางด่วนพิเศษ 402 : ราชพฤกษ์ → สาทร",from:"ราชพฤกษ์",to:"สาทร",operator:"BTS Group Holdings",network:"BRT"}}]},
  sukhumvit:{stops:[{name:"โคเรียนทาวน์",lat:13.738242,lon:100.5584835},{name:"เทอร์มินอล 21 อโศก",lat:13.7379057,lon:100.5593354},{name:"ซอยสุขุมวิท 15",lat:13.7388954,lon:100.557941}],rels:[{tags:{ref:"48 (3-11)",name:"48 (3-11) ม.รามคำแหง 2 - ท่าช้าง",from:"",to:"",operator:"smart bus",network:"smart bus"}},{tags:{ref:"511",name:"511 ปอ. ปากน้ำ - สายใต้ใหม่",from:"",to:"สถานีขนส่งสายใต้ใหม่",operator:"BMTA",network:"BMTA"}},{tags:{ref:"511",name:"511 ปอ. สายใต้ใหม่ - ปากน้ำ",from:"สถานีขนส่งสายใต้ใหม่",to:"",operator:"BMTA",network:"BMTA"}},{tags:{ref:"48 (3-11)",name:"48 (3-11) ท่าช้าง - ม.รามคำแหง 2",from:"",to:"",operator:"smart bus",network:"smart bus"}},{tags:{ref:"40 (4-39)",name:"40 (4-39) สายใต้ใหม่ - เอกมัย",from:"สายใต้ใหม่ (ตลิ่งชัน)",to:"เอกมัย",operator:"smart bus",network:"smart bus"}},{tags:{ref:"40 (4-39)",name:"40 (4-39) เอกมัย - สายใต้ใหม่",from:"เอกมัย",to:"สายใต้ใหม่ (ตลิ่งชัน)",operator:"smart bus",network:"smart bus"}},{tags:{ref:"3-53",name:"3-53 สถานีรถไฟฟ้าหัวหมาก - เสาชิงช้า",from:"",to:"",operator:"",network:"TSB"}},{tags:{ref:"3-53",name:"3-53 เสาชิงช้า - สถานีรถไฟฟ้าหัวหมาก",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"2 (3-1)",name:"2 (3-1) ปากน้ำ - สะพานพุทธ",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"2 (3-1)",name:"2 (3-1) สะพานพุทธ - ปากน้ำ",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"3-54",name:"3-54 ท่าน้ำภาษีเจริญ - อนุสาวรีย์ชัยสมรภูมิ",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"3-54",name:"3-54 อนุสาวรีย์ชัยสมรภูมิ - ท่าน้ำภาษีเจริญ",from:"อนุสาวรีย์ชัยสมรภูมิ",to:"ท่าน้ำภาษีเจริญ",operator:"TSB",network:"TSB"}},{tags:{ref:"501 (1-53)",name:"501 (1-53) หมู่บ้านนักกีฬาฯ - ท่าราชวรดิฐ",from:"",to:"",operator:"BMTA",network:"BMTA"}},{tags:{ref:"501 (1-53)",name:"501 (1-53) ท่าราชวรดิฐ - หมู่บ้านนักกีฬาฯ",from:"",to:"",operator:"BMTA",network:"BMTA"}}]},
  thonglor:{stops:[{name:"Thong Lo Station (Exit 1)",lat:13.7247389,lon:100.5779938},{name:"BTS ทองหล่อ (ทางออก 2/4)",lat:13.7241236,lon:100.5785161},{name:"ปากทางเข้าถนนทองหล่อ",lat:13.7248073,lon:100.5793339}],rels:[{tags:{ref:"48 (3-11)",name:"48 (3-11) ม.รามคำแหง 2 - ท่าช้าง",from:"",to:"",operator:"smart bus",network:"smart bus"}},{tags:{ref:"511",name:"511 ปอ. ปากน้ำ - สายใต้ใหม่",from:"",to:"สถานีขนส่งสายใต้ใหม่",operator:"BMTA",network:"BMTA"}},{tags:{ref:"511",name:"511 ปอ. สายใต้ใหม่ - ปากน้ำ",from:"สถานีขนส่งสายใต้ใหม่",to:"",operator:"BMTA",network:"BMTA"}},{tags:{ref:"48 (3-11)",name:"48 (3-11) ท่าช้าง - ม.รามคำแหง 2",from:"",to:"",operator:"smart bus",network:"smart bus"}},{tags:{ref:"40 (4-39)",name:"40 (4-39) สายใต้ใหม่ - เอกมัย",from:"สายใต้ใหม่ (ตลิ่งชัน)",to:"เอกมัย",operator:"smart bus",network:"smart bus"}},{tags:{ref:"40 (4-39)",name:"40 (4-39) เอกมัย - สายใต้ใหม่",from:"เอกมัย",to:"สายใต้ใหม่ (ตลิ่งชัน)",operator:"smart bus",network:"smart bus"}},{tags:{ref:"38 (3-8)",name:"38 (3-8) ม.รามคำแหง 2 - อนุสาวรีย์ชัยสมรภูมิ",from:"",to:"",operator:"smart bus",network:"smart bus"}},{tags:{ref:"38 (3-8)",name:"38 (3-8) อนุสาวรีย์ชัยสมรภูมิ - ม.รามคำแหง 2",from:"",to:"",operator:"smart bus",network:"smart bus"}},{tags:{ref:"2 (3-1)",name:"2 (3-1) ปากน้ำ - สะพานพุทธ",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"2 (3-1)",name:"2 (3-1) สะพานพุทธ - ปากน้ำ",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"71 (1-39)",name:"71 (1-39) สวนสยาม - คลองเตย",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"71 (1-39)",name:"71 (1-39) คลองเตย - สวนสยาม",from:"",to:"",operator:"TSB",network:"TSB"}},{tags:{ref:"72 (3-46)",name:"72 (3-46) ท่าเรือคลองเตย - เทเวศร์",from:"",to:"",operator:"BMTA",network:"BMTA"}},{tags:{ref:"501 (1-53)",name:"501 (1-53) หมู่บ้านนักกีฬาฯ - ท่าราชวรดิฐ",from:"",to:"",operator:"BMTA",network:"BMTA"}},{tags:{ref:"501 (1-53)",name:"501 (1-53) ท่าราชวรดิฐ - หมู่บ้านนักกีฬาฯ",from:"",to:"",operator:"BMTA",network:"BMTA"}}]},
@@ -1988,7 +1996,8 @@ const S={vehicle:"wrap",loc:"sathorn",angle:"hero34",light:"golden",
   styles:new Set(STYLES.filter(s=>s.on).map(s=>s.id)),
   lens:2,weather:0,ratio:0,scale:1,hdr:75,refData:null,refFileName:"",
   refExtra:[],refBody:"",refOrient:"",refB64:"",refMime:"image/png",refW:0,refH:0,
-  adData:null,adB64:"",adMime:"image/jpeg",adFileName:""};
+  adData:null,adB64:"",adMime:"image/jpeg",adFileName:"",
+  busSign:""};
 
 const $=id=>document.getElementById(id);
 const MAXPX=2048;
@@ -2517,6 +2526,23 @@ function heroClause(){
       ? " Cars, buses, people and buildings are background context only — never let a passing vehicle become the main subject or block the sign face, and keep the whole advertising face unobstructed and squarely readable."
       : " Other traffic, people and buildings stay in the background and must not overlap or hide it.");
 }
+/* ป้ายจุดหมายปลายทางบนกระจกหน้ารถ — มีผลเฉพาะยานพาหนะที่เป็นรถเมล์จริง (isBusVehicle())
+   และเฉพาะตอนผู้ใช้เลือกสายไว้ใน 10 · Route Map (S.busSign) ถ้าจุดนั้นไม่มีข้อมูลปลายทางจริง
+   (destTextFor คืน null) ใส่แค่เลขสายอย่างเดียว ไม่เดาว่าสายนี้วิ่งไปที่ไหน */
+function busSignClause(){
+  if(!isBusVehicle()||!S.busSign) return "";
+  const dest=destTextFor(find(list("loc"),S.loc),S.busSign);
+  return dest
+    ? " The route-number display above the windscreen shows '"+S.busSign+"' and the destination sign reads '"+dest+"'."
+    : " The route-number display above the windscreen shows '"+S.busSign+"'.";
+}
+function busSignClauseTH(){
+  if(!isBusVehicle()||!S.busSign) return "";
+  const dest=destTextFor(find(list("loc"),S.loc),S.busSign);
+  return dest
+    ? " จอแสดงเลขสายด้านหน้ารถโชว์เลข '"+S.busSign+"' และป้ายจุดหมายปลายทางเขียนว่า '"+dest+"'"
+    : " จอแสดงเลขสายด้านหน้ารถโชว์เลข '"+S.busSign+"'";
+}
 function angleText(a){
   const S1=subjInfo();
   let t=a.p.replace(/\bvehicle\b/g,S1.n);
@@ -2647,7 +2673,7 @@ function buildPrompt(){
       : "8K resolution, ultra detailed reflections on glass and clearcoat, accurate tyre and wheel geometry, professional colour grading",
     notes
   ].filter(Boolean);
-  return parts.join(", ")+"."+ratioClause()+negClause();
+  return parts.join(", ")+"."+busSignClause()+ratioClause()+negClause();
 }
 
 /* โหมดเปลี่ยนโฆษณา + "คงฉากหลังเดิมทั้งหมด" (#adKeepScene, ดู buildAdPrompt() ใน 36-edit-prompt.js):
@@ -2668,6 +2694,7 @@ function sync(){
      ตัวคุมโลเคชั่นของตัวเองอยู่แล้ว — #lockLoc ไม่ถูกอ่านเลยในโหมดนี้ ซ่อนไว้กันสับสนว่ามีสองสวิตช์ */
   $("lockLocField").hidden=!hasSketch()||adReady();
   updateAdLocks();
+  renderBusSign();
   const srcActive=srcRatioActive();
   const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;
@@ -2835,6 +2862,9 @@ function hasAd(){return !!(S.adB64&&S.adData)}
 /* มีครบสองใบ = เขียนคำสั่งเปลี่ยนโฆษณาในจุดเดิมของสื่อ */
 function adReady(){return hasAd()&&hasSketch()}
 function adMode(){return adReady()}
+/* ป้ายจุดหมายปลายทางบนกระจกหน้ารถมีความหมายเฉพาะยานพาหนะที่เป็นรถเมล์จริงเท่านั้น
+   (ป้ายบิลบอร์ด/จอ LED/ตุ๊กตุ๊กไม่มีจอแบบนี้) */
+function isBusVehicle(){return["wrap","dd","bus3d"].indexOf(S.vehicle)>=0}
 
 /* ---------------- reference DNA ---------------- */
 const NAMED=[
@@ -2896,7 +2926,7 @@ function buildEditPromptTH(){
     ? " เก็บงานแบบภาพโฆษณารถ: "+list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th).join(", ")
     : " คงความเป็นภาพถ่ายจริง ชัดลึกธรรมชาติ เงาใต้ล้อถูกต้อง";
   const notes=$("detail").value.trim();
-  return keep+hero+col+body+scene+fin+(notes?" "+notes:"")+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อหลายช่อง";
+  return keep+hero+col+body+scene+fin+(notes?" "+notes:"")+busSignClauseTH()+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อหลายช่อง";
 }
 function buildPromptTH(){
   const v=find(list("vehicle"),S.vehicle), l=find(list("loc"),S.loc),
@@ -2914,7 +2944,7 @@ function buildPromptTH(){
   return [head,hero,lock.join(" "),art,"ฉาก "+l.th,"มุมกล้อง "+a.th,"เลนส์ "+thLens(),
     "แสง "+li.th,thWeather(),thHdr(),
     list("style").filter(x=>S.styles.has(x.id)).map(x=>x.th).join(", "),
-    "ความละเอียดสูง รายละเอียดคมชัด เก็บงานระดับมืออาชีพ",notes].filter(Boolean).join(" · ")+ratioClauseTH()+negClauseTH();
+    "ความละเอียดสูง รายละเอียดคมชัด เก็บงานระดับมืออาชีพ",notes].filter(Boolean).join(" · ")+busSignClauseTH()+ratioClauseTH()+negClauseTH();
 }
 function activePromptTH(){return adReady()?buildAdPromptTH():editMode()?buildEditPromptTH():buildPromptTH()}
 
@@ -3058,6 +3088,7 @@ function buildEditPrompt(){
 
   return keep+heroClause()+colours+body+scene+finish+hdrWord+
          (notes?" "+notes+".":"")+
+         busSignClause()+
          srcRatioClause()+
          negClause()+
          " Output one single photorealistic image, no text overlay, no watermark, no collage.";
@@ -3112,7 +3143,7 @@ function buildAdPrompt(){
   }
   if(styles.length) t+=" Overall finish: "+styles.join(", ")+".";
   if(notes) t+=" "+notes+".";
-  return t+srcRatioClause()+negClause()+" Output one single photorealistic image, no text overlay, no watermark, no collage, no before-after split.";
+  return t+busSignClause()+srcRatioClause()+negClause()+" Output one single photorealistic image, no text overlay, no watermark, no collage, no before-after split.";
 }
 function buildAdPromptTH(){
   const v=find(list("vehicle"),S.vehicle), N=v.th;
@@ -3146,7 +3177,7 @@ function buildAdPromptTH(){
       " · สร้างท้องฟ้า ฉากหลัง ผิวถนน และเงาสะท้อนใหม่ให้ตรงกับสถานที่และแสงนั้น พร้อมจัดแสงบนตัวสื่อใหม่ให้เงา ไฮไลต์ และอุณหภูมิสีเข้ากับฉากใหม่";
   if(styles.length) t+=" · เก็บงานสไตล์: "+styles.join(", ");
   if(notes) t+=" "+notes;
-  return t+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อเทียบก่อนหลัง";
+  return t+busSignClauseTH()+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อเทียบก่อนหลัง";
 }
 function activePrompt(){return adReady()?buildAdPrompt():editMode()?buildEditPrompt():buildPrompt()}
 
@@ -3288,6 +3319,17 @@ function locPos(l){
 }
 function busOf(l){ return BUSX[l.id] ? BUSX[l.id].slice() : (l.bus||[]).slice(); }
 function isCustomLoc(l){ return typeof l.lat!=="number"; }
+
+/* ข้อความป้ายจุดหมายปลายทาง (บนกระจกหน้ารถ) ต่อสาย — มาจาก ROUTE_SEED.rels ที่ดึงจาก OpenStreetMap
+   จริงต่อจุด (ตอนนี้มีให้แค่ 5 โลเคชั่นใหม่ที่เพิ่งเพิ่ม — ยังไม่ได้ไล่ทำครบทั้ง 26 จุด) ถ้าจุดนั้นไม่มี
+   ข้อมูล from/to เก็บไว้ ให้คืน null ตรงๆ ไม่เดาว่าสายนี้วิ่งไปไหน */
+function destTextFor(l,ref){
+  const seed=ROUTE_SEED[l.id];
+  if(!seed||!seed.rels) return null;
+  const r=seed.rels.find(x=>x.tags&&x.tags.ref===ref);
+  if(!r||!r.tags.from||!r.tags.to) return null;
+  return r.tags.from+" - "+r.tags.to;
+}
 
 const CONFTH={high:"ตรวจสอบแล้ว",medium:"ควรตรวจซ้ำ",low:"ข้อมูลไม่ยืนยัน"};
 
@@ -4249,7 +4291,32 @@ function renderBus(){
     ? b.map((x,i)=>'<span class="busline"><b>'+esc(x)+'</b><span class="x" data-i="'+i+'" role="button" aria-label="ลบสาย '+esc(x)+'">×</span></span>').join("")
     : '<span class="dnaline" style="margin:0">ยังไม่มีสายรถเมล์สำหรับจุดนี้ — พิมพ์เพิ่มเองได้ในช่องด้านล่าง</span>';
   mapNote();
+  renderBusSign();
 }
+
+/* v41: เลือกสายรถเมล์ที่วิ่งผ่านจุดนี้เพื่อใส่ป้ายหน้าจอ/ป้ายจุดหมายปลายทางในคำสั่งจริง — เห็นได้เฉพาะ
+   ยานพาหนะที่เป็นรถเมล์จริง (isBusVehicle()) และค่าที่เลือกจะถูกล้างทิ้งเงียบๆ ถ้าย้ายไปโลเคชั่นที่
+   ไม่มีสายนั้น (กันค่าเก่าค้างแล้วชี้ผิดสาย) */
+function renderBusSign(){
+  const field=$("busSignField"); if(!field) return;
+  field.hidden=!isBusVehicle();
+  if(!isBusVehicle()) return;
+  const l=curLoc(), b=busOf(l);
+  if(b.indexOf(S.busSign)<0) S.busSign="";
+  $("busSignChips").innerHTML = b.length
+    ? b.map(x=>'<button type="button" class="chip" data-ref="'+esc(x)+'" aria-pressed="'+(S.busSign===x?"true":"false")+'">'+esc(x)+"</button>").join("")
+    : '<span class="dnaline" style="margin:0">จุดนี้ยังไม่มีข้อมูลสายรถเมล์</span>';
+  const dest=S.busSign?destTextFor(l,S.busSign):null;
+  $("busSignVal").textContent = !S.busSign ? "ยังไม่เลือก"
+    : dest ? ("สาย "+S.busSign+": "+dest)
+    : ("สาย "+S.busSign+" (ไม่มีข้อมูลปลายทาง)");
+}
+$("busSignChips").addEventListener("click",e=>{
+  const b=e.target.closest("[data-ref]"); if(!b)return;
+  const ref=b.dataset.ref;
+  S.busSign = S.busSign===ref ? "" : ref;
+  SFX.play("tick"); renderBusSign(); sync();
+});
 $("busChips").addEventListener("click",e=>{
   const x=e.target.closest(".x"); if(!x)return;
   const l=curLoc(), b=busOf(l);

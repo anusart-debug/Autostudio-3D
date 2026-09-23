@@ -40,6 +40,7 @@ function buildEditPrompt(){
 
   return keep+heroClause()+colours+body+scene+finish+hdrWord+
          (notes?" "+notes+".":"")+
+         busSignClause()+
          srcRatioClause()+
          negClause()+
          " Output one single photorealistic image, no text overlay, no watermark, no collage.";
@@ -94,7 +95,7 @@ function buildAdPrompt(){
   }
   if(styles.length) t+=" Overall finish: "+styles.join(", ")+".";
   if(notes) t+=" "+notes+".";
-  return t+srcRatioClause()+negClause()+" Output one single photorealistic image, no text overlay, no watermark, no collage, no before-after split.";
+  return t+busSignClause()+srcRatioClause()+negClause()+" Output one single photorealistic image, no text overlay, no watermark, no collage, no before-after split.";
 }
 function buildAdPromptTH(){
   const v=find(list("vehicle"),S.vehicle), N=v.th;
@@ -128,7 +129,7 @@ function buildAdPromptTH(){
       " · สร้างท้องฟ้า ฉากหลัง ผิวถนน และเงาสะท้อนใหม่ให้ตรงกับสถานที่และแสงนั้น พร้อมจัดแสงบนตัวสื่อใหม่ให้เงา ไฮไลต์ และอุณหภูมิสีเข้ากับฉากใหม่";
   if(styles.length) t+=" · เก็บงานสไตล์: "+styles.join(", ");
   if(notes) t+=" "+notes;
-  return t+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อเทียบก่อนหลัง";
+  return t+busSignClauseTH()+srcRatioClauseTH()+negClauseTH()+" ส่งออกภาพเดียว ไม่มีข้อความซ้อน ไม่มีลายน้ำ ไม่ตัดต่อเทียบก่อนหลัง";
 }
 function activePrompt(){return adReady()?buildAdPrompt():editMode()?buildEditPrompt():buildPrompt()}
 

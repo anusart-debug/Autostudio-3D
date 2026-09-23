@@ -9,4 +9,7 @@ function hasAd(){return !!(S.adB64&&S.adData)}
 /* มีครบสองใบ = เขียนคำสั่งเปลี่ยนโฆษณาในจุดเดิมของสื่อ */
 function adReady(){return hasAd()&&hasSketch()}
 function adMode(){return adReady()}
+/* ป้ายจุดหมายปลายทางบนกระจกหน้ารถมีความหมายเฉพาะยานพาหนะที่เป็นรถเมล์จริงเท่านั้น
+   (ป้ายบิลบอร์ด/จอ LED/ตุ๊กตุ๊กไม่มีจอแบบนี้) */
+function isBusVehicle(){return["wrap","dd","bus3d"].indexOf(S.vehicle)>=0}
 

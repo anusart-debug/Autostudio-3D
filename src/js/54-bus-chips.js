@@ -6,7 +6,32 @@ function renderBus(){
     ? b.map((x,i)=>'<span class="busline"><b>'+esc(x)+'</b><span class="x" data-i="'+i+'" role="button" aria-label="ลบสาย '+esc(x)+'">×</span></span>').join("")
     : '<span class="dnaline" style="margin:0">ยังไม่มีสายรถเมล์สำหรับจุดนี้ — พิมพ์เพิ่มเองได้ในช่องด้านล่าง</span>';
   mapNote();
+  renderBusSign();
 }
+
+/* v41: เลือกสายรถเมล์ที่วิ่งผ่านจุดนี้เพื่อใส่ป้ายหน้าจอ/ป้ายจุดหมายปลายทางในคำสั่งจริง — เห็นได้เฉพาะ
+   ยานพาหนะที่เป็นรถเมล์จริง (isBusVehicle()) และค่าที่เลือกจะถูกล้างทิ้งเงียบๆ ถ้าย้ายไปโลเคชั่นที่
+   ไม่มีสายนั้น (กันค่าเก่าค้างแล้วชี้ผิดสาย) */
+function renderBusSign(){
+  const field=$("busSignField"); if(!field) return;
+  field.hidden=!isBusVehicle();
+  if(!isBusVehicle()) return;
+  const l=curLoc(), b=busOf(l);
+  if(b.indexOf(S.busSign)<0) S.busSign="";
+  $("busSignChips").innerHTML = b.length
+    ? b.map(x=>'<button type="button" class="chip" data-ref="'+esc(x)+'" aria-pressed="'+(S.busSign===x?"true":"false")+'">'+esc(x)+"</button>").join("")
+    : '<span class="dnaline" style="margin:0">จุดนี้ยังไม่มีข้อมูลสายรถเมล์</span>';
+  const dest=S.busSign?destTextFor(l,S.busSign):null;
+  $("busSignVal").textContent = !S.busSign ? "ยังไม่เลือก"
+    : dest ? ("สาย "+S.busSign+": "+dest)
+    : ("สาย "+S.busSign+" (ไม่มีข้อมูลปลายทาง)");
+}
+$("busSignChips").addEventListener("click",e=>{
+  const b=e.target.closest("[data-ref]"); if(!b)return;
+  const ref=b.dataset.ref;
+  S.busSign = S.busSign===ref ? "" : ref;
+  SFX.play("tick"); renderBusSign(); sync();
+});
 $("busChips").addEventListener("click",e=>{
   const x=e.target.closest(".x"); if(!x)return;
   const l=curLoc(), b=busOf(l);

@@ -13,6 +13,23 @@ function heroClause(){
       ? " Cars, buses, people and buildings are background context only — never let a passing vehicle become the main subject or block the sign face, and keep the whole advertising face unobstructed and squarely readable."
       : " Other traffic, people and buildings stay in the background and must not overlap or hide it.");
 }
+/* ป้ายจุดหมายปลายทางบนกระจกหน้ารถ — มีผลเฉพาะยานพาหนะที่เป็นรถเมล์จริง (isBusVehicle())
+   และเฉพาะตอนผู้ใช้เลือกสายไว้ใน 10 · Route Map (S.busSign) ถ้าจุดนั้นไม่มีข้อมูลปลายทางจริง
+   (destTextFor คืน null) ใส่แค่เลขสายอย่างเดียว ไม่เดาว่าสายนี้วิ่งไปที่ไหน */
+function busSignClause(){
+  if(!isBusVehicle()||!S.busSign) return "";
+  const dest=destTextFor(find(list("loc"),S.loc),S.busSign);
+  return dest
+    ? " The route-number display above the windscreen shows '"+S.busSign+"' and the destination sign reads '"+dest+"'."
+    : " The route-number display above the windscreen shows '"+S.busSign+"'.";
+}
+function busSignClauseTH(){
+  if(!isBusVehicle()||!S.busSign) return "";
+  const dest=destTextFor(find(list("loc"),S.loc),S.busSign);
+  return dest
+    ? " จอแสดงเลขสายด้านหน้ารถโชว์เลข '"+S.busSign+"' และป้ายจุดหมายปลายทางเขียนว่า '"+dest+"'"
+    : " จอแสดงเลขสายด้านหน้ารถโชว์เลข '"+S.busSign+"'";
+}
 function angleText(a){
   const S1=subjInfo();
   let t=a.p.replace(/\bvehicle\b/g,S1.n);
@@ -143,7 +160,7 @@ function buildPrompt(){
       : "8K resolution, ultra detailed reflections on glass and clearcoat, accurate tyre and wheel geometry, professional colour grading",
     notes
   ].filter(Boolean);
-  return parts.join(", ")+"."+ratioClause()+negClause();
+  return parts.join(", ")+"."+busSignClause()+ratioClause()+negClause();
 }
 
 /* โหมดเปลี่ยนโฆษณา + "คงฉากหลังเดิมทั้งหมด" (#adKeepScene, ดู buildAdPrompt() ใน 36-edit-prompt.js):
@@ -164,6 +181,7 @@ function sync(){
      ตัวคุมโลเคชั่นของตัวเองอยู่แล้ว — #lockLoc ไม่ถูกอ่านเลยในโหมดนี้ ซ่อนไว้กันสับสนว่ามีสองสวิตช์ */
   $("lockLocField").hidden=!hasSketch()||adReady();
   updateAdLocks();
+  renderBusSign();
   const srcActive=srcRatioActive();
   const d=srcActive?{w:S.refW,h:S.refH}:dims();
   $("roRes").textContent=d.w+" × "+d.h;
