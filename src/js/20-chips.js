@@ -292,18 +292,103 @@ function renderPresets(){
 }
 function applyPreset(id){
   const p=PRESETS.find(x=>x.id===id); if(!p) return;
-  S.vehicle=p.vehicle; S.loc=p.loc; S.angle=p.angle; S.light=p.light;
-  if(p.weather!=null) S.weather=p.weather;
-  if(p.detail) $("detail").value=p.detail;
-  ["vehicle","angle","light"].forEach(renderChips);
-  renderChips("loc"); renderBus(); mapGo();
-  refreshWeather(); detailTagsSync();
-  sync();
-  toast("ตั้งค่าอัตโนมัติแล้ว: "+p.label);
+  applyPresetObj(p);
 }
 $("presetScroll").addEventListener("click",e=>{
   const b=e.target.closest("[data-preset]"); if(!b)return;
   applyPreset(b.dataset.preset);
 });
 renderPresets();
+
+/* ---- "คำสั่งของฉัน" (v41.14) — เหมือน PRESETS ด้านบนทุกประการ (ตั้งแค่ประเภทสื่อ/โลเคชั่น/
+   มุมกล้อง/แสง/สภาพอากาศ/โจทย์เพิ่มเติม ไม่แตะ styles/ratio/lens เช่นกัน) ต่างกันแค่ที่มา:
+   อันนี้ผู้ใช้กด "บันทึกค่านี้" เองจากหน้าจอปัจจุบัน เก็บในเครื่อง (store, ดู 00-store.js) คนละก้อน
+   ต่อผู้ใช้ที่ล็อกอินอยู่ (ถ้าเป็นเวอร์ชันเว็บที่มี AU_USER — ไฟล์ 70-auth.web.js) กันบัญชีชนกันเวลา
+   ใช้เครื่องคอมพิวเตอร์ร่วมกัน · จำกัด 5 ช่องต่อคน ลบแล้วสร้างใหม่ได้เรื่อยๆ */
+const MY_PRESET_MAX=5;
+const MY_PRESET_COLORS=[
+  {c:"#FF6B6B",c2:"#c0392b"},{c:"#FF922B",c2:"#c76a12"},
+  {c:"#F59F00",c2:"#b57500"},{c:"#37B24D",c2:"#237a33"},
+  {c:"#1098AD",c2:"#0a6b7a"}
+];
+function myPresetKey(){
+  try{ if(typeof AU_USER!=="undefined"&&AU_USER&&AU_USER.email) return "as3d_myPresets__"+AU_USER.email; }catch(e){}
+  return "as3d_myPresets__local";
+}
+function loadMyPresets(){
+  try{
+    const a=JSON.parse(store.get(myPresetKey())||"[]");
+    return Array.isArray(a)?a.slice(0,MY_PRESET_MAX):[];
+  }catch(e){ return []; }
+}
+function saveMyPresets(list){
+  try{ store.set(myPresetKey(),JSON.stringify(list.slice(0,MY_PRESET_MAX))); }
+  catch(e){ toast("บันทึกคำสั่งของฉันไม่สำเร็จ",true); }
+}
+let MY_PRESETS=loadMyPresets();
+
+function renderMyPresets(){
+  $("myPresetCount").textContent=MY_PRESETS.length+"/"+MY_PRESET_MAX;
+  const chips=MY_PRESETS.map((p,i)=>{
+    const col=MY_PRESET_COLORS[i%MY_PRESET_COLORS.length];
+    return '<span class="mypresetchip" data-my="'+esc(p.id)+'" style="--c:'+col.c+';--c2:'+col.c2+
+      ';--cs:'+col.c+'80" title="คลิกเพื่อใช้คำสั่งนี้">'+esc(p.label)+
+      '<span class="del" data-del="'+esc(p.id)+'" title="ลบคำสั่งนี้">×</span></span>';
+  }).join("");
+  const canAdd=MY_PRESETS.length<MY_PRESET_MAX;
+  const addBtn='<button type="button" class="mypresetadd" id="myPresetAddBtn"'+(canAdd?"":" disabled")+
+    ' title="'+(canAdd?"บันทึกค่าปัจจุบันเป็นคำสั่งของฉัน":"ครบ 5 คำสั่งแล้ว ลบอันเก่าก่อนเพิ่มใหม่")+'">'+
+    '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'+
+    (canAdd?"บันทึกคำสั่งนี้":"ครบ 5 คำสั่งแล้ว")+"</button>";
+  $("myPresetScroll").innerHTML=chips+addBtn+
+    (MY_PRESETS.length===0?'<span class="mypresetempty">ยังไม่มีคำสั่งที่บันทึกไว้ — ตั้งค่าฝั่งซ้าย/ขวาแล้วกด "บันทึกคำสั่งนี้"</span>':"");
+}
+function applyPresetObj(p){
+  S.vehicle=p.vehicle; S.loc=p.loc; S.angle=p.angle; S.light=p.light;
+  if(p.weather!=null) S.weather=p.weather;
+  if(p.detail!=null) $("detail").value=p.detail;
+  ["vehicle","angle","light"].forEach(renderChips);
+  renderChips("loc"); renderBus(); mapGo();
+  refreshWeather(); detailTagsSync();
+  sync();
+  toast("ตั้งค่าอัตโนมัติแล้ว: "+p.label);
+}
+function saveCurrentAsMyPreset(){
+  if(MY_PRESETS.length>=MY_PRESET_MAX){
+    toast("บันทึกได้สูงสุด 5 คำสั่งต่อคน — ลบอันเก่าก่อน",true); return;
+  }
+  const vLabel=(list("vehicle").find(x=>x.id===S.vehicle)||{}).th||S.vehicle;
+  const lLabel=(list("loc").find(x=>x.id===S.loc)||{}).th||S.loc;
+  const suggested=(vLabel+" "+lLabel).trim().slice(0,40);
+  const name=window.prompt("ตั้งชื่อคำสั่งนี้ (แสดงบนปุ่ม):",suggested);
+  if(name==null) return; /* ผู้ใช้กดยกเลิก */
+  const label=(name.trim()||suggested).slice(0,40);
+  MY_PRESETS.push({
+    id:"my"+Date.now()+Math.floor(Math.random()*1000),
+    label,
+    vehicle:S.vehicle, loc:S.loc, angle:S.angle, light:S.light,
+    weather:S.weather, detail:$("detail").value||""
+  });
+  saveMyPresets(MY_PRESETS);
+  renderMyPresets();
+  toast("บันทึกคำสั่ง \""+label+"\" แล้ว");
+}
+function deleteMyPreset(id){
+  MY_PRESETS=MY_PRESETS.filter(p=>p.id!==id);
+  saveMyPresets(MY_PRESETS);
+  renderMyPresets();
+  toast("ลบคำสั่งนี้แล้ว");
+}
+$("myPresetScroll").addEventListener("click",e=>{
+  const del=e.target.closest("[data-del]");
+  if(del){ deleteMyPreset(del.dataset.del); return; }
+  const add=e.target.closest("#myPresetAddBtn");
+  if(add){ if(!add.disabled) saveCurrentAsMyPreset(); return; }
+  const chip=e.target.closest("[data-my]");
+  if(chip){
+    const p=MY_PRESETS.find(x=>x.id===chip.dataset.my);
+    if(p) applyPresetObj(p);
+  }
+});
+renderMyPresets();
 

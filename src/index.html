@@ -82,6 +82,14 @@
   <div class="presetbar-scroll" id="presetScroll"></div>
 </div>
 
+<div class="presetbar mypresetbar" id="myPresetBar">
+  <div class="presetbar-head">
+    <svg viewBox="0 0 24 24"><path d="m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8-5.1-4.7 6.9-.8Z"/></svg>
+    <span>คำสั่งของฉัน <em id="myPresetCount">0/5</em></span>
+  </div>
+  <div class="presetbar-scroll" id="myPresetScroll"></div>
+</div>
+
 <div class="workspace">
 
   <!-- ================= LEFT RAIL : SOURCE ================= -->
@@ -315,13 +323,13 @@
           </div>
           <div class="maphint" id="mapHint">ลากเพื่อเลื่อน · หมุนล้อเพื่อซูม · ดับเบิลคลิกเพื่อย้ายหมุด</div>
         </div>
-        <!-- v41: แถบสรุปโลเคชั่นที่เลือก + สายรถเมล์ที่ผ่านแบบย่อ (สีตรงกับการ์ดด้านบน) ตาม mockup -->
+        <!-- v41.15: แถบสรุปโลเคชั่นที่เลือกใต้แผนที่ — เดิมมีจุดสีสายรถเมล์ย่อ (#mfRoutes) ด้วย แต่ซ้ำ
+             กับการ์ดลอยบนแผนที่ (#mapBox .routelegend) ที่กดเลือกสายได้จริง ตัดออกตามที่ผู้ใช้แจ้ง -->
         <div class="mapfoot" id="mapFoot">
           <div class="mf-loc">
             <span class="mf-pin"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
             <div class="mf-text"><b id="mfName">—</b><small id="mfSub"></small></div>
           </div>
-          <div class="mf-routes" id="mfRoutes"></div>
         </div>
         <div class="dnaline" style="margin-top:7px" id="mapNote"></div>
         <div class="stopbox" id="stopBox" hidden></div>

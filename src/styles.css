@@ -119,6 +119,42 @@ header.top{
 .presetchip:hover{border-color:var(--brand-txt);color:var(--txt);background:var(--ink-200)}
 .presetchip:active{background:var(--brand-glow)}
 
+/* ---------- "คำสั่งของฉัน" — 5 ช่องบันทึกค่าที่ผู้ใช้แต่ละคนตั้งเอง (v41.14) ----------
+   ตั้งใจให้สีสันจัดจ้านต่างจาก .presetchip (ของสำเร็จรูป) ชัดเจน เพื่อให้แยกออกด้วยสายตาทันที
+   ว่านี่คือของที่ "ฉันตั้งเอง" ไม่ใช่ค่าที่แอปเตรียมไว้ให้ — สีวนตามลำดับช่อง (index) ไม่ผูกกับ
+   ประเภทสื่อ/โลเคชั่น เพราะจุดประสงค์คือช่วยจำตำแหน่งช่อง (ช่อง 1 สีแดงเสมอ ฯลฯ) ไม่ใช่จัดหมวดหมู่ */
+.mypresetbar{background:var(--ink-000)}
+.mypresetbar .presetbar-head em{
+  font-style:normal;margin-left:5px;padding:1px 7px;border-radius:999px;
+  background:var(--brand-glow);color:var(--brand-txt);font-size:9.5px;
+}
+.mypresetchip{
+  --c:#845EF7;--c2:#5f3dc4;--cs:rgba(132,94,247,.5);
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;cursor:pointer;
+  border:none;border-radius:999px;color:#fff;font-size:11.5px;font-weight:600;
+  padding:8px 8px 8px 15px;
+  background:linear-gradient(135deg,var(--c),var(--c2));
+  box-shadow:0 2px 10px var(--cs);
+  transition:transform .12s,box-shadow .12s;
+}
+.mypresetchip:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--cs)}
+.mypresetchip:active{transform:translateY(0)}
+.mypresetchip .del{
+  flex:0 0 auto;width:18px;height:18px;line-height:16px;text-align:center;border-radius:50%;
+  background:rgba(0,0,0,.22);color:#fff;font-size:13px;font-weight:700;
+}
+.mypresetchip .del:hover{background:rgba(0,0,0,.4)}
+.mypresetadd{
+  flex:0 0 auto;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  border:1.5px dashed var(--line);border-radius:999px;background:transparent;
+  color:var(--txt-dim);font-size:11.5px;font-weight:600;padding:7.5px 15px 7.5px 12px;transition:.15s;
+}
+.mypresetadd:hover{border-color:var(--brand-txt);color:var(--brand-txt);background:var(--brand-wash)}
+.mypresetadd:disabled{opacity:.45;cursor:not-allowed;border-style:solid}
+.mypresetempty{
+  font-size:11px;color:var(--txt-mute);padding:8px 4px;white-space:nowrap;
+}
+
 /* ---------- ลิงก์สื่อตัวอย่างในแผง 01 · Source (v41) ---------- */
 .samplelink{display:inline-flex;align-items:center;gap:5px;font-size:11px}
 .samplelink svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -682,7 +718,9 @@ pre.final{
 #mapBox .mapoff{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:18px;
   font-size:12px;line-height:1.75;color:var(--txt-mute);background:var(--ink-050);z-index:5}
 
-/* ---- v41: การ์ด "สายรถเมล์" ลอยมุมขวาบนของแผนที่ ตาม mockup ----
+/* ---- v41.15: การ์ด "สายรถเมล์" ลอยมุมขวาบนของแผนที่ — เริ่มพับเสมอ (ดู MAPD.legendOpen) ----
+   ผู้ใช้แจ้งว่าการ์ดเดิม (กางเต็มตลอดเวลา) "ใหญ่มาก บังข้อมูลแผนที่" ตอนนี้ค่าเริ่มต้นคือ "พับ"
+   เหลือแค่ป้ายวงรีตัวเลขสาย (.lgd-toggle) เล็กๆ มุมขวาบน แตะครั้งเดียวกางดูรายชื่อทั้งหมด แตะซ้ำพับกลับ
    ใช้ selector #mapBox .routelegend เจาะจง ไม่แตะสไตล์ฐานของ .routelegend เดิม (ที่ยังใช้
    ตอนย้ายเข้าโหมดเต็มจอผ่าน #fullLegend — ที่นั่นมีที่ว่างพอ จึงยังโชว์ต้นทาง-ปลายทางและจุดสีแยกได้)
    สีพื้นแต่ละปุ่มมาจาก --rc ที่ตั้งเป็น inline style จาก routeColour() ใน renderRouteLegend()
@@ -690,20 +728,31 @@ pre.final{
    ในพื้นที่แคบนี้ — รายละเอียดเต็มยังอยู่ใน title= (โฮเวอร์ดูได้) และในโหมดเต็มจอ */
 #mapBox .routelegend{
   position:absolute;top:8px;right:8px;left:auto;z-index:6;
-  width:min(206px,46%);max-height:calc(100% - 16px);
-  margin-top:0;padding:9px;border:0;border-radius:14px;
+  width:min(180px,42%);max-height:min(240px,calc(100% - 16px));
+  margin-top:0;padding:6px;border:0;border-radius:14px;
   background:var(--overlay);backdrop-filter:blur(6px);
   box-shadow:0 10px 26px rgba(0,0,0,.35);
-  display:flex;flex-direction:column;gap:7px;
+  display:flex;flex-direction:column;gap:6px;
+  transition:max-height .18s ease;
 }
+/* พับ (ค่าเริ่มต้น) — ไม่มี .lgd-list ให้แสดง การ์ดจึงหดเหลือแค่ความสูงของป้ายตัวเลขแถวเดียว */
+#mapBox .routelegend:has(.lgd-toggle):not(:has(.lgd-list)){max-height:34px;width:auto;min-width:0}
 #mapBox .routelegend .lgd-head{font-size:10.5px;line-height:1.5;margin-bottom:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#mapBox .routelegend .lgd-toggle{
+  display:inline-flex;align-items:center;gap:5px;border:0;border-radius:999px;cursor:pointer;
+  background:var(--brand-glow);color:var(--brand-txt);font-family:var(--head);
+  padding:4px 9px;font-size:11px;white-space:nowrap;
+}
+#mapBox .routelegend .lgd-toggle:hover{filter:brightness(1.15)}
+#mapBox .routelegend .lgd-toggle b{font-weight:700}
+#mapBox .routelegend .lgd-chev{font-size:9px;opacity:.85}
 #mapBox .routelegend .lgd-explain{display:none}
 #mapBox .routelegend .lgd-tip{display:none}
 #mapBox .routelegend .lgd-all{font-size:9.5px;padding:3px 7px}
-#mapBox .routelegend .lgd-list{flex-direction:column;max-height:none;overflow:auto;gap:5px;flex:1;min-height:0}
+#mapBox .routelegend .lgd-list{flex-direction:column;max-height:190px;overflow:auto;gap:5px;min-height:0}
 #mapBox .routelegend .lgd-i{
   background:var(--rc,var(--ink-300));border:0;border-radius:999px;
-  padding:6px 11px;color:#fff;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.35);
+  padding:5px 10px;color:#fff;font-weight:600;font-size:11px;text-shadow:0 1px 2px rgba(0,0,0,.35);
   justify-content:space-between;width:100%;
 }
 #mapBox .routelegend .lgd-i .dot{display:none}
@@ -712,9 +761,9 @@ pre.final{
 #mapBox .routelegend .lgd-i.on{outline:2px solid #fff;outline-offset:-2px}
 #mapBox .routelegend .lgd-i::after{content:"›";opacity:.9;font-weight:700;margin-left:6px}
 
-/* ---- v41: แถบสรุป "จุดที่เลือก" + สายรถเมล์ย่อ ใต้แผนที่ ตาม mockup ---- */
+/* ---- v41: แถบสรุป "จุดที่เลือก" ใต้แผนที่ ตาม mockup ---- */
 .mapfoot{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   margin-top:9px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);
   background:var(--ink-100);
 }
@@ -727,17 +776,6 @@ pre.final{
 .mf-text{display:flex;flex-direction:column;min-width:0;line-height:1.4}
 .mf-text b{font-size:12px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
 .mf-text small{font-size:9.5px;color:var(--txt-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.mf-routes{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
-.mf-dot{
-  display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:21px;
-  padding:0 7px;border-radius:999px;color:#fff;font-size:10px;font-weight:600;
-  font-family:var(--mono);text-shadow:0 1px 2px rgba(0,0,0,.35);
-}
-.mf-more{
-  display:inline-flex;align-items:center;height:21px;padding:0 8px;border-radius:999px;
-  background:var(--ink-300);color:var(--txt-dim);font-size:10px;font-family:var(--mono);
-}
-.mf-empty{font-size:10.5px;color:var(--txt-mute)}
 /* หมุดบนแผนที่คงสีส้มไว้เสมอ ไม่ตามธีมแบรนด์ — บนน้ำสีฟ้าอ่อนของธีมสว่าง หมุดน้ำเงินจะจมหาย
    ส่วนนี้ผูกกับ THEME_DARK/THEME_LIGHT ใน 51-map-render.js อยู่แล้ว (pin:"#FF6B2C" ทั้งคู่) ไม่ใช่ตัวแปร CSS */
 .pinico{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);

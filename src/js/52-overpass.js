@@ -214,7 +214,7 @@ async function loadMap(){
     return;
   }
   const l=curLoc(), p=locPos(l);
-  MAPD.busy=true; MAPD.err=""; MAPD.solo=null;
+  MAPD.busy=true; MAPD.err=""; MAPD.solo=null; MAPD.legendOpen=false;
   MAPD.data=null; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null; MAPD.stops=[];
   ovpBtnLabel(true); renderStops(); renderRouteLegend();
   let tick=null, t0=Date.now(), base="";

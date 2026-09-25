@@ -9,6 +9,12 @@ const MAPD={data:null,nodes:[],at:null,radius:600,near:250,busy:false,
             groups:[],wayRoutes:null,solo:null,err:"",
             /* v41: โหมดดูทั้งสาย — ดู 57-route-view.js */
             mode:"local",localView:null,routeFitR:0,geomBusy:"",
+            /* v41.15: การ์ด "สายรถเมล์" ลอยบนแผนที่ (#mapBox .routelegend) เริ่มที่พับเก็บเสมอ
+               (false) กันบังแผนที่ — ผู้ใช้แจ้งว่าการ์ดเดิม "ใหญ่มาก บังข้อมูลแผนที่" เพราะขยายเต็ม
+               ความสูงกล่องแผนที่ทุกครั้งที่มีหลายสาย ตอนนี้เห็นแค่ป้ายตัวเลข ต้องแตะเพื่อกางดูรายชื่อ
+               รีเซ็ตเป็นพับทุกครั้งที่ดึงข้อมูลโลเคชั่นใหม่ (ดู reset ที่ 52-overpass.js) กันการ์ดค้าง
+               ค้างกางบังแผนที่ใหม่ที่เพิ่งโหลดเสร็จ */
+            legendOpen:false,
             /* v41: ที่มาของ MAPD.data — "live" ดึงสดสำเร็จตอนนี้, "seed" มาจาก MAP_SEED
                (สแนปช็อตถนน ดู 10c-map-seed.js/applyMapSeed()) ใช้บอกความจริงในเครดิตแผนที่
                ไม่ให้อ้างว่า "สด" ทั้งที่จริงเป็นสแนปช็อตที่ฝังมากับแอป */
@@ -372,7 +378,7 @@ function mapGo(){          /* เปลี่ยนโลเคชั่น = �
    (v41: MAPD.at ตั้งจาก locPos() ที่รู้อยู่แล้วเสมอ ไม่ต้องรอ loadMap() สำเร็จก่อนถึงจะเห็นจุด) */
   const l=curLoc(), p=locPos(l);
   MAPD.data=null; MAPD.at=p; MAPD.title=l.th; MAPD.nodes=[]; MAPD.groups=[]; MAPD.wayRoutes=null;
-  MAPD.solo=null; MAPD.err=""; MAPD.stops=[]; MAPD.dataSource=null;
+  MAPD.solo=null; MAPD.err=""; MAPD.stops=[]; MAPD.dataSource=null; MAPD.legendOpen=false;
   /* เก็บ GEO cache ไว้ — สายรถเมล์เป็นของทั้งเมือง ใช้ซ้ำข้ามโลเคชั่นได้ ไม่ต้องดึงใหม่ */
   MAPD.mode="local"; MAPD.localView=null; MAPD.routeFitR=0; MAPD.geomBusy="";
   OVP.hits=null; OVP.source=null; OVP.asOf="";
@@ -431,16 +437,21 @@ function mapNote(){
 
 function renderRouteLegend(){
   const G=MAPD.groups;
-  if(!G.length){ $("routeLegend").innerHTML=""; $("routeLegend").hidden=true; return; }
+  if(!G.length){ $("routeLegend").innerHTML=""; $("routeLegend").hidden=true; renderMapFoot(); return; }
   $("routeLegend").hidden=false;
   const solo=MAPD.solo;
   const soloG=solo!=null?G[solo]:null;
   const key=soloG?geoKeyOf(soloG):null;
   const hasGeo=!!(key&&typeof GEO!=="undefined"&&GEO.has(key))||!!(soloG&&applyRouteGeomSeed(soloG.ref));
   const busy=!!(key&&MAPD.geomBusy===key);
+  /* v41.15: การ์ดลอยบนแผนที่ (#mapBox .routelegend) เริ่มพับเสมอ — พับ = ป้ายกลมๆ ตัวเลขสาย
+     กดครั้งเดียวกาง กันบังแผนที่ตามที่ผู้ใช้แจ้ง (ดูคอมเมนต์ที่ MAPD.legendOpen ใน 51-map-render.js) */
+  const collapsed=!MAPD.legendOpen;
   /* v41: แยกคำอธิบายยาวๆ ไว้ใน .lgd-explain — การ์ดลอยบนแผนที่ (#mapBox .routelegend) ซ่อนส่วนนี้
      ไว้ (พื้นที่แคบ) เหลือแค่จำนวนสาย + ปุ่ม ส่วนโหมดเต็มจอที่มีที่ว่างพอยังโชว์เต็มประโยคเหมือนเดิม */
-  let head="<b>"+G.length+" สาย</b><span class=\"lgd-explain\"> ที่จอดป้ายรถเมล์ในรัศมี "+MAPD.near+" ม. · แต่ละสีคือหนึ่งสาย</span>";
+  let head='<button type="button" class="lgd-toggle" data-toggle="1"><b>'+G.length+' สาย</b>'+
+    '<span class="lgd-chev">'+(collapsed?"▾":"▴")+'</span></button>'+
+    '<span class="lgd-explain"> ที่จอดป้ายรถเมล์ในรัศมี '+MAPD.near+' ม. · แต่ละสีคือหนึ่งสาย</span>';
   if(solo!=null){
     head+=' <button type="button" class="lgd-all" data-all="1">แสดงทุกสาย</button>';
     head+= MAPD.mode==="route"
@@ -452,7 +463,7 @@ function renderRouteLegend(){
   }
   $("routeLegend").innerHTML =
     '<div class="lgd-head">'+head+"</div>"+
-    '<div class="lgd-list">'+G.map((g,i)=>{
+    (collapsed?"":'<div class="lgd-list">'+G.map((g,i)=>{
       const verified=curatedLabel(g.ref,curLoc()).verified;
       /* --rc = สีประจำสายเป็น custom property แทนที่จะเซ็ต background ตรงๆ บนปุ่ม
          เพราะสไตล์ฐาน (.routelegend .lgd-i) เป็นชิปกรอบเปล่าใช้ .dot สีต่างหาก ยังใช้ในโหมดเต็มจอ
@@ -466,26 +477,27 @@ function renderRouteLegend(){
         (verified?"":'<span title="สายนี้มาจาก OSM ยังไม่ตรวจกับรายการที่ยืนยันแล้ว"> ?</span>')+
         (g.pair?'<em>'+esc(g.pair)+"</em>":"")+
       "</button>";
-    }).join("")+"</div>";
+    }).join("")+"</div>");
   renderMapFoot();
 }
 
 /* v41: แถบสรุป "จุดที่เลือก" ใต้แผนที่ (#mapFoot ใน index.html) — เอาไว้ให้เห็นชื่อโลเคชั่นปัจจุบัน
-   กับจำนวน/สีสายรถเมล์แบบย่อโดยไม่ต้องมองขึ้นไปนับในการ์ดลอยด้านบน ใช้ข้อมูลชุดเดียวกับ
-   renderRouteLegend() ทุกอย่าง (MAPD.groups) ไม่ได้ยิง Overpass เพิ่มหรือมีสถานะของตัวเอง
-   เรียกจากท้าย renderRouteLegend() จึงอัปเดตพร้อมกันทุกจุดที่เคยเรียก renderRouteLegend() อยู่แล้ว */
+   ใช้ข้อมูลชุดเดียวกับ renderRouteLegend() (MAPD.groups) ไม่ได้ยิง Overpass เพิ่มหรือมีสถานะของตัวเอง
+   เรียกจากท้าย renderRouteLegend() จึงอัปเดตพร้อมกันทุกจุดที่เคยเรียก renderRouteLegend() อยู่แล้ว
+   v41.15: ตัดแถวจุดสีสายรถเมล์ (#mfRoutes เดิม) ออก — ซ้ำกับการ์ดลอยบนแผนที่ (#mapBox .routelegend)
+   ที่โชว์รายชื่อสายเดียวกันอยู่แล้วและกดเลือกสายได้จริงด้วย ส่วนแถวนี้เป็นแค่จุดสีอ่านอย่างเดียว
+   กดไม่ได้ ผู้ใช้แจ้งว่าซ้ำซ้อน ให้เหลือไว้จุดเดียวที่ใช้งานได้จริงบนแผนที่แทน */
 function renderMapFoot(){
   if(!$("mfName")) return;
-  const l=curLoc(), G=MAPD.groups;
+  const l=curLoc();
   $("mfName").textContent=l.th;
   $("mfSub").textContent=(l.en?l.en+" · ":"")+"กรุงเทพฯ";
-  const MAX=6;
-  $("mfRoutes").innerHTML = G.length
-    ? G.slice(0,MAX).map(g=>'<span class="mf-dot" style="background:'+g.col+'" title="สาย '+esc(g.ref)+'">'+esc(g.ref)+"</span>").join("")+
-      (G.length>MAX?'<span class="mf-more">+'+(G.length-MAX)+"</span>":"")
-    : '<span class="mf-empty">ยังไม่มีข้อมูลสายรถเมล์</span>';
 }
 $("routeLegend").addEventListener("click",async e=>{
+  if(e.target.closest("[data-toggle]")){
+    MAPD.legendOpen=!MAPD.legendOpen;
+    renderRouteLegend(); return;
+  }
   if(e.target.closest("[data-all]")){
     MAPD.solo=null;
     if(MAPD.mode==="route") exitRouteMode(); else{ SFX.play("tick"); paintMap(); }

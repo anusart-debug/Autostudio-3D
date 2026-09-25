@@ -46,7 +46,7 @@ function dvSerializeProject() {
   const fields = {};
   DV_FIELD_IDS.forEach((id) => { fields[id] = dvFieldGet(id); });
   return {
-    as3d: 1, app: "AUTOSTUDIO 3D", appVersion: "41.0.0",
+    as3d: 1, app: "AUTOSTUDIO 3D", appVersion: "41.1.0",
     savedAt: new Date().toISOString(),
     savedBy: (AU_USER && AU_USER.email) || "",
     prompt: {
