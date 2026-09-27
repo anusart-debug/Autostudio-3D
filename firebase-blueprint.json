@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User approval request and permission profile for AUTOSTUDIO 3D",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address"
+        },
+        "name": {
+          "type": "string",
+          "description": "User display name"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Approval status of the user account"
+        },
+        "requestedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when user submitted access request"
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when admin approved or rejected request"
+        },
+        "reviewedBy": {
+          "type": "string",
+          "format": "email",
+          "description": "Admin email who performed the review"
+        }
+      },
+      "required": ["email", "name", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{email}": {
+      "schema": "User",
+      "description": "User approval requests and roles indexed by email address"
+    }
+  }
+}

@@ -62,10 +62,12 @@ function qLines(lat,lng,r,near){
 }
 async function ovpFetch(q,onTry,ms){
   const errs=[];
-  for(let i=0;i<OVP_HOSTS.length;i++){
-    const host=OVP_HOSTS[i], name=host.split("/")[2];
+  const canUseProxy = typeof WEB !== "undefined" && WEB && typeof window !== "undefined" && window.location && window.location.protocol.startsWith("http");
+  const hostList = canUseProxy ? ["/api/overpass", ...OVP_HOSTS] : OVP_HOSTS;
+  for(let i=0;i<hostList.length;i++){
+    const host=hostList[i], name=host.startsWith("/") ? "server proxy" : host.split("/")[2];
     if(OVP_CANCEL&&OVP_CANCEL.stopped) break;
-    if(onTry) onTry(name,i+1,OVP_HOSTS.length);
+    if(onTry) onTry(name,i+1,hostList.length);
     const ac=new AbortController();
     OVP_CANCEL={abort:()=>{ac.abort()},stopped:OVP_CANCEL?OVP_CANCEL.stopped:false};
     const timer=setTimeout(()=>ac.abort(),ms||OVP_TIMEOUT);

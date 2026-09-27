@@ -357,15 +357,55 @@ function saveCurrentAsMyPreset(){
   if(MY_PRESETS.length>=MY_PRESET_MAX){
     toast("บันทึกได้สูงสุด 5 คำสั่งต่อคน — ลบอันเก่าก่อน",true); return;
   }
-  const vLabel=(list("vehicle").find(x=>x.id===S.vehicle)||{}).th||S.vehicle;
-  const lLabel=(list("loc").find(x=>x.id===S.loc)||{}).th||S.loc;
+  const vObj=list("vehicle").find(x=>x.id===S.vehicle)||{};
+  const lObj=list("loc").find(x=>x.id===S.loc)||{};
+  const aObj=list("angle").find(x=>x.id===S.angle)||{};
+  const liObj=list("light").find(x=>x.id===S.light)||{};
+  const vLabel=vObj.th||S.vehicle;
+  const lLabel=lObj.th||S.loc;
   const suggested=(vLabel+" "+lLabel).trim().slice(0,40);
-  const name=window.prompt("ตั้งชื่อคำสั่งนี้ (แสดงบนปุ่ม):",suggested);
-  if(name==null) return; /* ผู้ใช้กดยกเลิก */
-  const label=(name.trim()||suggested).slice(0,40);
+
+  const veil=$("myPresetVeil");
+  if(!veil){
+    // Fallback if modal DOM element is not present
+    let name=suggested;
+    try{ name=window.prompt("ตั้งชื่อคำสั่งนี้ (แสดงบนปุ่ม):",suggested); }catch(e){}
+    if(name==null) return;
+    const label=(name.trim()||suggested).slice(0,40);
+    commitMyPreset(label);
+    return;
+  }
+
+  const sumEl=$("myPresetSummary");
+  if(sumEl){
+    sumEl.innerHTML =
+      '<div style="color:var(--txt-bright);font-weight:600;margin-bottom:6px">ค่าที่จะบันทึกเป็นคำสั่งลัด:</div>'+
+      '<div>• สื่อ: <b>'+esc(vLabel)+'</b></div>'+
+      '<div>• โลเคชั่น: <b>'+esc(lLabel)+'</b></div>'+
+      '<div>• มุมกล้อง: <b>'+esc(aObj.th||S.angle)+'</b> · แสง: <b>'+esc(liObj.th||S.light)+'</b></div>'+
+      (S.weather?'<div>• สภาพอากาศ: <b>'+esc(S.weather)+'</b></div>':'')+
+      ($("detail").value?'<div>• โจทย์เพิ่มเติม: <b>'+esc($("detail").value)+'</b></div>':'');
+  }
+
+  const input=$("myPresetNameInput");
+  if(input){
+    input.value=suggested;
+    veil.hidden=false;
+    setTimeout(()=>{
+      try{ input.focus(); input.select(); }catch(e){}
+    },60);
+  } else {
+    veil.hidden=false;
+  }
+}
+
+function commitMyPreset(label){
+  if(MY_PRESETS.length>=MY_PRESET_MAX){
+    toast("บันทึกได้สูงสุด 5 คำสั่งต่อคน — ลบอันเก่าก่อน",true); return;
+  }
   MY_PRESETS.push({
     id:"my"+Date.now()+Math.floor(Math.random()*1000),
-    label,
+    label:label.slice(0,40),
     vehicle:S.vehicle, loc:S.loc, angle:S.angle, light:S.light,
     weather:S.weather, detail:$("detail").value||""
   });
@@ -373,12 +413,46 @@ function saveCurrentAsMyPreset(){
   renderMyPresets();
   toast("บันทึกคำสั่ง \""+label+"\" แล้ว");
 }
+
+function closeMyPresetModal(){
+  const veil=$("myPresetVeil");
+  if(veil) veil.hidden=true;
+}
+
+function confirmMyPresetModal(){
+  const input=$("myPresetNameInput");
+  const vLabel=(list("vehicle").find(x=>x.id===S.vehicle)||{}).th||S.vehicle;
+  const lLabel=(list("loc").find(x=>x.id===S.loc)||{}).th||S.loc;
+  const fallback=(vLabel+" "+lLabel).trim().slice(0,40);
+  const name=input?input.value.trim():"";
+  const label=(name||fallback).slice(0,40);
+  commitMyPreset(label);
+  closeMyPresetModal();
+}
+
 function deleteMyPreset(id){
   MY_PRESETS=MY_PRESETS.filter(p=>p.id!==id);
   saveMyPresets(MY_PRESETS);
   renderMyPresets();
   toast("ลบคำสั่งนี้แล้ว");
 }
+
+// Modal dialog event listeners
+if($("myPresetClose")) $("myPresetClose").addEventListener("click", closeMyPresetModal);
+if($("myPresetCancelBtn")) $("myPresetCancelBtn").addEventListener("click", closeMyPresetModal);
+if($("myPresetConfirmBtn")) $("myPresetConfirmBtn").addEventListener("click", confirmMyPresetModal);
+if($("myPresetVeil")) {
+  $("myPresetVeil").addEventListener("click", e => {
+    if(e.target === $("myPresetVeil")) closeMyPresetModal();
+  });
+}
+if($("myPresetNameInput")) {
+  $("myPresetNameInput").addEventListener("keydown", e => {
+    if(e.key === "Enter") { e.preventDefault(); confirmMyPresetModal(); }
+    else if(e.key === "Escape") { e.preventDefault(); closeMyPresetModal(); }
+  });
+}
+
 $("myPresetScroll").addEventListener("click",e=>{
   const del=e.target.closest("[data-del]");
   if(del){ deleteMyPreset(del.dataset.del); return; }

@@ -3,16 +3,19 @@
   "version": "41.1.0",
   "private": true,
   "description": "Plan B Media — เครื่องมือเขียนคำสั่งสร้างภาพโฆษณา OOH และแผนที่เส้นทางรถเมล์สำหรับฝ่ายขาย",
+  "type": "module",
   "scripts": {
+    "dev": "node server.mjs",
     "build": "node build.mjs",
+    "start": "node server.mjs",
     "build:file": "node build.mjs --target=file",
     "build:web": "node build.mjs --target=web",
     "check": "node build.mjs --check",
     "test": "node build.mjs && node test/run.mjs",
-    "open": "node build.mjs && node -e \"const{execSync}=require('child_process');const p=require('path').join(process.cwd(),'dist','autostudio3d.html');const c=process.platform==='win32'?'start \\\"\\\" \\\"'+p+'\\\"':process.platform==='darwin'?'open \\\"'+p+'\\\"':'xdg-open \\\"'+p+'\\\"';execSync(c,{shell:true})\""
+    "lint": "node build.mjs --check"
   },
-  "devDependencies": {
-    "playwright": "^1.49.0"
+  "dependencies": {
+    "express": "^4.21.2"
   },
   "engines": {
     "node": ">=18"

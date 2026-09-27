@@ -1,0 +1,8 @@
+{
+  "name": "Autostudio 3D",
+  "description": "Plan B Media — เครื่องมือเขียนคำสั่งสร้างภาพโฆษณา OOH และแผนที่เส้นทางรถเมล์สำหรับฝ่ายขาย",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

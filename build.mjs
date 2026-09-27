@@ -48,22 +48,25 @@ const sha256b64 = (s) => createHash("sha256").update(s, "utf8").digest("base64")
    (forHeader=true) — เมตาแท็กกับ header จึงไม่ตรงกันเป๊ะโดยตั้งใจ ไม่ใช่ความผิดพลาด */
 function cspTemplate(scriptHashes, target, forHeader) {
   const scriptSrc = target === "web"
-    ? "'unsafe-inline' https://www.gstatic.com"
+    ? "'unsafe-inline' https://www.gstatic.com https://apis.google.com"
     : scriptHashes.map((h) => "'" + h + "'").join(" ");
   const connectSrc = "https://overpass-api.de " +
     "https://fonts.googleapis.com https://fonts.gstatic.com" +
     (target === "web"
       /* เฟส 7: www.googleapis.com คือ Google Drive REST API (71-drive.web.js) —
-         ขอบเขตจริงถูกจำกัดด้วย scope drive.file ที่ขอไว้ตอน sign-in ไม่ใช่ด้วย CSP */
-      ? " https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com"
+         ขอบเขตจริงถูกจำกัดด้วย scope drive.readonly/drive.file ที่ขอไว้ตอน sign-in ไม่ใช่ด้วย CSP */
+      ? " 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://apis.google.com"
       : "");
-  const frameSrc = target === "web" ? "https://*.firebaseapp.com" : "'none'";
+  const frameSrc = target === "web" ? "https://*.firebaseapp.com https://accounts.google.com https://docs.google.com https://drive.google.com" : "'none'";
+  const imgSrc = target === "web"
+    ? "data: blob: https://*.googleusercontent.com https://drive.google.com https://*.google.com"
+    : "data: blob:";
   return "default-src 'none'; " +
     "script-src " + scriptSrc + "; " +
     /* style-src ต้องมี fonts.googleapis.com ด้วย ไม่ใช่แค่ font-src — <link rel=stylesheet>
        ที่ดึง CSS ของฟอนต์มาคือการโหลดสไตล์ชีต ไฟล์ woff2 จริงต่างหากที่ font-src คุม */
     "style-src 'unsafe-inline' https://fonts.googleapis.com; " +
-    "img-src data: blob:; " +
+    "img-src " + imgSrc + "; " +
     "font-src https://fonts.gstatic.com; " +
     "connect-src " + connectSrc + "; " +
     "form-action 'none'; base-uri 'none'; frame-src " + frameSrc + "; object-src 'none'" +
@@ -172,6 +175,7 @@ for (const target of targets) {
     const kb = (Buffer.byteLength(out) / 1024).toFixed(0);
     console.log("[" + target + "] สร้าง " + outfile.slice(ROOT.length + 1).replace(/\\/g, "/") + " แล้ว — " + kb + " KB");
     if (target === "web") {
+      writeFileSync(join(ROOT, "index.html"), out);
       writeFileSync(join(ROOT, "firebase.json"), firebaseJson(headerCsp));
       console.log("[web] สร้าง firebase.json แล้ว (CSP header คำนวณจาก hash ของสคริปต์จริง ไม่ต้องแก้มือ)");
     }
